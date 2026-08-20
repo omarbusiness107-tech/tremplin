@@ -16,6 +16,7 @@ from roguelike.main import (
     InventoryScreen,
     MapView,
     MessageLog,
+    PromptBar,
     RoguelikeApp,
     StatusPanel,
     TitleScreen,
@@ -498,5 +499,319 @@ def test_abandoning_a_run_returns_to_the_title_screen():
             assert app.game is None
             # An abandoned run is not reported as a finished one.
             assert "YOUR LAST RUN" not in panel(app, "#title-panel")
+
+    drive(scenario)
+
+
+# -- aiming a thrown item (stretch: ranged items) -------------------------
+
+
+async def arm_with_targets(pilot, item_name: str = "Flask of Fire"):
+    """Put three goblins in a row beside the player and a throwable in the pack."""
+    game = pilot.app.game
+    game.entities.clear()
+    px, py = game.player.position
+    for offset in (2, 3, 4):
+        game.entities.append(MONSTERS["Goblin"].spawn(px + offset, py, floor=1))
+    game.update_fov()
+    game.inventory.add(TEMPLATES[item_name].spawn())
+    return game
+
+
+def test_choosing_a_thrown_item_starts_aiming_instead_of_using_it():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=SIZE) as pilot:
+            await start(pilot)
+            game = await arm_with_targets(pilot)
+            await pilot.press("i")
+            await pilot.pause()
+            await pilot.press("a")
+            await pilot.pause()
+
+            screen = app.screen
+            assert isinstance(screen, GameScreen)
+            assert screen.aiming is not None, "the flask was used without aiming"
+            assert len(game.inventory) == 1, "it left the pack before being thrown"
+            assert game.turns == 0
+            # The cursor starts on the nearest thing worth hitting.
+            assert screen.aiming.cursor == game.targets_in_range(7)[0].position
+            assert "Aiming" in screen.query_one(PromptBar).render().plain
+
+    drive(scenario)
+
+
+def test_the_aiming_cursor_and_blast_are_drawn():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=SIZE) as pilot:
+            await start(pilot)
+            await arm_with_targets(pilot)
+            await pilot.press("i")
+            await pilot.pause()
+            await pilot.press("a")
+            await pilot.pause()
+
+            view = app.screen.query_one(MapView)
+            assert view.cursor == app.screen.aiming.cursor
+            assert len(view.blast) == 9, "a radius-1 blast covers nine tiles"
+            assert view.cursor_valid
+
+    drive(scenario)
+
+
+def test_arrow_keys_aim_rather_than_walk():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=SIZE) as pilot:
+            await start(pilot)
+            game = await arm_with_targets(pilot)
+            await pilot.press("i")
+            await pilot.pause()
+            await pilot.press("a")
+            await pilot.pause()
+
+            standing, cursor = game.player.position, app.screen.aiming.cursor
+            await pilot.press("right")
+            await pilot.pause()
+            assert game.player.position == standing, "the player walked while aiming"
+            assert app.screen.aiming.cursor == (cursor[0] + 1, cursor[1])
+            assert game.turns == 0
+
+    drive(scenario)
+
+
+def test_tab_steps_through_the_monsters_you_could_hit():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=SIZE) as pilot:
+            await start(pilot)
+            game = await arm_with_targets(pilot)
+            await pilot.press("i")
+            await pilot.pause()
+            await pilot.press("a")
+            await pilot.pause()
+
+            reachable = [m.position for m in game.targets_in_range(7)]
+            assert len(reachable) >= 2, "need at least two targets to cycle"
+            assert app.screen.aiming.cursor == reachable[0]
+            await pilot.press("tab")
+            await pilot.pause()
+            assert app.screen.aiming.cursor == reachable[1]
+
+    drive(scenario)
+
+
+def test_confirming_throws_and_clears_the_overlay():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=SIZE) as pilot:
+            await start(pilot)
+            game = await arm_with_targets(pilot)
+            await pilot.press("i")
+            await pilot.pause()
+            await pilot.press("a")
+            await pilot.pause()
+            await pilot.press("enter")
+            await pilot.pause()
+
+            assert app.screen.aiming is None
+            assert app.screen.query_one(MapView).cursor is None
+            assert not app.screen.query_one(PromptBar).display
+            assert game.kills > 0, "the throw hit nothing"
+            assert len(game.inventory) == 0
+            assert game.turns == 1
+
+    drive(scenario)
+
+
+def test_aiming_somewhere_unreachable_is_refused_without_ending_the_aim():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=SIZE) as pilot:
+            await start(pilot)
+            game = await arm_with_targets(pilot)
+            await pilot.press("i")
+            await pilot.pause()
+            await pilot.press("a")
+            await pilot.pause()
+
+            screen = app.screen
+            screen.aiming.cursor = (game.player.x + 30, game.player.y)
+            screen._show_aim()
+            assert not screen.query_one(MapView).cursor_valid
+
+            await pilot.press("enter")
+            await pilot.pause()
+            assert screen.aiming is not None, "the aim was thrown away"
+            assert len(game.inventory) == 1
+            assert game.turns == 0
+            assert "No clear shot" in screen.query_one(PromptBar).render().plain
+
+    drive(scenario)
+
+
+def test_escape_puts_the_item_away():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=SIZE) as pilot:
+            await start(pilot)
+            game = await arm_with_targets(pilot)
+            await pilot.press("i")
+            await pilot.pause()
+            await pilot.press("a")
+            await pilot.pause()
+            await pilot.press("escape")
+            await pilot.pause()
+
+            assert app.screen.aiming is None
+            assert len(game.inventory) == 1, "the flask was lost"
+            assert game.turns == 0
+            assert app.screen.query_one(MapView).cursor is None
+
+    drive(scenario)
+
+
+def test_other_actions_are_held_back_while_aiming():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=SIZE) as pilot:
+            await start(pilot)
+            game = await arm_with_targets(pilot)
+            await pilot.press("i")
+            await pilot.pause()
+            await pilot.press("a")
+            await pilot.pause()
+
+            for key in ("space", "greater_than_sign", "n", "i"):
+                await pilot.press(key)
+            await pilot.pause()
+            assert isinstance(app.screen, GameScreen)
+            assert app.screen.aiming is not None
+            assert game.turns == 0
+
+    drive(scenario)
+
+
+# -- suspend and resume (stretch: save/load) ------------------------------
+
+
+def test_a_run_can_be_suspended_and_picked_back_up(tmp_path):
+    async def scenario():
+        app = RoguelikeApp(seed=1234, save_path=tmp_path / "save.json")
+        async with app.run_test(size=SIZE) as pilot:
+            game = await start(pilot)
+            for key in ["down"] * 4 + ["right"] * 5:
+                await pilot.press(key)
+            await pilot.pause()
+            before = (game.seed, game.turns, game.player.position, len(game.explored))
+
+            await pilot.press("S")
+            await pilot.pause()
+            assert isinstance(app.screen, TitleScreen)
+            assert (tmp_path / "save.json").is_file()
+            text = panel(app, "#title-panel")
+            assert "continue" in text
+            assert "YOUR LAST RUN" not in text, "a suspended run is not a finished one"
+
+            await pilot.press("c")
+            await pilot.pause()
+            assert isinstance(app.screen, GameScreen)
+            resumed = app.game
+            assert (
+                resumed.seed,
+                resumed.turns,
+                resumed.player.position,
+                len(resumed.explored),
+            ) == before
+
+    drive(scenario)
+
+
+def test_loading_consumes_the_save_so_a_run_cannot_be_rewound(tmp_path):
+    async def scenario():
+        save = tmp_path / "save.json"
+        app = RoguelikeApp(seed=1234, save_path=save)
+        async with app.run_test(size=SIZE) as pilot:
+            await start(pilot)
+            await pilot.press("S")
+            await pilot.pause()
+            assert save.is_file()
+
+            await pilot.press("c")
+            await pilot.pause()
+            assert not save.is_file(), "the save survived being loaded"
+
+    drive(scenario)
+
+
+def test_the_title_screen_only_offers_continue_when_there_is_a_save(tmp_path):
+    async def scenario():
+        app = RoguelikeApp(seed=1234, save_path=tmp_path / "save.json")
+        async with app.run_test(size=SIZE) as pilot:
+            await pilot.pause()
+            assert "continue" not in panel(app, "#title-panel")
+            # Pressing it anyway must not blow up or start anything.
+            await pilot.press("c")
+            await pilot.pause()
+            assert isinstance(app.screen, TitleScreen)
+            assert app.game is None
+
+    drive(scenario)
+
+
+def test_dying_destroys_a_suspended_run(tmp_path):
+    async def scenario():
+        save = tmp_path / "save.json"
+        app = RoguelikeApp(seed=1234, save_path=save)
+        async with app.run_test(size=SIZE) as pilot:
+            await start(pilot)
+            await pilot.press("S")
+            await pilot.pause()
+            await pilot.press("c")
+            await pilot.pause()
+            await pilot.press("S")
+            await pilot.pause()
+            await pilot.press("c")
+            await pilot.pause()
+            await pilot.press("S")
+            await pilot.pause()
+            assert save.is_file()
+
+            await pilot.press("c")
+            await pilot.pause()
+            await kill_the_player(pilot)
+            assert isinstance(app.screen, GameOverScreen)
+            assert not save.is_file(), "permadeath left a save file behind"
+
+    drive(scenario)
+
+
+def test_a_corrupt_save_is_reported_rather_than_crashing(tmp_path):
+    async def scenario():
+        save = tmp_path / "save.json"
+        save.write_text("{ not json", encoding="utf-8")
+        app = RoguelikeApp(seed=1234, save_path=save)
+        async with app.run_test(size=SIZE) as pilot:
+            await pilot.pause()
+            await pilot.press("c")
+            await pilot.pause()
+            assert isinstance(app.screen, TitleScreen), "a bad save took down the app"
+            assert app.game is None
+            assert "not readable JSON" in panel(app, "#title-panel")
+
+    drive(scenario)
+
+
+def test_a_finished_run_cannot_be_suspended(tmp_path):
+    async def scenario():
+        save = tmp_path / "save.json"
+        app = RoguelikeApp(seed=1234, save_path=save)
+        async with app.run_test(size=SIZE) as pilot:
+            await start(pilot)
+            await kill_the_player(pilot)
+            await pilot.press("S")
+            await pilot.pause()
+            assert not save.is_file()
 
     drive(scenario)

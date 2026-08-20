@@ -20,6 +20,7 @@ if TYPE_CHECKING:  # pragma: no cover - import cycle guard
 POTION_COLOR = "rgb(226,120,190)"
 WEAPON_COLOR = "rgb(150,200,230)"
 SCROLL_COLOR = "rgb(235,230,200)"
+THROWN_COLOR = "rgb(255,140,80)"
 
 LIGHTNING_DAMAGE = 12
 FIREBALL_DAMAGE = 7
@@ -34,6 +35,7 @@ class ItemKind(str, Enum):
     POTION = "potion"
     WEAPON = "weapon"
     SCROLL = "scroll"
+    THROWN = "thrown"
 
 
 @dataclass
@@ -44,16 +46,27 @@ class Item:
     char: str
     color: str
     kind: ItemKind
-    #: HP restored for a potion, attack bonus for a weapon.
+    #: HP restored for a potion, attack bonus for a weapon, damage for a blast.
     power: int = 0
+    #: How far this item can be thrown or aimed. 0 means it is used in place.
+    throw_range: int = 0
+    #: Tiles either side of the impact point that also take the hit.
+    blast_radius: int = 0
 
-    def use(self, game: GameState) -> bool:
-        """Use this item.
+    @property
+    def needs_target(self) -> bool:
+        """True when using this item means picking a spot on the map first."""
+        return self.throw_range > 0
 
-        Returns True when the item should leave the pack — drunk, read, or (for
-        a weapon) moved into the player's hand. Returns False when nothing
-        happened, in which case no turn is spent either.
+    def use(self, game: GameState, target: tuple[int, int] | None = None) -> bool:
+        """Use this item, at ``target`` if it is one that must be aimed.
+
+        Returns True when the item should leave the pack — drunk, read, thrown,
+        or (for a weapon) moved into the player's hand. Returns False when
+        nothing happened, in which case no turn is spent either.
         """
+        if self.needs_target:
+            return _hurl(game, self, target)
         if self.kind is ItemKind.POTION:
             return _drink(game, self)
         if self.kind is ItemKind.WEAPON:
@@ -62,6 +75,8 @@ class Item:
 
     def describe(self) -> str:
         """Short label for the inventory screen."""
+        if self.needs_target:
+            return f"{self.name} ({self.power} damage, range {self.throw_range})"
         if self.kind is ItemKind.POTION:
             return f"{self.name} (heals {self.power})"
         if self.kind is ItemKind.WEAPON:
@@ -88,6 +103,33 @@ def _equip(game: GameState, item: Item) -> bool:
     if previous is not None:
         game.inventory.add(previous)
         game.log(f"You stow the {previous.name}.", "grey70")
+    return True
+
+
+def _hurl(game: GameState, item: Item, target: tuple[int, int] | None) -> bool:
+    """Throw or aim ``item`` at ``target``, hitting everything in the blast."""
+    if target is None or not game.can_target(target, item.throw_range):
+        game.log("You have no clear shot there.", "grey70")
+        return False
+
+    caught = [
+        monster
+        for monster in game.entities
+        if monster.is_alive
+        and max(abs(monster.x - target[0]), abs(monster.y - target[1]))
+        <= item.blast_radius
+    ]
+    game.log(f"The {item.name} bursts!", "rgb(255,150,80)")
+    if not caught:
+        game.log("It goes off against bare stone.", "grey70")
+        return True
+
+    for monster in caught:
+        game.log(
+            f"The blast catches the {monster.name} for {item.power}.",
+            "rgb(255,180,110)",
+        )
+        game.hurt_monster(monster, item.power)
     return True
 
 
@@ -176,6 +218,8 @@ class ItemTemplate:
     color: str
     kind: ItemKind
     power: int = 0
+    throw_range: int = 0
+    blast_radius: int = 0
     weight: int = 10
     min_floor: int = 1
 
@@ -186,6 +230,8 @@ class ItemTemplate:
             color=self.color,
             kind=self.kind,
             power=self.power,
+            throw_range=self.throw_range,
+            blast_radius=self.blast_radius,
         )
 
 
@@ -196,6 +242,11 @@ ITEM_TEMPLATES: tuple[ItemTemplate, ...] = (
                  power=26, weight=5, min_floor=3),
     ItemTemplate("Unknown Scroll", "?", SCROLL_COLOR, ItemKind.SCROLL,
                  weight=9, min_floor=1),
+    # Ranged: these are aimed at a spot on the map rather than used in place.
+    ItemTemplate("Flask of Fire", "!", THROWN_COLOR, ItemKind.THROWN,
+                 power=10, throw_range=7, blast_radius=1, weight=7, min_floor=1),
+    ItemTemplate("Scroll of Fireball", "?", SCROLL_COLOR, ItemKind.SCROLL,
+                 power=9, throw_range=9, blast_radius=2, weight=6, min_floor=2),
     # Each weapon tier unlocks a floor before the monster it is meant to answer,
     # so the player can be armed for an Orc, Ogre or Wraith before meeting one.
     ItemTemplate("Dagger", "/", WEAPON_COLOR, ItemKind.WEAPON,

@@ -15,11 +15,18 @@ fresh seed.
 |---|---|
 | ![Title screen](docs/title.svg) | ![Game over](docs/game-over.svg) |
 
+Aiming a thrown flask — the cursor sits on the target, the tiles around it are the
+blast it would cover:
+
+![Aiming a thrown item](docs/aiming.svg)
+
 ## Status
 
-All ten roadmap steps are complete. A run goes: pick a seed, descend, explore under
-fog of war, fight, gear up from what you find, take the stairs into something worse,
-and eventually die — permanently — to a screen that tells you how far you got.
+All ten roadmap steps are complete, and so are the five stretch goals. A run goes:
+pick a seed, descend, explore under fog of war, fight things that each hunt you
+differently, gear up from what you find, take the stairs into something worse, and
+eventually die — permanently — to a screen that tells you how far you got. You can
+suspend a run to disk and pick it up later, but you cannot rewind one.
 
 - [x] 1. Project scaffold
 - [x] 2. Dungeon generation (BSP rooms + corridors, seeded)
@@ -31,6 +38,14 @@ and eventually die — permanently — to a screen that tells you how far you go
 - [x] 8. Stairs & floor progression (`>` descends into a harder floor)
 - [x] 9. Permadeath + game over screen (run stats, then a fresh seed)
 - [x] 10. Status panel (health, gear, pack, and what is nearby)
+
+### Stretch goals
+
+- [x] Save/load game state to JSON (suspend a run; loading consumes the save)
+- [x] Ranged items (thrown flasks and a targeted fireball scroll, with an aiming cursor)
+- [x] Enemy variety — different stats *and* behaviours per floor depth
+- [x] Message log panel (combat, pickups, deaths)
+- [x] Colorized tiles and entities via Textual styling
 
 ## Quick start
 
@@ -53,12 +68,19 @@ command on your PATH.
 | `W` `A` `S` `D` | Move |
 | `K` `J` `H` `L` | Move (vi keys) |
 | `Space` `.` | Wait a turn |
-| `I` | Open the pack (`a`-`p` to drink or wield, `esc` to close) |
+| `I` | Open the pack (`a`-`p` to drink, wield, or aim; `esc` to close) |
 | `>` | Take the stairs down |
+| `Shift`+`S` | Suspend the run to disk and exit to the title screen |
 | `N` | Abandon this run, back to the title screen |
 | `Q` | Quit |
 
-On the title screen, `Enter` begins and `R` rolls a different seed.
+On the title screen, `Enter` begins, `R` rolls a different seed, and `C` continues
+a suspended run.
+
+Choosing a thrown item from the pack starts **aiming**: the arrow keys move the
+cursor, `Tab` jumps to the next monster in reach, `Enter` throws, and `Esc` puts it
+away. The tiles the blast would cover are highlighted, and the cursor turns red
+where you have no shot.
 
 Walking into a monster attacks it. Every action you take — moving, attacking, or
 waiting — gives the dungeon a turn back.
@@ -73,7 +95,7 @@ waiting — gives the dungeon a turn back.
 | `+` | Door (blocks sight, so rooms stay dark until you step in) |
 | `>` | Stairs down (step 8) |
 | `r` `g` `o` `O` `W` | Rat, Goblin, Orc, Ogre, Wraith |
-| `!` | Potion |
+| `!` | Potion, or a flask to throw |
 | `/` | Weapon |
 | `?` | Scroll |
 
@@ -98,12 +120,14 @@ you can actually see them.
 │   ├── entities.py          # Entity / Actor / Player / Monster + species table
 │   ├── combat.py            # melee damage resolution
 │   ├── inventory.py         # items, their effects, and the pack
+│   ├── persistence.py       # saving a run to JSON and reading it back
 │   ├── game.py              # GameState: the whole run, turn loop, AI, camera
 │   └── main.py              # Textual app: screens, MapView, log, status panel
 ├── docs/
 │   ├── screenshot.svg       # all captured from real sessions
 │   ├── title.svg
 │   ├── inventory.svg
+│   ├── aiming.svg
 │   └── game-over.svg
 └── tests/
     ├── helpers.py           # build a GameState from an ASCII drawing
@@ -114,6 +138,9 @@ you can actually see them.
     ├── test_items.py        # pickup, potions, weapons, scrolls, spawning
     ├── test_floors.py       # stairs, descending, the difficulty curve
     ├── test_run_stats.py    # permadeath, what killed you, the run summary
+    ├── test_behaviour.py    # how each species spends its turn
+    ├── test_ranged.py       # aiming, blast radius, and refused throws
+    ├── test_persistence.py  # JSON round trips and refusing bad saves
     ├── test_combat_inventory.py
     └── test_app.py          # drives the real app headlessly
 ```
@@ -155,10 +182,23 @@ you can actually see them.
   modal screens handle their keys in `on_key` rather than as bindings, because
   stopping an event (which is what keeps it off the dungeon below) also stops it
   before binding processing.
-- **Permadeath.** There is no save file and no continue. `GameState` refuses
-  every action once `game_over` is set, and a new run builds a whole new
-  `GameState` — nothing is carried across but the summary shown on the title
-  screen.
+- **Permadeath.** `GameState` refuses every action once `game_over` is set, and a
+  new run builds a whole new `GameState` — nothing is carried across but the
+  summary shown on the title screen.
+- **Suspending, not save-scumming.** A save is a way to stop playing, not a way
+  to retry: loading deletes the file on the way in, and dying deletes it too. So
+  a run can be put down and picked up, but never rewound. The generator's own
+  internal state is part of the save, so a resumed run produces exactly the
+  floors an uninterrupted one would have — there is a test that plays the same
+  moves both ways and compares the results.
+- **Behaviour, not just stats.** Bigger numbers deeper down only go so far, so
+  each species also spends its turn differently: rats break and run when hurt,
+  ogres act every other turn but hit like a truck, and wraiths remember where
+  you were and keep coming after they lose sight of you.
+- **Aiming.** Throwing is a mode on the game screen rather than another screen,
+  because the map underneath has to stay visible and keep updating. While it is
+  active the movement keys drive a cursor instead of the player, and every other
+  action is held back.
 
 ## Development
 
@@ -167,11 +207,12 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-428 tests. The suite covers the generator (determinism, no overlapping rooms,
+506 tests. The suite covers the generator (determinism, no overlapping rooms,
 flood-filled connectivity across 50 seeds), the FOV algorithm (shadows, gaps,
-radius limits), the turn loop, AI, items, descent and run stats on hand-drawn
-ASCII maps, and a set of end-to-end tests that drive the real Textual app
-headlessly — through the title screen, a run, death, and back again.
+radius limits), the turn loop, per-species AI, items, ranged throws, descent,
+run stats and JSON round trips on hand-drawn ASCII maps, and a set of end-to-end
+tests that drive the real Textual app headlessly — through the title screen, a
+run, aiming and throwing, suspending and resuming, death, and back again.
 
 Because everything random comes from the seeded `GameState.rng`, a whole run
 replays exactly: the same seed plus the same key presses gives the same result,
@@ -200,7 +241,11 @@ The same bot now reaches floors 3–4 instead of 1–2. It plays badly on purpos
 it walks straight at everything it sees and never retreats — so a human should
 get further.
 
-One thing it does *not* solve: the player's maximum HP never grows, so the very
+Adding thrown items and per-species behaviours later did not move that number:
+flasks of fire give the player real burst damage, but slow ogres and stalking
+wraiths push back, and the bot still lands on floors 2–4.
+
+One thing none of it solves: the player's maximum HP never grows, so the very
 deep floors stay out of reach. Closing that gap needs a character progression
 mechanic (XP levels, or HP gained per floor), which is a design decision rather
 than a tuning one, so it is left alone for now.

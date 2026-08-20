@@ -10,6 +10,8 @@ handing back to the title screen with a fresh seed.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from rich.text import Text
 from textual.app import App, ComposeResult, RenderResult
 from textual.binding import Binding
@@ -18,9 +20,17 @@ from textual.screen import ModalScreen, Screen
 from textual.widget import Widget
 from textual.widgets import Footer, Header, Static
 
-from .game import GameState, camera_origin, random_seed
-from .inventory import Inventory
+from .game import DIRECTIONS, GameState, camera_origin, random_seed
+from .inventory import Inventory, Item
 from .map_gen import DOOR, FLOOR, STAIRS_DOWN, WALL
+from .persistence import (
+    DEFAULT_SAVE_PATH,
+    SaveError,
+    delete_save,
+    has_save,
+    load_game,
+    save_game,
+)
 
 #: How each glyph is painted while it is in view. Entities carry their own colour.
 TILE_STYLES: dict[str, str] = {
@@ -38,6 +48,11 @@ MEMORY_STYLES: dict[str, str] = {
 }
 DEFAULT_TILE_STYLE = "white"
 UNSEEN = " "
+
+#: The aiming overlay, drawn over whatever is on the tile.
+CURSOR_STYLE = "bold black on rgb(235,185,90)"
+CURSOR_BLOCKED_STYLE = "bold white on rgb(150,60,60)"
+BLAST_BACKGROUND = "rgb(78,52,40)"
 
 #: Lines of message log kept on screen.
 LOG_LINES = 6
@@ -57,6 +72,22 @@ class MapView(Widget):
     def __init__(self, game: GameState, **kwargs) -> None:
         super().__init__(**kwargs)
         self.game = game
+        #: Set while the player is aiming a thrown item.
+        self.cursor: tuple[int, int] | None = None
+        self.blast: set[tuple[int, int]] = set()
+        self.cursor_valid = True
+
+    def aim_at(
+        self,
+        cursor: tuple[int, int] | None,
+        blast: set[tuple[int, int]] | None = None,
+        valid: bool = True,
+    ) -> None:
+        """Show (or with ``cursor=None`` clear) the aiming overlay."""
+        self.cursor = cursor
+        self.blast = blast or set()
+        self.cursor_valid = valid
+        self.refresh()
 
     def render(self) -> RenderResult:
         width, height = self.size.width, self.size.height
@@ -95,26 +126,48 @@ class MapView(Widget):
                 if map_x >= tile_map.width:
                     break
                 position = (map_x, map_y)
-                visible = position in game.visible
+                glyph, style = self._glyph_at(position, occupied)
 
-                if visible and position in occupied:
-                    entity = occupied[position]
-                    frame.append(entity.char, style=f"bold {entity.color}")
-                    continue
+                # The aiming overlay repaints whatever is underneath it.
+                if position == self.cursor:
+                    style = CURSOR_STYLE if self.cursor_valid else CURSOR_BLOCKED_STYLE
+                elif position in self.blast:
+                    style = f"{style} on {BLAST_BACKGROUND}"
 
-                item = game.items.get(position)
-                if item is not None and visible:
-                    frame.append(item.char, style=f"bold {item.color}")
-                    continue
-
-                tile = tile_map.get(map_x, map_y)
-                if visible:
-                    frame.append(tile, style=TILE_STYLES.get(tile, DEFAULT_TILE_STYLE))
-                elif position in game.explored:
-                    frame.append(tile, style=MEMORY_STYLES.get(tile, "grey35"))
-                else:
-                    frame.append(UNSEEN)
+                frame.append(glyph, style=style)
         return frame
+
+    def _glyph_at(self, position, occupied) -> tuple[str, str]:
+        """The character and style for one map tile, under fog of war."""
+        game = self.game
+        visible = position in game.visible
+
+        if visible and position in occupied:
+            entity = occupied[position]
+            return entity.char, f"bold {entity.color}"
+
+        item = game.items.get(position)
+        if item is not None and visible:
+            return item.char, f"bold {item.color}"
+
+        tile = game.tile_map.get(*position)
+        if visible:
+            return tile, TILE_STYLES.get(tile, DEFAULT_TILE_STYLE)
+        if position in game.explored:
+            return tile, MEMORY_STYLES.get(tile, "grey35")
+        return UNSEEN, DEFAULT_TILE_STYLE
+
+
+class PromptBar(Static):
+    """A single line of instructions, shown only when the game is asking."""
+
+    def show(self, text: str) -> None:
+        self.update(text)
+        self.display = True
+
+    def hide(self) -> None:
+        self.update("")
+        self.display = False
 
 
 class MessageLog(Static):
@@ -303,11 +356,21 @@ class GameOverScreen(ModalScreen[None]):
             self.app.exit()
 
 
+@dataclass
+class Aiming:
+    """The player is picking a spot to throw a carried item at."""
+
+    index: int
+    item: Item
+    cursor: tuple[int, int]
+
+
 class TitleScreen(Screen):
     """The new game screen: a fresh seed, and the keys to play it with."""
 
     BINDINGS = [
         Binding("enter,space", "begin", "Begin"),
+        Binding("c", "continue_run", "Continue"),
         Binding("r", "reroll", "New seed"),
         Binding("q", "quit_app", "Quit"),
     ]
@@ -327,6 +390,10 @@ class TitleScreen(Screen):
             f"Seed  [b]{self.next_seed}[/b]  [dim](r — reroll)[/dim]",
             "",
             "[b]enter[/b]  begin the descent",
+        ]
+        if has_save(self.app.save_path):
+            lines.append("[b]c[/b]      continue your suspended run")
+        lines += [
             "[b]q[/b]      quit",
             "",
             "[dim]arrows/wasd move · i pack · > stairs · space wait[/dim]",
@@ -340,6 +407,21 @@ class TitleScreen(Screen):
 
     def action_begin(self) -> None:
         self.app.start_run(self.next_seed)
+
+    def action_continue_run(self) -> None:
+        """Pick a suspended run back up, and consume its save file."""
+        if not has_save(self.app.save_path):
+            return
+        try:
+            game = load_game(self.app.save_path)
+        except SaveError as error:
+            self.query_one("#title-panel", Static).update(
+                self._panel_text() + f"\n\n[rgb(240,140,140)]{error}[/]"
+            )
+            return
+        # Consumed on the way in: a run can be suspended, never rewound.
+        delete_save(self.app.save_path)
+        self.app.resume_run(game)
 
     def action_reroll(self) -> None:
         self.next_seed = random_seed()
@@ -359,14 +441,19 @@ class GameScreen(Screen):
         Binding("right,d,l", "move('right')", "Right"),
         Binding("space,period", "wait", "Wait"),
         Binding("i", "inventory", "Pack"),
+        Binding("enter", "confirm", "Throw", show=False),
+        Binding("tab", "next_target", "Next target", show=False),
+        Binding("escape", "cancel", "Cancel", show=False),
         Binding("greater_than_sign", "descend", "Descend"),
         Binding("n", "abandon", "New run"),
+        Binding("S", "suspend", "Save & exit"),
         Binding("q", "quit_app", "Quit"),
     ]
 
     def __init__(self, game: GameState) -> None:
         super().__init__()
         self.game = game
+        self.aiming: Aiming | None = None
         self._reported_death = False
 
     def compose(self) -> ComposeResult:
@@ -374,11 +461,13 @@ class GameScreen(Screen):
         with Horizontal(id="play-area"):
             with Vertical(id="left-column"):
                 yield MapView(self.game, id="map")
+                yield PromptBar("", id="prompt")
                 yield MessageLog(self.game, id="log")
             yield StatusPanel(self.game, id="status")
         yield Footer()
 
     def on_mount(self) -> None:
+        self.query_one(PromptBar).hide()
         self.redraw()
 
     def redraw(self) -> None:
@@ -390,17 +479,100 @@ class GameScreen(Screen):
 
         if self.game.game_over and not self._reported_death:
             self._reported_death = True
+            # Permadeath: whatever was suspended is gone with the run.
+            delete_save(self.app.save_path)
             self.app.push_screen(GameOverScreen(self.game))
 
     def action_move(self, direction: str) -> None:
+        if self.aiming is not None:
+            self._nudge_cursor(direction)
+            return
         if self.game.move_player_in_direction(direction):
             self.redraw()
 
     def action_wait(self) -> None:
+        if self.aiming is not None:
+            return
         if self.game.wait():
             self.redraw()
 
+    # -- aiming a thrown item --------------------------------------------
+
+    def begin_aiming(self, index: int) -> None:
+        """Start picking a spot for the item in pack slot ``index``."""
+        item = self.game.inventory.items[index]
+        reachable = self.game.targets_in_range(item.throw_range)
+        start = reachable[0].position if reachable else self.game.player.position
+        self.aiming = Aiming(index=index, item=item, cursor=start)
+        self._show_aim()
+
+    def _nudge_cursor(self, direction: str) -> None:
+        dx, dy = DIRECTIONS[direction]
+        cursor = (self.aiming.cursor[0] + dx, self.aiming.cursor[1] + dy)
+        if self.game.tile_map.in_bounds(*cursor):
+            self.aiming.cursor = cursor
+            self._show_aim()
+
+    def action_next_target(self) -> None:
+        """Jump the cursor to the next monster you could hit."""
+        if self.aiming is None:
+            return
+        reachable = self.game.targets_in_range(self.aiming.item.throw_range)
+        if not reachable:
+            return
+        positions = [monster.position for monster in reachable]
+        if self.aiming.cursor in positions:
+            following = positions.index(self.aiming.cursor) + 1
+            self.aiming.cursor = positions[following % len(positions)]
+        else:
+            self.aiming.cursor = positions[0]
+        self._show_aim()
+
+    def action_confirm(self) -> None:
+        """Throw at the current cursor, if it is somewhere reachable."""
+        if self.aiming is None:
+            return
+        aiming = self.aiming
+        if not self.game.can_target(aiming.cursor, aiming.item.throw_range):
+            self.query_one(PromptBar).show(
+                "[rgb(240,140,140)]No clear shot there.[/] "
+                "[dim]arrows aim · tab next · esc cancel[/dim]"
+            )
+            return
+        self.end_aiming()
+        self.game.use_item(aiming.index, aiming.cursor)
+        self.redraw()
+
+    def action_cancel(self) -> None:
+        if self.aiming is None:
+            return
+        self.end_aiming()
+        self.game.log("You put it away.", "grey70")
+        self.redraw()
+
+    def end_aiming(self) -> None:
+        self.aiming = None
+        self.query_one(MapView).aim_at(None)
+        self.query_one(PromptBar).hide()
+
+    def _show_aim(self) -> None:
+        """Repaint the aiming overlay and its instructions."""
+        aiming = self.aiming
+        valid = self.game.can_target(aiming.cursor, aiming.item.throw_range)
+        blast = (
+            self.game.blast_tiles(aiming.cursor, aiming.item.blast_radius)
+            if valid
+            else set()
+        )
+        self.query_one(MapView).aim_at(aiming.cursor, blast, valid)
+        self.query_one(PromptBar).show(
+            f"[b]Aiming {aiming.item.name}[/b] "
+            "[dim]arrows aim · tab next target · enter throw · esc cancel[/dim]"
+        )
+
     def action_descend(self) -> None:
+        if self.aiming is not None:
+            return
         # Always redraw: a refused descent still logs why.
         self.game.descend()
         self.redraw()
@@ -408,15 +580,37 @@ class GameScreen(Screen):
     def action_inventory(self) -> None:
         """Open the pack, and use whatever the player picks."""
 
+        if self.aiming is not None:
+            return
+
         def use_choice(index: int | None) -> None:
-            if index is not None:
-                self.game.use_item(index)
+            if index is None:
+                self.redraw()
+                return
+            if self.game.inventory.items[index].needs_target:
+                self.begin_aiming(index)
+                return
+            self.game.use_item(index)
             self.redraw()
 
         self.app.push_screen(InventoryScreen(self.game), use_choice)
 
+    def action_suspend(self) -> None:
+        """Write the run to disk and step out to the title screen."""
+        if self.aiming is not None or self.game.game_over:
+            return
+        try:
+            save_game(self.game, self.app.save_path)
+        except OSError as error:
+            self.game.log(f"Could not save: {error}", "rgb(240,140,140)")
+            self.redraw()
+            return
+        self.app.return_to_title()
+
     def action_abandon(self) -> None:
         """Give up on this run and go back to the new game screen."""
+        if self.aiming is not None:
+            return
         self.app.return_to_title(self.game if self.game.game_over else None)
 
     def action_quit_app(self) -> None:
@@ -442,6 +636,12 @@ class RoguelikeApp(App):
         width: 1fr;
         height: 1fr;
         background: rgb(16,16,22);
+    }
+    PromptBar {
+        width: 1fr;
+        height: 1;
+        padding: 0 2;
+        background: rgb(46,40,30);
     }
     MessageLog {
         width: 1fr;
@@ -484,8 +684,14 @@ class RoguelikeApp(App):
     }
     """
 
-    def __init__(self, seed: int | None = None) -> None:
+    def __init__(
+        self,
+        seed: int | None = None,
+        save_path=DEFAULT_SAVE_PATH,
+    ) -> None:
         super().__init__()
+        #: Where a suspended run is kept.
+        self.save_path = save_path
         #: The run in progress, or None while on the title screen.
         self.game: GameState | None = None
         #: Stats from the last finished run, shown on the title screen.
@@ -499,6 +705,11 @@ class RoguelikeApp(App):
         """Begin a run and hand over to the game screen."""
         self.game = GameState.new_game(seed=seed)
         self.switch_screen(GameScreen(self.game))
+
+    def resume_run(self, game: GameState) -> None:
+        """Carry on a run loaded from disk."""
+        self.game = game
+        self.switch_screen(GameScreen(game))
 
     def return_to_title(self, finished: GameState | None = None) -> None:
         """Report a finished run, then offer a fresh seed."""

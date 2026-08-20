@@ -15,6 +15,7 @@ from random import Random
 from .combat import resolve_attack
 from .entities import (
     Actor,
+    Behaviour,
     Player,
     make_player,
     templates_for_floor,
@@ -347,8 +348,16 @@ class GameState:
         self._end_turn()
         return True
 
-    def use_item(self, index: int) -> bool:
-        """Use the item in pack slot ``index``. True when a turn was spent."""
+    def use_item(
+        self,
+        index: int,
+        target: tuple[int, int] | None = None,
+    ) -> bool:
+        """Use the item in pack slot ``index``. True when a turn was spent.
+
+        Items that must be aimed take a ``target`` tile; without one they do
+        nothing, so the interface has to ask before calling this.
+        """
         if self.game_over or not 0 <= index < len(self.inventory):
             return False
 
@@ -356,12 +365,51 @@ class GameState:
         # Take it out first so an effect that stows a swapped-out weapon has
         # room for it, then put it back if nothing actually happened.
         self.inventory.remove(item)
-        if not item.use(self):
+        if not item.use(self, target):
             self.inventory.add(item)
             return False
 
         self._end_turn()
         return True
+
+    # -- aiming ----------------------------------------------------------
+
+    def can_target(self, position: tuple[int, int], throw_range: int) -> bool:
+        """True when ``position`` is somewhere the player could throw to.
+
+        It has to be in view — which already means nothing solid is in the way —
+        and inside the throwing range.
+        """
+        if position not in self.visible:
+            return False
+        distance = max(
+            abs(position[0] - self.player.x), abs(position[1] - self.player.y)
+        )
+        return distance <= throw_range
+
+    def targets_in_range(self, throw_range: int) -> list[Actor]:
+        """Monsters that could be hit from here, nearest first."""
+        return sorted(
+            (
+                monster
+                for monster in self.visible_monsters()
+                if self.can_target(monster.position, throw_range)
+            ),
+            key=lambda monster: monster.distance_to(self.player),
+        )
+
+    def blast_tiles(
+        self,
+        target: tuple[int, int],
+        blast_radius: int,
+    ) -> set[tuple[int, int]]:
+        """Every tile an impact at ``target`` would cover."""
+        return {
+            (target[0] + dx, target[1] + dy)
+            for dy in range(-blast_radius, blast_radius + 1)
+            for dx in range(-blast_radius, blast_radius + 1)
+            if self.tile_map.in_bounds(target[0] + dx, target[1] + dy)
+        }
 
     def descend(self) -> bool:
         """Take the stairs down to a deeper, meaner floor."""
@@ -463,13 +511,40 @@ class GameState:
                 self._take_monster_turn(monster)
 
     def _take_monster_turn(self, monster: Actor) -> None:
-        """Attack the player if adjacent, else close in while it can see them."""
+        """One monster's turn, according to how its species behaves."""
+        behaviour = getattr(monster, "behaviour", Behaviour.HUNTER)
+
+        if behaviour is Behaviour.SLOW:
+            # Heavy things act every other turn; the skipped one is its rest.
+            monster.resting = not monster.resting
+            if monster.resting:
+                return
+
+        sees_player = self._can_see_player(monster)
+        if sees_player:
+            monster.last_seen = self.player.position
+
+        # A wounded skittish monster wants distance, not a fight.
+        fleeing = behaviour is Behaviour.SKITTISH and monster.is_hurt
+        if fleeing and (sees_player or self._is_adjacent(monster, self.player)):
+            self._step_away(monster, self.player.position)
+            return
+
         if self._is_adjacent(monster, self.player):
             self._monster_attacks(monster)
             return
-        if not self._can_see_player(monster):
+
+        if sees_player:
+            self._step_toward(monster, self.player.position)
             return
-        self._step_toward(monster, self.player.position)
+
+        # Out of sight. Only a stalker keeps going, heading for where the
+        # player was when it lost them.
+        if behaviour is Behaviour.STALKER and monster.last_seen is not None:
+            if monster.position == monster.last_seen:
+                monster.last_seen = None
+                return
+            self._step_toward(monster, monster.last_seen)
 
     def _can_see_player(self, monster: Actor) -> bool:
         radius = getattr(monster, "sight_radius", 8)
@@ -498,6 +573,16 @@ class GameState:
             if self._is_open_for_monster(new_x, new_y):
                 monster.move_to(new_x, new_y)
                 return
+
+    def _step_away(self, monster: Actor, threat: tuple[int, int]) -> None:
+        """Back off one tile from ``threat``, if there is anywhere to go."""
+        away_x = monster.x - threat[0]
+        away_y = monster.y - threat[1]
+        target = (
+            monster.x + (1 if away_x > 0 else -1 if away_x else 0),
+            monster.y + (1 if away_y > 0 else -1 if away_y else 0),
+        )
+        self._step_toward(monster, target)
 
     def _monster_attacks(self, monster: Actor) -> None:
         result = resolve_attack(monster, self.player)

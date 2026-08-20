@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle guard
@@ -91,11 +92,42 @@ class Player(Actor):
         return previous
 
 
+class Behaviour(str, Enum):
+    """How a species acts on its turn.
+
+    Stats alone make deeper monsters bigger; behaviour is what makes them feel
+    different to fight.
+    """
+
+    #: Walks straight at the player whenever it can see them.
+    HUNTER = "hunter"
+    #: Hunts while healthy, but breaks and runs once badly hurt.
+    SKITTISH = "skittish"
+    #: Heavy and slow: acts only every other turn, but hits hard.
+    SLOW = "slow"
+    #: Remembers where the player was and keeps coming after losing sight.
+    STALKER = "stalker"
+
+
+#: A skittish monster runs once its health drops below this fraction.
+FLEE_THRESHOLD = 0.35
+
+
 @dataclass
 class Monster(Actor):
     """A hostile actor that hunts the player on sight."""
 
     sight_radius: int = 8
+    behaviour: Behaviour = Behaviour.HUNTER
+    #: Where the player was last seen, for a stalker that lost them.
+    last_seen: tuple[int, int] | None = None
+    #: Set on the turns a slow monster spends catching its breath.
+    resting: bool = False
+
+    @property
+    def is_hurt(self) -> bool:
+        """True once this monster is wounded badly enough to lose its nerve."""
+        return self.hp <= self.max_hp * FLEE_THRESHOLD
 
 
 @dataclass(frozen=True)
@@ -109,6 +141,7 @@ class MonsterTemplate:
     attack: int
     defense: int
     sight_radius: int = 8
+    behaviour: Behaviour = Behaviour.HUNTER
     min_floor: int = 1
     #: Last floor this species is still found on; None means all the way down.
     max_floor: int | None = None
@@ -134,6 +167,7 @@ class MonsterTemplate:
             attack=self.attack + depth // 3,
             defense=self.defense,
             sight_radius=self.sight_radius,
+            behaviour=self.behaviour,
         )
 
 
@@ -141,24 +175,27 @@ MONSTER_TEMPLATES: tuple[MonsterTemplate, ...] = (
     MonsterTemplate(
         name="Rat", char="r", color="rgb(150,140,120)",
         hp=4, attack=2, defense=0, sight_radius=6,
-        min_floor=1, max_floor=5, weight=10,
+        behaviour=Behaviour.SKITTISH, min_floor=1, max_floor=5, weight=10,
     ),
     MonsterTemplate(
         name="Goblin", char="g", color="rgb(110,190,90)",
         hp=8, attack=3, defense=0, sight_radius=8,
-        min_floor=1, max_floor=8, weight=8,
+        behaviour=Behaviour.HUNTER, min_floor=1, max_floor=8, weight=8,
     ),
     MonsterTemplate(
         name="Orc", char="o", color="rgb(220,110,80)",
-        hp=12, attack=5, defense=1, sight_radius=8, min_floor=2, weight=8,
+        hp=12, attack=5, defense=1, sight_radius=8,
+        behaviour=Behaviour.HUNTER, min_floor=2, weight=8,
     ),
     MonsterTemplate(
         name="Ogre", char="O", color="rgb(200,80,140)",
-        hp=16, attack=6, defense=2, sight_radius=8, min_floor=4, weight=6,
+        hp=20, attack=10, defense=2, sight_radius=8,
+        behaviour=Behaviour.SLOW, min_floor=4, weight=6,
     ),
     MonsterTemplate(
         name="Wraith", char="W", color="rgb(160,140,235)",
-        hp=18, attack=7, defense=3, sight_radius=11, min_floor=6, weight=6,
+        hp=18, attack=7, defense=3, sight_radius=11,
+        behaviour=Behaviour.STALKER, min_floor=6, weight=6,
     ),
 )
 
