@@ -20,6 +20,7 @@ from .entities import (
     make_player,
     templates_for_floor,
     with_article,
+    xp_value,
 )
 from .fov import compute_fov, line_of_sight
 from .inventory import Inventory, Item, ItemKind, item_templates_for_floor
@@ -83,6 +84,8 @@ class GameState:
     turns: int = 0
     kills: int = 0
     items_found: int = 0
+    #: Total experience earned this run, for the closing report.
+    xp_earned: int = 0
     game_over: bool = False
     #: What landed the killing blow, once the run is over.
     killed_by: str | None = None
@@ -469,6 +472,18 @@ class GameState:
         if monster in self.entities:
             self.entities.remove(monster)
         self.log(f"The {monster.name} dies!", "rgb(120,220,160)")
+        self._award_xp(monster)
+
+    def _award_xp(self, monster: Actor) -> None:
+        """Credit the player for a kill, announcing any level gained."""
+        earned = xp_value(monster)
+        self.xp_earned += earned
+        for _ in range(self.player.gain_xp(earned)):
+            self.log(
+                f"You reach level {self.player.level}! "
+                f"Max HP {self.player.max_hp}, attack {self.player.attack}.",
+                "bold rgb(255,225,140)",
+            )
 
     def hurt_player(self, amount: int, source: str) -> int:
         """Damage the player, remembering what did it in case it kills them."""
@@ -618,6 +633,8 @@ class GameState:
         return [
             ("Floors cleared", str(self.floors_cleared)),
             ("Deepest floor", str(self.floor)),
+            ("Character level", str(self.player.level)),
+            ("Experience", str(self.xp_earned)),
             ("Monsters slain", str(self.kills)),
             ("Turns survived", str(self.turns)),
             ("Items found", str(self.items_found)),

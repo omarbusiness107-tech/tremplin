@@ -24,9 +24,10 @@ blast it would cover:
 
 All ten roadmap steps are complete, and so are the five stretch goals. A run goes:
 pick a seed, descend, explore under fog of war, fight things that each hunt you
-differently, gear up from what you find, take the stairs into something worse, and
-eventually die — permanently — to a screen that tells you how far you got. You can
-suspend a run to disk and pick it up later, but you cannot rewind one.
+differently, level up on what you kill, gear up from what you find, take the stairs
+into something worse, and eventually die — permanently — to a screen that tells you
+how far you got. You can suspend a run to disk and pick it up later, but you cannot
+rewind one.
 
 - [x] 1. Project scaffold
 - [x] 2. Dungeon generation (BSP rooms + corridors, seeded)
@@ -46,6 +47,11 @@ suspend a run to disk and pick it up later, but you cannot rewind one.
 - [x] Enemy variety — different stats *and* behaviours per floor depth
 - [x] Message log panel (combat, pickups, deaths)
 - [x] Colorized tiles and entities via Textual styling
+
+### Beyond the brief
+
+- [x] Character progression — experience, levels, and stat gains, so the player's
+      power curve keeps pace with the dungeon's
 
 ## Quick start
 
@@ -141,9 +147,28 @@ you can actually see them.
     ├── test_behaviour.py    # how each species spends its turn
     ├── test_ranged.py       # aiming, blast radius, and refused throws
     ├── test_persistence.py  # JSON round trips and refusing bad saves
+    ├── test_progression.py  # experience, levels, and the difficulty curve
     ├── test_combat_inventory.py
     └── test_app.py          # drives the real app headlessly
 ```
+
+## Levelling
+
+Killing things earns experience, worth more for tougher monsters and for the
+harder specimens found deeper down. Experience is derived from the stats a
+monster actually spawned with rather than a number on the species, so the tables
+only need one set of figures.
+
+Each level grants:
+
+| | |
+|---|---|
+| Maximum health | `+5`, granted as healing too, so a hard-won kill can carry you into the next fight |
+| Attack | `+1` every second level |
+| Defense | `+1` every third level |
+
+Each level costs more than the one before it (`60 × current level`), so
+progression slows without ever stopping.
 
 ## Design notes
 
@@ -195,6 +220,9 @@ you can actually see them.
   each species also spends its turn differently: rats break and run when hurt,
   ogres act every other turn but hit like a truck, and wraiths remember where
   you were and keep coming after they lose sight of you.
+- **Progression is balanced against the dungeon, not just added to it.** Levelling
+  raises the player's ceiling, so monsters gain attack with absolute depth to
+  match. Without that second half, descending made the game *easier* — see below.
 - **Aiming.** Throwing is a mode on the game screen rather than another screen,
   because the map underneath has to stay visible and keep updating. While it is
   active the movement keys drive a cursor instead of the player, and every other
@@ -207,12 +235,13 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-506 tests. The suite covers the generator (determinism, no overlapping rooms,
+538 tests. The suite covers the generator (determinism, no overlapping rooms,
 flood-filled connectivity across 50 seeds), the FOV algorithm (shadows, gaps,
 radius limits), the turn loop, per-species AI, items, ranged throws, descent,
-run stats and JSON round trips on hand-drawn ASCII maps, and a set of end-to-end
-tests that drive the real Textual app headlessly — through the title screen, a
-run, aiming and throwing, suspending and resuming, death, and back again.
+levelling, run stats and JSON round trips on hand-drawn ASCII maps, and a set of
+end-to-end tests that drive the real Textual app headlessly — through the title
+screen, a run, aiming and throwing, suspending and resuming, death, and back
+again. Two of them guard the difficulty curve itself.
 
 Because everything random comes from the seeded `GameState.rng`, a whole run
 replays exactly: the same seed plus the same key presses gives the same result,
@@ -243,9 +272,43 @@ get further.
 
 Adding thrown items and per-species behaviours later did not move that number:
 flasks of fire give the player real burst damage, but slow ogres and stalking
-wraiths push back, and the bot still lands on floors 2–4.
+wraiths push back, and the bot still landed on floors 2–4.
 
-One thing none of it solves: the player's maximum HP never grows, so the very
-deep floors stay out of reach. Closing that gap needs a character progression
-mechanic (XP levels, or HP gained per floor), which is a design decision rather
-than a tuning one, so it is left alone for now.
+### Levelling, and the trap in it
+
+The player's maximum health used to be fixed at 30 for a whole run, which put the
+deep floors permanently out of reach. Character levels fixed that — but the first
+version overcorrected, and not in a way the bot revealed: it went *deeper*
+(floors 2–7), which looked like a success.
+
+Working out the cost of the nastiest fight on each floor told the real story:
+
+```
+floor      1     2     3     4     5     6     7     8
+before    13%   22%   14%   17%   15%   13%   12%   11%
+```
+
+Descending was making the game *easier*. The player's `+5` health a level was
+outrunning the monsters' `+1` health per floor since their species arrived, so
+by floor 8 the worst thing down there cost half what a floor-2 orc did. The bot
+only died to attrition — enough monsters, eventually — rather than to anything
+being dangerous.
+
+The fix came from a small parameter search over the player's per-level gains and
+the monsters' per-floor gains, scoring each combination on how many floors landed
+in a 20–32% band and whether danger held steady with depth. It settled on `+5`
+health a level for the player, and one more point of attack for everything living
+two floors further down:
+
+```
+floor      1     2     3     4     5     6     7     8
+after     13%   23%   20%   20%   20%   22%   23%   22%
+```
+
+The bot now reaches floors 2–6 rather than 2–4, with the deepest species finally
+in play, and two tests keep it that way: one asserts the worst fight on every
+floor stays inside that band, and one asserts danger never fades with depth.
+
+Still unsolved, and inherent to the bot rather than the balance: it walks straight
+at everything it sees and never retreats, so it is a floor on what the game
+allows, not a ceiling.

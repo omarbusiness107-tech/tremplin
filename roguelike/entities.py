@@ -79,6 +79,40 @@ class Player(Actor):
     #: Attack with bare hands, before any weapon.
     base_attack: int = 5
     weapon: "Item | None" = None
+    #: Character level, and experience earned towards the next one.
+    level: int = 1
+    xp: int = 0
+
+    @property
+    def xp_to_next_level(self) -> int:
+        """Experience still needed before the next level."""
+        return max(0, xp_for_level(self.level) - self.xp)
+
+    def gain_xp(self, amount: int) -> int:
+        """Bank ``amount`` experience, returning how many levels it bought.
+
+        Levelling grants health outright as well as raising the maximum, so a
+        hard-won kill can be what carries you into the next fight.
+        """
+        if amount <= 0:
+            return 0
+        self.xp += amount
+        gained = 0
+        while self.xp >= xp_for_level(self.level):
+            self.xp -= xp_for_level(self.level)
+            self.level += 1
+            gained += 1
+            self._apply_level_bonuses()
+        return gained
+
+    def _apply_level_bonuses(self) -> None:
+        self.max_hp += HP_PER_LEVEL
+        self.hp += HP_PER_LEVEL
+        if self.level % LEVELS_PER_ATTACK == 0:
+            self.base_attack += 1
+        if self.level % LEVELS_PER_DEFENSE == 0:
+            self.defense += 1
+        self.refresh_attack()
 
     def refresh_attack(self) -> None:
         """Recompute ``attack`` from the base value and the wielded weapon."""
@@ -111,6 +145,35 @@ class Behaviour(str, Enum):
 
 #: A skittish monster runs once its health drops below this fraction.
 FLEE_THRESHOLD = 0.35
+
+#: Every this many floors down, everything that lives there hits one harder.
+DEPTH_PER_ATTACK = 2
+
+# -- character progression -------------------------------------------------
+
+#: Experience needed to leave level N is ``XP_PER_LEVEL * N``, so each level
+#: costs more than the one before it.
+XP_PER_LEVEL = 60
+#: Maximum health gained with every level, granted as healing too.
+HP_PER_LEVEL = 5
+#: A point of attack every this many levels, and a point of defense likewise.
+LEVELS_PER_ATTACK = 2
+LEVELS_PER_DEFENSE = 3
+
+
+def xp_for_level(level: int) -> int:
+    """Experience needed to advance from ``level`` to the next one."""
+    return XP_PER_LEVEL * level
+
+
+def xp_value(monster: "Actor") -> int:
+    """What killing ``monster`` is worth.
+
+    Derived from the stats it actually spawned with rather than a number on the
+    species, so the tougher specimens found deeper down are worth more without
+    the tables needing a second set of figures.
+    """
+    return monster.max_hp + monster.attack * 2 + monster.defense * 3
 
 
 @dataclass
@@ -152,7 +215,9 @@ class MonsterTemplate:
 
         A species keeps appearing for several floors after it first shows up,
         so the ones met deeper down are veterans: a little more HP, and more
-        damage every third floor.
+        damage every third floor. On top of that everything hits harder the
+        further down it is found, which is what keeps pace with the player's
+        own levelling — without it, descending would make the game easier.
         """
         depth = max(0, floor - self.min_floor)
         hp = self.hp + depth
@@ -164,7 +229,7 @@ class MonsterTemplate:
             color=self.color,
             hp=hp,
             max_hp=hp,
-            attack=self.attack + depth // 3,
+            attack=self.attack + depth // 3 + (floor - 1) // DEPTH_PER_ATTACK,
             defense=self.defense,
             sight_radius=self.sight_radius,
             behaviour=self.behaviour,

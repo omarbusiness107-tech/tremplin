@@ -20,7 +20,13 @@ from textual.screen import ModalScreen, Screen
 from textual.widget import Widget
 from textual.widgets import Footer, Header, Static
 
-from .game import DIRECTIONS, GameState, camera_origin, random_seed
+from .entities import xp_for_level
+from .game import (
+    DIRECTIONS,
+    GameState,
+    camera_origin,
+    random_seed,
+)
 from .inventory import Inventory, Item
 from .map_gen import DOOR, FLOOR, STAIRS_DOWN, WALL
 from .persistence import (
@@ -190,6 +196,9 @@ class StatusPanel(Static):
     """Sidebar: health, gear, what is carried, and what is nearby."""
 
     BAR_WIDTH = 11
+    #: Distinct glyphs, so a meter still reads correctly without colour.
+    BAR_FULL = "█"
+    BAR_EMPTY = "░"
     RULE = "[rgb(60,60,75)]" + "─" * PANEL_WIDTH + "[/]"
     PACK_PREVIEW = 4
     NEARBY_PREVIEW = 4
@@ -198,10 +207,19 @@ class StatusPanel(Static):
         super().__init__(**kwargs)
         self.game = game
 
+    def _bar(self, label: str, current: int, maximum: int, color: str) -> str:
+        """One labelled meter: ``HP ███████░░░ 22/54``."""
+        ratio = max(current, 0) / maximum if maximum else 0.0
+        filled = round(min(ratio, 1.0) * self.BAR_WIDTH)
+        bar = (
+            f"[{color}]{self.BAR_FULL * filled}[/]"
+            f"[rgb(78,78,92)]{self.BAR_EMPTY * (self.BAR_WIDTH - filled)}[/]"
+        )
+        return f"{label} {bar} [b]{max(current, 0)}[/b]/{maximum}"
+
     def _health_bar(self) -> str:
         player = self.game.player
         ratio = max(player.hp, 0) / player.max_hp if player.max_hp else 0.0
-        filled = round(ratio * self.BAR_WIDTH)
         color = (
             "rgb(120,220,140)"
             if ratio > 0.5
@@ -209,11 +227,13 @@ class StatusPanel(Static):
             if ratio > 0.25
             else "rgb(230,90,90)"
         )
-        bar = (
-            f"[{color}]{'█' * filled}[/]"
-            f"[rgb(60,60,72)]{'█' * (self.BAR_WIDTH - filled)}[/]"
+        return self._bar("HP", player.hp, player.max_hp, color)
+
+    def _xp_bar(self) -> str:
+        player = self.game.player
+        return self._bar(
+            "XP", player.xp, xp_for_level(player.level), "rgb(160,150,240)"
         )
-        return f"HP {bar} [b]{max(player.hp, 0)}[/b]/{player.max_hp}"
 
     def _pack_lines(self) -> list[str]:
         pack = self.game.inventory
@@ -244,10 +264,14 @@ class StatusPanel(Static):
         player = game.player
         weapon = player.weapon.name if player.weapon else "bare hands"
 
+        heading = f"FLOOR {game.floor}"
+        level = f"LVL {player.level}"
+        gap = " " * max(1, PANEL_WIDTH - len(heading) - len(level))
         lines = [
-            f"[b]FLOOR {game.floor}[/b]",
+            f"[b]{heading}[/b]{gap}[b rgb(160,150,240)]{level}[/]",
             self.RULE,
             self._health_bar(),
+            self._xp_bar(),
             f"ATK [b]{player.attack}[/b]    DEF [b]{player.defense}[/b]",
             f"[dim]{fit(weapon)}[/dim]",
             "",

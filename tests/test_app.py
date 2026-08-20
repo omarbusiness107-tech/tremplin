@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 
-from roguelike.entities import MONSTER_TEMPLATES
+from roguelike.entities import MONSTER_TEMPLATES, xp_for_level
 from roguelike.inventory import ITEM_TEMPLATES
 from roguelike.main import (
     GameOverScreen,
@@ -813,5 +813,94 @@ def test_a_finished_run_cannot_be_suspended(tmp_path):
             await pilot.press("S")
             await pilot.pause()
             assert not save.is_file()
+
+    drive(scenario)
+
+
+# -- levelling in the interface (stretch: character progression) ----------
+
+
+def test_the_status_panel_shows_level_and_experience():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=SIZE) as pilot:
+            game = await start(pilot)
+            status = app.screen.query_one(StatusPanel)
+            status.refresh_status()
+            text = status.render().plain
+
+            assert "LVL 1" in text
+            assert "XP" in text
+            assert f"0/{xp_for_level(1)}" in text
+
+            game.player.gain_xp(xp_for_level(1) + 10)
+            status.refresh_status()
+            text = status.render().plain
+            assert "LVL 2" in text
+            assert f"10/{xp_for_level(2)}" in text
+            assert f"{game.player.hp}/{game.player.max_hp}" in text
+
+    drive(scenario)
+
+
+def test_the_game_over_report_includes_the_level_reached():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=SIZE) as pilot:
+            game = await start(pilot)
+            game.player.gain_xp(xp_for_level(1) + xp_for_level(2))
+            game.xp_earned = 500
+            await kill_the_player(pilot)
+
+            text = panel(app, "#game-over-panel")
+            assert "Character level" in text and "3" in text
+            assert "Experience" in text and "500" in text
+
+    drive(scenario)
+
+
+def test_levelling_up_is_reported_in_the_log():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=SIZE) as pilot:
+            game = await start(pilot)
+            game.entities.clear()
+            game.entities.append(
+                MONSTERS["Goblin"].spawn(game.player.x + 1, game.player.y, floor=1)
+            )
+            game.update_fov()
+            game.player.gain_xp(xp_for_level(1) - 1)  # one kill from levelling
+
+            for _ in range(6):
+                await pilot.press("right")
+            await pilot.pause()
+
+            assert game.player.level == 2
+            log = app.screen.query_one(MessageLog)
+            log.refresh_log()
+            assert "level 2" in log.render().plain
+
+    drive(scenario)
+
+
+def test_the_meters_read_correctly_without_colour():
+    """Filled and empty use different glyphs, not just different colours."""
+
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=SIZE) as pilot:
+            game = await start(pilot)
+            game.player.take_damage(game.player.max_hp // 2)
+            status = app.screen.query_one(StatusPanel)
+            status.refresh_status()
+
+            lines = status.render().plain.splitlines()
+            health = next(line for line in lines if line.startswith("HP"))
+            experience = next(line for line in lines if line.startswith("XP"))
+
+            assert StatusPanel.BAR_EMPTY in health, "a half-empty bar looks full"
+            # No experience earned yet, so that meter is empty end to end.
+            assert StatusPanel.BAR_FULL not in experience
+            assert experience.count(StatusPanel.BAR_EMPTY) == StatusPanel.BAR_WIDTH
 
     drive(scenario)

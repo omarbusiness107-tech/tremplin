@@ -22,7 +22,7 @@ from .inventory import Inventory, Item, ItemKind
 from .map_gen import Rect, TileMap
 
 #: Bumped whenever the layout below changes; older files are refused.
-SAVE_VERSION = 1
+SAVE_VERSION = 2
 
 #: Where a suspended run is kept, relative to the working directory.
 DEFAULT_SAVE_PATH = Path("savegame.json")
@@ -108,6 +108,8 @@ def player_to_dict(player: Player) -> dict:
         "attack": player.attack,
         "defense": player.defense,
         "base_attack": player.base_attack,
+        "level": player.level,
+        "xp": player.xp,
         "weapon": item_to_dict(player.weapon) if player.weapon else None,
     }
 
@@ -121,6 +123,8 @@ def player_from_dict(data: dict) -> Player:
         attack=data["attack"],
         defense=data["defense"],
         base_attack=data["base_attack"],
+        level=data["level"],
+        xp=data["xp"],
     )
     if data["weapon"]:
         player.weapon = item_from_dict(data["weapon"])
@@ -177,6 +181,7 @@ def game_to_dict(game: GameState) -> dict:
         "turns": game.turns,
         "kills": game.kills,
         "items_found": game.items_found,
+        "xp_earned": game.xp_earned,
         "game_over": game.game_over,
         "killed_by": game.killed_by,
         "width": game.width,
@@ -219,6 +224,7 @@ def game_from_dict(data: dict) -> GameState:
         turns=data["turns"],
         kills=data["kills"],
         items_found=data["items_found"],
+        xp_earned=data["xp_earned"],
         game_over=data["game_over"],
         killed_by=data["killed_by"],
         width=data["width"],
