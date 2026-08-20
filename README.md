@@ -7,11 +7,19 @@ time by torchlight — with things in the dark that hunt you.
 
 ![The game in play](docs/screenshot.svg)
 
+A run moves through three screens — the title screen picks a seed, the game screen
+plays it out, and the game over screen reports how it went before handing back a
+fresh seed.
+
+| | |
+|---|---|
+| ![Title screen](docs/title.svg) | ![Game over](docs/game-over.svg) |
+
 ## Status
 
-Steps 1–8 of the roadmap are complete and playable end to end: generate a dungeon,
-explore it under fog of war, fight monsters, gear up from what you find, and take
-the stairs down into something worse.
+All ten roadmap steps are complete. A run goes: pick a seed, descend, explore under
+fog of war, fight, gear up from what you find, take the stairs into something worse,
+and eventually die — permanently — to a screen that tells you how far you got.
 
 - [x] 1. Project scaffold
 - [x] 2. Dungeon generation (BSP rooms + corridors, seeded)
@@ -21,9 +29,8 @@ the stairs down into something worse.
 - [x] 6. Entities & combat (chase-on-sight AI, bump-to-attack, death)
 - [x] 7. Inventory & items (potions, weapons, scrolls; walk-over pickup, `i` to open)
 - [x] 8. Stairs & floor progression (`>` descends into a harder floor)
-- [ ] 9. Permadeath + game over screen (death already ends the run; the stats
-      screen comes with this step)
-- [ ] 10. Status panel (a working one already ships; it grows with the features above)
+- [x] 9. Permadeath + game over screen (run stats, then a fresh seed)
+- [x] 10. Status panel (health, gear, pack, and what is nearby)
 
 ## Quick start
 
@@ -48,8 +55,10 @@ command on your PATH.
 | `Space` `.` | Wait a turn |
 | `I` | Open the pack (`a`-`p` to drink or wield, `esc` to close) |
 | `>` | Take the stairs down |
-| `N` | Abandon this run, roll a new dungeon |
+| `N` | Abandon this run, back to the title screen |
 | `Q` | Quit |
+
+On the title screen, `Enter` begins and `R` rolls a different seed.
 
 Walking into a monster attacks it. Every action you take — moving, attacking, or
 waiting — gives the dungeon a turn back.
@@ -90,10 +99,12 @@ you can actually see them.
 │   ├── combat.py            # melee damage resolution
 │   ├── inventory.py         # items, their effects, and the pack
 │   ├── game.py              # GameState: the whole run, turn loop, AI, camera
-│   └── main.py              # Textual app: MapView, MessageLog, StatusPanel
+│   └── main.py              # Textual app: screens, MapView, log, status panel
 ├── docs/
-│   ├── screenshot.svg       # captured from a real session
-│   └── inventory.svg
+│   ├── screenshot.svg       # all captured from real sessions
+│   ├── title.svg
+│   ├── inventory.svg
+│   └── game-over.svg
 └── tests/
     ├── helpers.py           # build a GameState from an ASCII drawing
     ├── test_map_gen.py      # determinism, structure, connectivity
@@ -102,6 +113,7 @@ you can actually see them.
     ├── test_ai_combat.py    # fog of war, monster AI, combat, death
     ├── test_items.py        # pickup, potions, weapons, scrolls, spawning
     ├── test_floors.py       # stairs, descending, the difficulty curve
+    ├── test_run_stats.py    # permadeath, what killed you, the run summary
     ├── test_combat_inventory.py
     └── test_app.py          # drives the real app headlessly
 ```
@@ -137,6 +149,16 @@ you can actually see them.
   entrance; the player object itself is untouched, so it serves both the start
   of a run and arrival on a deeper floor. Stairs go in the room furthest from
   the entrance, so a floor cannot be crossed in a couple of steps.
+- **Screens.** The title, game, inventory, and game over screens are separate
+  Textual screens, so only one of them can be driven at a time — you cannot walk
+  the dungeon with the pack open, or from behind the game over report. The two
+  modal screens handle their keys in `on_key` rather than as bindings, because
+  stopping an event (which is what keeps it off the dungeon below) also stops it
+  before binding processing.
+- **Permadeath.** There is no save file and no continue. `GameState` refuses
+  every action once `game_over` is set, and a new run builds a whole new
+  `GameState` — nothing is carried across but the summary shown on the title
+  screen.
 
 ## Development
 
@@ -145,10 +167,11 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-405 tests. The suite covers the generator (determinism, no overlapping rooms,
+428 tests. The suite covers the generator (determinism, no overlapping rooms,
 flood-filled connectivity across 50 seeds), the FOV algorithm (shadows, gaps,
-radius limits), the turn loop, AI, items and descent on hand-drawn ASCII maps,
-and a set of end-to-end tests that drive the real Textual app headlessly.
+radius limits), the turn loop, AI, items, descent and run stats on hand-drawn
+ASCII maps, and a set of end-to-end tests that drive the real Textual app
+headlessly — through the title screen, a run, death, and back again.
 
 Because everything random comes from the seeded `GameState.rng`, a whole run
 replays exactly: the same seed plus the same key presses gives the same result,

@@ -140,7 +140,7 @@ def _scroll_blessing(game: GameState) -> None:
 
 
 def _scroll_backfire(game: GameState) -> None:
-    game.player.take_damage(BACKFIRE_DAMAGE)
+    game.hurt_player(BACKFIRE_DAMAGE, "their own scroll")
     game.log(
         f"The scroll backfires, searing you for {BACKFIRE_DAMAGE} damage!",
         "rgb(255,120,120)",

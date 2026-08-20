@@ -12,8 +12,14 @@ import random
 from dataclasses import dataclass, field
 from random import Random
 
-from .combat import damage_for, resolve_attack
-from .entities import Actor, Player, make_player, templates_for_floor
+from .combat import resolve_attack
+from .entities import (
+    Actor,
+    Player,
+    make_player,
+    templates_for_floor,
+    with_article,
+)
 from .fov import compute_fov, line_of_sight
 from .inventory import Inventory, Item, ItemKind, item_templates_for_floor
 from .map_gen import STAIRS_DOWN, Rect, TileMap, generate_dungeon
@@ -75,7 +81,10 @@ class GameState:
     floor: int = 1
     turns: int = 0
     kills: int = 0
+    items_found: int = 0
     game_over: bool = False
+    #: What landed the killing blow, once the run is over.
+    killed_by: str | None = None
     width: int = MAP_WIDTH
     height: int = MAP_HEIGHT
     entities: list[Actor] = field(default_factory=list)
@@ -385,26 +394,39 @@ class GameState:
             return
         del self.items[self.player.position]
         self.inventory.add(item)
+        self.items_found += 1
         self.log(f"You pick up the {item.name}.", item.color)
 
     def _player_attacks(self, target: Actor) -> None:
-        damage = damage_for(self.player, target)
+        result = resolve_attack(self.player, target)
         self.log(
-            f"You hit the {target.name} for {damage}."
-            if damage
+            f"You hit the {target.name} for {result.damage}."
+            if result.damage
             else f"You hit the {target.name}, but it shrugs it off.",
             "rgb(255,220,120)",
         )
-        self.hurt_monster(target, damage)
+        if result.killed:
+            self._monster_died(target)
 
     def hurt_monster(self, monster: Actor, amount: int) -> int:
-        """Damage ``monster``, clearing it off the floor if that killed it."""
+        """Damage ``monster`` outside melee — a scroll, say. Returns damage dealt."""
         dealt = monster.take_damage(amount)
         if not monster.is_alive:
-            self.kills += 1
-            if monster in self.entities:
-                self.entities.remove(monster)
-            self.log(f"The {monster.name} dies!", "rgb(120,220,160)")
+            self._monster_died(monster)
+        return dealt
+
+    def _monster_died(self, monster: Actor) -> None:
+        """Book-keeping for a kill, however it was dealt."""
+        self.kills += 1
+        if monster in self.entities:
+            self.entities.remove(monster)
+        self.log(f"The {monster.name} dies!", "rgb(120,220,160)")
+
+    def hurt_player(self, amount: int, source: str) -> int:
+        """Damage the player, remembering what did it in case it kills them."""
+        dealt = self.player.take_damage(amount)
+        if not self.player.is_alive and self.killed_by is None:
+            self.killed_by = source
         return dealt
 
     def teleport_player(self) -> bool:
@@ -479,6 +501,8 @@ class GameState:
 
     def _monster_attacks(self, monster: Actor) -> None:
         result = resolve_attack(monster, self.player)
+        if result.killed and self.killed_by is None:
+            self.killed_by = with_article(monster.name)
         seen = monster.position in self.visible
         if result.damage:
             self.log(
@@ -495,6 +519,28 @@ class GameState:
             return
         self.game_over = True
         self.log("You die...", "bold rgb(255,80,80)")
+
+    # -- the run, once it is over ----------------------------------------
+
+    @property
+    def floors_cleared(self) -> int:
+        """Floors left behind. Dying on floor 3 means two were cleared."""
+        return self.floor - 1
+
+    def run_summary(self) -> list[tuple[str, str]]:
+        """The run's final numbers, ready to print on the game over screen."""
+        weapon = self.player.weapon.name if self.player.weapon else "bare hands"
+        return [
+            ("Floors cleared", str(self.floors_cleared)),
+            ("Deepest floor", str(self.floor)),
+            ("Monsters slain", str(self.kills)),
+            ("Turns survived", str(self.turns)),
+            ("Items found", str(self.items_found)),
+            ("Final attack", str(self.player.attack)),
+            ("Wielding", weapon),
+            ("Killed by", self.killed_by or "unknown"),
+            ("Seed", str(self.seed)),
+        ]
 
 
 def camera_origin(

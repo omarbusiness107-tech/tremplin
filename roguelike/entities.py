@@ -177,6 +177,12 @@ def templates_for_floor(floor: int) -> list[MonsterTemplate]:
     ]
 
 
+def with_article(name: str) -> str:
+    """``"Orc"`` -> ``"an Orc"``, ``"Goblin"`` -> ``"a Goblin"``."""
+    article = "an" if name[:1].lower() in "aeiou" else "a"
+    return f"{article} {name}"
+
+
 def make_player(x: int, y: int) -> Player:
     """A fresh player at full health standing on (x, y)."""
     return Player(x=x, y=y)
