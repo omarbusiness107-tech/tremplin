@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from roguelike.combat import damage_for, resolve_attack
 from roguelike.entities import Actor, make_player
-from roguelike.inventory import Inventory, Item
+from roguelike.inventory import Inventory, Item, ItemKind
 
 
 def monster(hp: int = 10, attack: int = 3, defense: int = 0) -> Actor:
@@ -40,12 +40,16 @@ def test_healing_stops_at_max_hp():
     assert player.heal(100) == 10 and player.hp == player.max_hp
 
 
+def make_item(name: str, char: str, kind: ItemKind = ItemKind.POTION) -> Item:
+    return Item(name=name, char=char, color="white", kind=kind, power=1)
+
+
 def test_inventory_add_remove_and_capacity():
     pack = Inventory(capacity=2)
-    potion, sword = Item("Potion", "!"), Item("Sword", "/")
+    potion, sword = make_item("Potion", "!"), make_item("Sword", "/", ItemKind.WEAPON)
     assert pack.add(potion) and pack.add(sword)
     assert pack.is_full and len(pack) == 2
-    assert pack.add(Item("Scroll", "?")) is False
+    assert pack.add(make_item("Scroll", "?", ItemKind.SCROLL)) is False
     assert pack.remove(potion) and len(pack) == 1
     assert pack.remove(potion) is False
 

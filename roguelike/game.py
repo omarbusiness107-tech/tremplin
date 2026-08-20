@@ -2,8 +2,8 @@
 
 All mutable game data lives on one ``GameState`` instance — there are no module
 level globals — and every random decision is drawn from ``GameState.rng``, a
-seeded ``random.Random``. Give the same seed twice and you get the same dungeon,
-the same monsters, and the same outcome from the same key presses.
+seeded ``random.Random``. Give the same seed twice and play the same keys and
+you get the same dungeons, monsters, loot and outcome, all the way down.
 """
 
 from __future__ import annotations
@@ -12,10 +12,11 @@ import random
 from dataclasses import dataclass, field
 from random import Random
 
-from .combat import resolve_attack
-from .entities import Actor, Monster, Player, make_player, templates_for_floor
+from .combat import damage_for, resolve_attack
+from .entities import Actor, Player, make_player, templates_for_floor
 from .fov import compute_fov, line_of_sight
-from .map_gen import TileMap, generate_dungeon
+from .inventory import Inventory, Item, ItemKind, item_templates_for_floor
+from .map_gen import STAIRS_DOWN, Rect, TileMap, generate_dungeon
 
 MAP_WIDTH = 80
 MAP_HEIGHT = 45
@@ -26,8 +27,17 @@ FOV_RADIUS = 9
 #: Monster count scales with the size of the floor, so a big dungeon does not
 #: end up feeling empty, plus a flat bonus for each floor descended.
 MIN_MONSTERS = 4
-ROOMS_PER_MONSTER = 2
-MONSTERS_PER_FLOOR = 2
+ROOMS_PER_MONSTER = 3
+MONSTERS_PER_FLOOR = 1
+
+#: Taking the stairs is also a chance to catch your breath. Healing only on
+#: descent (rather than every turn) means it cannot be farmed by waiting.
+DESCENT_HEAL_FRACTION = 0.35
+
+#: Loot scales the same way, and deeper floors are a little richer.
+MIN_ITEMS = 3
+ROOMS_PER_ITEM = 3
+FLOORS_PER_EXTRA_ITEM = 2
 
 #: How many log lines to keep.
 MAX_MESSAGES = 100
@@ -66,7 +76,14 @@ class GameState:
     turns: int = 0
     kills: int = 0
     game_over: bool = False
+    width: int = MAP_WIDTH
+    height: int = MAP_HEIGHT
     entities: list[Actor] = field(default_factory=list)
+    #: Items lying on the floor, keyed by the tile they rest on.
+    items: dict[tuple[int, int], Item] = field(default_factory=dict)
+    inventory: Inventory = field(default_factory=Inventory)
+    #: Where the stairs down are on this floor.
+    stairs: tuple[int, int] | None = None
     messages: list[Message] = field(default_factory=list)
     #: Tiles the player can see right now.
     visible: set[tuple[int, int]] = field(default_factory=set)
@@ -84,12 +101,16 @@ class GameState:
         if seed is None:
             seed = random_seed()
         rng = Random(seed)
-        tile_map = generate_dungeon(width, height, rng)
-        start_x, start_y = tile_map.rooms[0].center
-        player = make_player(start_x, start_y)
-        game = cls(seed=seed, rng=rng, tile_map=tile_map, player=player)
-        game.entities = game._spawn_monsters()
-        game.update_fov()
+        # The player is placed properly by the first _generate_floor call.
+        game = cls(
+            seed=seed,
+            rng=rng,
+            tile_map=TileMap.filled(width, height),
+            player=make_player(0, 0),
+            width=width,
+            height=height,
+        )
+        game.generate_floor()
         game.log("You descend into the dungeon.", "rgb(150,200,255)")
         return game
 
@@ -103,7 +124,41 @@ class GameState:
         """The last ``count`` log lines, oldest first."""
         return self.messages[-count:] if count > 0 else []
 
-    # -- spawning --------------------------------------------------------
+    # -- building a floor ------------------------------------------------
+
+    def generate_floor(self) -> None:
+        """Lay out the current floor and drop the player at its entrance.
+
+        The player themself carries over untouched — HP, pack, and weapon — so
+        this is equally the start of a run and the arrival on a deeper floor.
+        """
+        self.tile_map = generate_dungeon(self.width, self.height, self.rng)
+        self.player.move_to(*self.tile_map.rooms[0].center)
+        self.stairs = self._place_stairs()
+        self.entities = self._spawn_monsters()
+        self.items = self._spawn_items()
+        self.visible = set()
+        self.explored = set()
+        self.update_fov()
+
+    def _place_stairs(self) -> tuple[int, int] | None:
+        """Put the stairs down in the room furthest from where the player lands.
+
+        Anything closer would let the player skip most of the floor.
+        """
+        rooms = self.tile_map.rooms
+        if not rooms:
+            return None
+        start = rooms[0].center
+        candidates = rooms[1:] or rooms
+        furthest = max(
+            candidates,
+            key=lambda room: (room.center[0] - start[0]) ** 2
+            + (room.center[1] - start[1]) ** 2,
+        )
+        position = furthest.center
+        self.tile_map.set(*position, STAIRS_DOWN)
+        return position
 
     def _spawn_monsters(self) -> list[Actor]:
         """Populate the floor, keeping the player's starting room empty."""
@@ -123,12 +178,46 @@ class GameState:
                 continue
             taken.add(spot)
             template = self.rng.choices(templates, weights=weights, k=1)[0]
-            monsters.append(template.spawn(*spot))
+            monsters.append(template.spawn(*spot, floor=self.floor))
         return monsters
+
+    def _spawn_items(self) -> dict[tuple[int, int], Item]:
+        """Scatter loot across the floor, never on top of the stairs."""
+        templates = item_templates_for_floor(self.floor)
+        rooms = self.tile_map.rooms
+        if not rooms or not templates:
+            return {}
+
+        weights = [template.weight for template in templates]
+        count = max(MIN_ITEMS, len(rooms) // ROOMS_PER_ITEM)
+        count += (self.floor - 1) // FLOORS_PER_EXTRA_ITEM
+
+        taken = {self.player.position}
+        if self.stairs is not None:
+            taken.add(self.stairs)
+
+        # The player's attack only grows by finding a better weapon, so every
+        # floor is guaranteed to hold at least one rather than leaving the whole
+        # power curve to chance.
+        weapons = [t for t in templates if t.kind is ItemKind.WEAPON]
+        weapon_weights = [template.weight for template in weapons]
+
+        items: dict[tuple[int, int], Item] = {}
+        for index in range(count):
+            spot = self._free_spot_in(self.rng.choice(rooms), taken)
+            if spot is None:
+                continue
+            taken.add(spot)
+            if index == 0 and weapons:
+                choices, choice_weights = weapons, weapon_weights
+            else:
+                choices, choice_weights = templates, weights
+            items[spot] = self.rng.choices(choices, weights=choice_weights, k=1)[0].spawn()
+        return items
 
     def _free_spot_in(
         self,
-        room,
+        room: Rect,
         taken: set[tuple[int, int]],
         attempts: int = 20,
     ) -> tuple[int, int] | None:
@@ -160,6 +249,26 @@ class GameState:
             if entity.is_alive and entity.position in self.visible
         ]
 
+    def nearest_visible_monster(self) -> Actor | None:
+        """The closest monster in view, if there is one."""
+        seen = self.visible_monsters()
+        if not seen:
+            return None
+        return min(seen, key=lambda monster: monster.distance_to(self.player))
+
+    def reveal_floor(self) -> None:
+        """Mark the whole floor explored — every room, corridor, and wall."""
+        for y in range(self.tile_map.height):
+            for x in range(self.tile_map.width):
+                if not self.tile_map.is_walkable(x, y):
+                    continue
+                self.explored.add((x, y))
+                # Include the walls around it, so rooms read as rooms.
+                for dy in (-1, 0, 1):
+                    for dx in (-1, 0, 1):
+                        if self.tile_map.in_bounds(x + dx, y + dy):
+                            self.explored.add((x + dx, y + dy))
+
     # -- queries ---------------------------------------------------------
 
     def blocking_entity_at(self, x: int, y: int) -> Actor | None:
@@ -174,6 +283,9 @@ class GameState:
         if not self.tile_map.is_walkable(x, y):
             return False
         return self.blocking_entity_at(x, y) is None
+
+    def on_stairs(self) -> bool:
+        return self.stairs is not None and self.player.position == self.stairs
 
     def _is_open_for_monster(self, x: int, y: int) -> bool:
         """True when a monster could step onto (x, y): no wall, no one there."""
@@ -207,13 +319,11 @@ class GameState:
             self._player_attacks(target)
         elif self.tile_map.is_walkable(target_x, target_y):
             self.player.move_to(target_x, target_y)
+            self._pick_up()
         else:
             return False
 
-        self.turns += 1
-        self._monsters_take_turn()
-        self.update_fov()
-        self._check_player_death()
+        self._end_turn()
         return True
 
     def move_player_in_direction(self, direction: str) -> bool:
@@ -225,26 +335,103 @@ class GameState:
         """Stand still and let the dungeon take its turn."""
         if self.game_over:
             return False
+        self._end_turn()
+        return True
+
+    def use_item(self, index: int) -> bool:
+        """Use the item in pack slot ``index``. True when a turn was spent."""
+        if self.game_over or not 0 <= index < len(self.inventory):
+            return False
+
+        item = self.inventory.items[index]
+        # Take it out first so an effect that stows a swapped-out weapon has
+        # room for it, then put it back if nothing actually happened.
+        self.inventory.remove(item)
+        if not item.use(self):
+            self.inventory.add(item)
+            return False
+
+        self._end_turn()
+        return True
+
+    def descend(self) -> bool:
+        """Take the stairs down to a deeper, meaner floor."""
+        if self.game_over:
+            return False
+        if not self.on_stairs():
+            self.log("There are no stairs here.", "grey70")
+            return False
+
+        self.floor += 1
+        self.generate_floor()
+        self.turns += 1
+        self.log(f"You descend to floor {self.floor}.", "rgb(150,200,255)")
+
+        rested = self.player.heal(round(self.player.max_hp * DESCENT_HEAL_FRACTION))
+        if rested:
+            self.log(f"You rest on the way down and recover {rested} HP.",
+                     "rgb(120,220,160)")
+        return True
+
+    def _pick_up(self) -> None:
+        """Take whatever is lying on the player's tile, if it fits."""
+        item = self.items.get(self.player.position)
+        if item is None:
+            return
+        if self.inventory.is_full:
+            self.log(
+                f"Your pack is full; the {item.name} stays on the floor.", "grey70"
+            )
+            return
+        del self.items[self.player.position]
+        self.inventory.add(item)
+        self.log(f"You pick up the {item.name}.", item.color)
+
+    def _player_attacks(self, target: Actor) -> None:
+        damage = damage_for(self.player, target)
+        self.log(
+            f"You hit the {target.name} for {damage}."
+            if damage
+            else f"You hit the {target.name}, but it shrugs it off.",
+            "rgb(255,220,120)",
+        )
+        self.hurt_monster(target, damage)
+
+    def hurt_monster(self, monster: Actor, amount: int) -> int:
+        """Damage ``monster``, clearing it off the floor if that killed it."""
+        dealt = monster.take_damage(amount)
+        if not monster.is_alive:
+            self.kills += 1
+            if monster in self.entities:
+                self.entities.remove(monster)
+            self.log(f"The {monster.name} dies!", "rgb(120,220,160)")
+        return dealt
+
+    def teleport_player(self) -> bool:
+        """Drop the player on a random free tile. False if there is nowhere."""
+        candidates = [
+            (x, y)
+            for y in range(self.tile_map.height)
+            for x in range(self.tile_map.width)
+            if self.tile_map.is_walkable(x, y)
+            and (x, y) != self.player.position
+            and self.blocking_entity_at(x, y) is None
+        ]
+        if not candidates:
+            return False
+        self.player.move_to(*self.rng.choice(candidates))
+        self._pick_up()
+        self.update_fov()
+        return True
+
+    # -- turn loop -------------------------------------------------------
+
+    def _end_turn(self) -> None:
+        """Close out a player action: the dungeon moves, then we look around."""
         self.turns += 1
         self._monsters_take_turn()
         self.update_fov()
         self._check_player_death()
-        return True
-
-    def _player_attacks(self, target: Actor) -> None:
-        result = resolve_attack(self.player, target)
-        self.log(
-            f"You hit the {target.name} for {result.damage}."
-            if result.damage
-            else f"You hit the {target.name}, but it shrugs it off.",
-            "rgb(255,220,120)",
-        )
-        if result.killed:
-            self.kills += 1
-            self.entities.remove(target)
-            self.log(f"The {target.name} dies!", "rgb(120,220,160)")
-
-    # -- monster turn ----------------------------------------------------
 
     def _monsters_take_turn(self) -> None:
         """Every living monster acts once, in spawn order."""

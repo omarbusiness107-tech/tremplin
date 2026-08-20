@@ -1,28 +1,230 @@
-"""Carried items.
+"""Items: what they are, and what happens when you use one.
 
-Only the container lives here so far; items themselves (potions, weapons,
-scrolls) arrive in step 7. Nothing in this module touches the UI.
+An item's effect is written against :class:`~roguelike.game.GameState`, so it
+can heal the player, hurt monsters, or redraw the map. The import is guarded by
+``TYPE_CHECKING`` because ``game`` imports this module, not the other way round.
+
+Every effect draws its randomness from ``game.rng``, so a run replays exactly.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover - import cycle guard
+    from .game import GameState
+
+#: Colours used for the item glyphs on the map and in the pack.
+POTION_COLOR = "rgb(226,120,190)"
+WEAPON_COLOR = "rgb(150,200,230)"
+SCROLL_COLOR = "rgb(235,230,200)"
+
+LIGHTNING_DAMAGE = 12
+FIREBALL_DAMAGE = 7
+FIREBALL_RADIUS = 3
+BLESSING_ATTACK = 1
+BACKFIRE_DAMAGE = 4
+
+
+class ItemKind(str, Enum):
+    """What sort of thing an item is, which decides how using it behaves."""
+
+    POTION = "potion"
+    WEAPON = "weapon"
+    SCROLL = "scroll"
 
 
 @dataclass
 class Item:
-    """A thing that can sit on the floor or in a pack."""
+    """One item, either lying on the floor or carried in the pack."""
 
     name: str
     char: str
-    color: str = "white"
+    color: str
+    kind: ItemKind
+    #: HP restored for a potion, attack bonus for a weapon.
+    power: int = 0
+
+    def use(self, game: GameState) -> bool:
+        """Use this item.
+
+        Returns True when the item should leave the pack — drunk, read, or (for
+        a weapon) moved into the player's hand. Returns False when nothing
+        happened, in which case no turn is spent either.
+        """
+        if self.kind is ItemKind.POTION:
+            return _drink(game, self)
+        if self.kind is ItemKind.WEAPON:
+            return _equip(game, self)
+        return _read_scroll(game, self)
+
+    def describe(self) -> str:
+        """Short label for the inventory screen."""
+        if self.kind is ItemKind.POTION:
+            return f"{self.name} (heals {self.power})"
+        if self.kind is ItemKind.WEAPON:
+            return f"{self.name} (+{self.power} attack)"
+        return self.name
+
+
+# -- item effects ----------------------------------------------------------
+
+
+def _drink(game: GameState, item: Item) -> bool:
+    healed = game.player.heal(item.power)
+    if healed == 0:
+        game.log("You are already at full health.", "grey70")
+        return False
+    game.log(f"You drink the {item.name} and recover {healed} HP.", POTION_COLOR)
+    return True
+
+
+def _equip(game: GameState, item: Item) -> bool:
+    previous = game.player.equip(item)
+    game.log(f"You wield the {item.name}. Attack is now {game.player.attack}.",
+             WEAPON_COLOR)
+    if previous is not None:
+        game.inventory.add(previous)
+        game.log(f"You stow the {previous.name}.", "grey70")
+    return True
+
+
+def _scroll_lightning(game: GameState) -> None:
+    target = game.nearest_visible_monster()
+    if target is None:
+        game.log("The scroll crackles, and the charge earths itself.", "grey70")
+        return
+    game.log(
+        f"Lightning arcs into the {target.name} for {LIGHTNING_DAMAGE} damage!",
+        "rgb(180,200,255)",
+    )
+    game.hurt_monster(target, LIGHTNING_DAMAGE)
+
+
+def _scroll_fireball(game: GameState) -> None:
+    targets = [
+        monster
+        for monster in game.entities
+        if monster.is_alive
+        and monster.distance_to(game.player) <= FIREBALL_RADIUS
+    ]
+    game.log("The scroll erupts in a roaring fireball!", "rgb(255,150,80)")
+    if not targets:
+        game.log("Nothing is close enough to burn.", "grey70")
+        return
+    for monster in targets:
+        game.hurt_monster(monster, FIREBALL_DAMAGE)
+
+
+def _scroll_mapping(game: GameState) -> None:
+    game.reveal_floor()
+    game.log("The floor plan burns itself into your mind.", "rgb(150,200,255)")
+
+
+def _scroll_teleport(game: GameState) -> None:
+    if game.teleport_player():
+        game.log("The world lurches, and you are somewhere else.", "rgb(190,160,255)")
+    else:
+        game.log("The scroll fizzles; you stay exactly where you are.", "grey70")
+
+
+def _scroll_blessing(game: GameState) -> None:
+    game.player.base_attack += BLESSING_ATTACK
+    game.player.refresh_attack()
+    game.log(
+        f"A blessing settles on you. Attack is now {game.player.attack}.",
+        "rgb(255,225,140)",
+    )
+
+
+def _scroll_backfire(game: GameState) -> None:
+    game.player.take_damage(BACKFIRE_DAMAGE)
+    game.log(
+        f"The scroll backfires, searing you for {BACKFIRE_DAMAGE} damage!",
+        "rgb(255,120,120)",
+    )
+
+
+#: Every outcome of reading an unknown scroll, chosen with ``game.rng``.
+SCROLL_EFFECTS = (
+    _scroll_lightning,
+    _scroll_fireball,
+    _scroll_mapping,
+    _scroll_teleport,
+    _scroll_blessing,
+    _scroll_backfire,
+)
+
+
+def _read_scroll(game: GameState, item: Item) -> bool:
+    effect = game.rng.choice(SCROLL_EFFECTS)
+    effect(game)
+    return True
+
+
+# -- what can spawn --------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class ItemTemplate:
+    """An item type, and the floors it can be found on."""
+
+    name: str
+    char: str
+    color: str
+    kind: ItemKind
+    power: int = 0
+    weight: int = 10
+    min_floor: int = 1
+
+    def spawn(self) -> Item:
+        return Item(
+            name=self.name,
+            char=self.char,
+            color=self.color,
+            kind=self.kind,
+            power=self.power,
+        )
+
+
+ITEM_TEMPLATES: tuple[ItemTemplate, ...] = (
+    ItemTemplate("Healing Potion", "!", POTION_COLOR, ItemKind.POTION,
+                 power=12, weight=12, min_floor=1),
+    ItemTemplate("Greater Healing Potion", "!", POTION_COLOR, ItemKind.POTION,
+                 power=26, weight=5, min_floor=3),
+    ItemTemplate("Unknown Scroll", "?", SCROLL_COLOR, ItemKind.SCROLL,
+                 weight=9, min_floor=1),
+    # Each weapon tier unlocks a floor before the monster it is meant to answer,
+    # so the player can be armed for an Orc, Ogre or Wraith before meeting one.
+    ItemTemplate("Dagger", "/", WEAPON_COLOR, ItemKind.WEAPON,
+                 power=2, weight=8, min_floor=1),
+    ItemTemplate("Short Sword", "/", WEAPON_COLOR, ItemKind.WEAPON,
+                 power=4, weight=7, min_floor=2),
+    ItemTemplate("War Hammer", "/", WEAPON_COLOR, ItemKind.WEAPON,
+                 power=7, weight=6, min_floor=3),
+    ItemTemplate("Rune Blade", "/", WEAPON_COLOR, ItemKind.WEAPON,
+                 power=10, weight=5, min_floor=5),
+)
+
+
+def item_templates_for_floor(floor: int) -> list[ItemTemplate]:
+    """The item types that can be found on ``floor``."""
+    return [template for template in ITEM_TEMPLATES if template.min_floor <= floor]
+
+
+# -- the pack --------------------------------------------------------------
+
+#: Letters used to select items on the inventory screen.
+SLOT_LETTERS = "abcdefghijklmnop"
 
 
 @dataclass
 class Inventory:
     """A fixed-capacity pack."""
 
-    capacity: int = 16
+    capacity: int = len(SLOT_LETTERS)
     items: list[Item] = field(default_factory=list)
 
     def __len__(self) -> int:
@@ -45,3 +247,13 @@ class Inventory:
             return False
         self.items.remove(item)
         return True
+
+    def slots(self) -> list[tuple[str, Item]]:
+        """The carried items, each paired with its selection letter."""
+        return list(zip(SLOT_LETTERS, self.items))
+
+    @staticmethod
+    def slot_index(letter: str) -> int | None:
+        """The pack position a letter refers to, or None if it is not a slot."""
+        index = SLOT_LETTERS.find(letter)
+        return index if index >= 0 else None

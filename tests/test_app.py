@@ -8,7 +8,16 @@ from __future__ import annotations
 
 import asyncio
 
-from roguelike.main import MapView, MessageLog, RoguelikeApp, StatusPanel
+from roguelike.inventory import ITEM_TEMPLATES
+from roguelike.main import (
+    InventoryScreen,
+    MapView,
+    MessageLog,
+    RoguelikeApp,
+    StatusPanel,
+)
+
+TEMPLATES = {template.name: template for template in ITEM_TEMPLATES}
 
 
 def drive(coro_factory):
@@ -143,5 +152,134 @@ def test_the_status_panel_announces_death():
             await pilot.press("right")
             await pilot.pause()
             assert app.game.turns == turns
+
+    drive(scenario)
+
+
+def test_the_inventory_screen_lists_what_you_carry():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=(100, 40)) as pilot:
+            await pilot.pause()
+            app.game.inventory.add(TEMPLATES["Dagger"].spawn())
+            app.game.inventory.add(TEMPLATES["Healing Potion"].spawn())
+
+            await pilot.press("i")
+            await pilot.pause()
+            screen = app.screen
+            assert isinstance(screen, InventoryScreen)
+            panel = screen.query_one("#inventory-panel").render().plain
+            assert "Dagger" in panel and "Healing Potion" in panel
+            assert "a)" in panel and "b)" in panel
+
+            await pilot.press("escape")
+            await pilot.pause()
+            assert not isinstance(app.screen, InventoryScreen)
+
+    drive(scenario)
+
+
+def test_an_empty_pack_says_so():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=(100, 40)) as pilot:
+            await pilot.pause()
+            await pilot.press("i")
+            await pilot.pause()
+            panel = app.screen.query_one("#inventory-panel").render().plain
+            assert "empty" in panel.lower()
+
+    drive(scenario)
+
+
+def test_picking_a_letter_uses_that_item():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=(100, 40)) as pilot:
+            await pilot.pause()
+            app.game.player.hp = 10
+            app.game.inventory.add(TEMPLATES["Healing Potion"].spawn())
+
+            await pilot.press("i")
+            await pilot.pause()
+            await pilot.press("a")
+            await pilot.pause()
+
+            assert app.game.player.hp > 10
+            assert len(app.game.inventory) == 0
+            assert not isinstance(app.screen, InventoryScreen)
+
+    drive(scenario)
+
+
+def test_the_dungeon_cannot_be_played_while_the_pack_is_open():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=(100, 40)) as pilot:
+            await pilot.pause()
+            await pilot.press("i")
+            await pilot.pause()
+
+            position, turns = app.game.player.position, app.game.turns
+            for key in ("right", "left", "up", "down", "space", "n"):
+                await pilot.press(key)
+            await pilot.pause()
+
+            assert app.game.player.position == position, "the player moved"
+            assert app.game.turns == turns, "a turn was spent"
+            assert isinstance(app.screen, InventoryScreen), "the pack was closed"
+
+    drive(scenario)
+
+
+def test_the_descend_key_takes_the_stairs():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=(100, 40)) as pilot:
+            await pilot.pause()
+            app.game.player.move_to(*app.game.stairs)
+            app.game.update_fov()
+
+            await pilot.press("greater_than_sign")
+            await pilot.pause()
+            assert app.game.floor == 2
+            assert "Floor 2" in app.sub_title
+
+    drive(scenario)
+
+
+def test_the_map_draws_loot_the_player_can_see():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=(100, 40)) as pilot:
+            await pilot.pause()
+            game = app.game
+            # Drop a potion right next to the player, inside the lit radius.
+            spot = (game.player.x + 1, game.player.y)
+            game.items[spot] = TEMPLATES["Healing Potion"].spawn()
+            assert spot in game.visible
+            assert "!" in app.query_one(MapView).render().plain
+
+    drive(scenario)
+
+
+def test_the_status_panel_shows_gear_and_the_stairs_prompt():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=(100, 40)) as pilot:
+            await pilot.pause()
+            panel = app.query_one(StatusPanel)
+
+            panel.refresh_status()
+            assert "bare hands" in panel.render().plain
+
+            app.game.inventory.add(TEMPLATES["Dagger"].spawn())
+            app.game.use_item(0)
+            panel.refresh_status()
+            assert "Dagger" in panel.render().plain
+
+            app.game.player.move_to(*app.game.stairs)
+            panel.refresh_status()
+            assert "Stairs here" in panel.render().plain
 
     drive(scenario)

@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover - import cycle guard
+    from .inventory import Item
 
 
 @dataclass
@@ -57,7 +61,12 @@ class Actor(Entity):
 
 @dataclass
 class Player(Actor):
-    """The player character."""
+    """The player character.
+
+    ``attack`` is derived: it is ``base_attack`` plus whatever the wielded
+    weapon adds. Anything that changes either one calls :meth:`refresh_attack`,
+    so combat can keep reading the plain ``attack`` field.
+    """
 
     char: str = "@"
     name: str = "Player"
@@ -66,6 +75,20 @@ class Player(Actor):
     max_hp: int = 30
     attack: int = 5
     defense: int = 1
+    #: Attack with bare hands, before any weapon.
+    base_attack: int = 5
+    weapon: "Item | None" = None
+
+    def refresh_attack(self) -> None:
+        """Recompute ``attack`` from the base value and the wielded weapon."""
+        self.attack = self.base_attack + (self.weapon.power if self.weapon else 0)
+
+    def equip(self, weapon: "Item") -> "Item | None":
+        """Wield ``weapon``, returning whatever was in hand before."""
+        previous = self.weapon
+        self.weapon = weapon
+        self.refresh_attack()
+        return previous
 
 
 @dataclass
@@ -87,18 +110,28 @@ class MonsterTemplate:
     defense: int
     sight_radius: int = 8
     min_floor: int = 1
+    #: Last floor this species is still found on; None means all the way down.
+    max_floor: int | None = None
     weight: int = 10
 
-    def spawn(self, x: int, y: int) -> Monster:
+    def spawn(self, x: int, y: int, floor: int = 1) -> Monster:
+        """One monster of this species, toughened by how deep it was found.
+
+        A species keeps appearing for several floors after it first shows up,
+        so the ones met deeper down are veterans: a little more HP, and more
+        damage every third floor.
+        """
+        depth = max(0, floor - self.min_floor)
+        hp = self.hp + depth
         return Monster(
             x=x,
             y=y,
             char=self.char,
             name=self.name,
             color=self.color,
-            hp=self.hp,
-            max_hp=self.hp,
-            attack=self.attack,
+            hp=hp,
+            max_hp=hp,
+            attack=self.attack + depth // 3,
             defense=self.defense,
             sight_radius=self.sight_radius,
         )
@@ -107,22 +140,41 @@ class MonsterTemplate:
 MONSTER_TEMPLATES: tuple[MonsterTemplate, ...] = (
     MonsterTemplate(
         name="Rat", char="r", color="rgb(150,140,120)",
-        hp=4, attack=2, defense=0, sight_radius=6, min_floor=1, weight=10,
+        hp=4, attack=2, defense=0, sight_radius=6,
+        min_floor=1, max_floor=5, weight=10,
     ),
     MonsterTemplate(
         name="Goblin", char="g", color="rgb(110,190,90)",
-        hp=8, attack=4, defense=0, sight_radius=8, min_floor=1, weight=8,
+        hp=8, attack=3, defense=0, sight_radius=8,
+        min_floor=1, max_floor=8, weight=8,
     ),
     MonsterTemplate(
         name="Orc", char="o", color="rgb(220,110,80)",
-        hp=14, attack=6, defense=1, sight_radius=8, min_floor=2, weight=6,
+        hp=12, attack=5, defense=1, sight_radius=8, min_floor=2, weight=8,
+    ),
+    MonsterTemplate(
+        name="Ogre", char="O", color="rgb(200,80,140)",
+        hp=16, attack=6, defense=2, sight_radius=8, min_floor=4, weight=6,
+    ),
+    MonsterTemplate(
+        name="Wraith", char="W", color="rgb(160,140,235)",
+        hp=18, attack=7, defense=3, sight_radius=11, min_floor=6, weight=6,
     ),
 )
 
 
 def templates_for_floor(floor: int) -> list[MonsterTemplate]:
-    """The species that can appear on ``floor``."""
-    return [t for t in MONSTER_TEMPLATES if t.min_floor <= floor]
+    """The species that can appear on ``floor``.
+
+    Weak species drop out as the dungeon deepens, so descending shifts the mix
+    rather than just piling more rats on top.
+    """
+    return [
+        template
+        for template in MONSTER_TEMPLATES
+        if template.min_floor <= floor
+        and (template.max_floor is None or floor <= template.max_floor)
+    ]
 
 
 def make_player(x: int, y: int) -> Player:

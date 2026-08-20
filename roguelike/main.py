@@ -10,10 +10,12 @@ from rich.text import Text
 from textual.app import App, ComposeResult, RenderResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
+from textual.screen import ModalScreen
 from textual.widget import Widget
 from textual.widgets import Footer, Header, Static
 
 from .game import GameState, camera_origin
+from .inventory import Inventory
 from .map_gen import DOOR, FLOOR, STAIRS_DOWN, WALL
 
 #: How each glyph is painted while it is in view. Entities carry their own colour.
@@ -88,6 +90,11 @@ class MapView(Widget):
                     frame.append(entity.char, style=f"bold {entity.color}")
                     continue
 
+                item = game.items.get(position)
+                if item is not None and visible:
+                    frame.append(item.char, style=f"bold {item.color}")
+                    continue
+
                 tile = tile_map.get(map_x, map_y)
                 if visible:
                     frame.append(tile, style=TILE_STYLES.get(tile, DEFAULT_TILE_STYLE))
@@ -152,13 +159,17 @@ class StatusPanel(Static):
             "",
             f"Attack   [b]{player.attack}[/b]",
             f"Defense  [b]{player.defense}[/b]",
+            f"Weapon   {player.weapon.name if player.weapon else '[dim]bare hands[/]'}",
             "",
+            f"Pack     {len(game.inventory)}/{game.inventory.capacity}",
             f"Kills    {game.kills}",
             f"Turns    {game.turns}",
             f"In view  {len(seen)}",
             "",
             f"[dim]Seed {game.seed}[/dim]",
         ]
+        if game.on_stairs():
+            lines += ["", "[rgb(120,220,160)]Stairs here — press >[/]"]
         if seen:
             lines += ["", "[b]NEARBY[/b]"]
             lines += [
@@ -169,6 +180,52 @@ class StatusPanel(Static):
         if game.game_over:
             lines += ["", "[bold rgb(255,80,80)]YOU DIED[/]", "[dim]n — new run[/dim]"]
         self.update("\n".join(lines))
+
+
+class InventoryScreen(ModalScreen[int | None]):
+    """The pack, overlaid on the map.
+
+    Dismisses with the chosen slot index, or None when closed without picking
+    anything. The screen swallows every key press, so the dungeon cannot be
+    played by accident while the pack is open.
+    """
+
+    def __init__(self, game: GameState) -> None:
+        super().__init__()
+        self.game = game
+
+    def compose(self) -> ComposeResult:
+        yield Static(self._panel_text(), id="inventory-panel")
+
+    def _panel_text(self) -> str:
+        pack = self.game.inventory
+        lines = ["[b]INVENTORY[/b]", ""]
+        if not pack.items:
+            lines.append("[dim]Your pack is empty.[/dim]")
+        else:
+            lines += [
+                f"[b]{letter}[/b])  [{item.color}]{item.char}[/]  {item.describe()}"
+                for letter, item in pack.slots()
+            ]
+        lines += [
+            "",
+            f"[dim]{len(pack)}/{pack.capacity} carried[/dim]",
+            "[dim]a-p use or wield · esc close[/dim]",
+        ]
+        return "\n".join(lines)
+
+    def on_key(self, event) -> None:
+        """Handle the pack's own keys and let nothing else through."""
+        event.stop()
+        event.prevent_default()
+
+        if event.key in ("escape", "i", "q"):
+            self.dismiss(None)
+            return
+
+        index = Inventory.slot_index(event.character or "")
+        if index is not None and index < len(self.game.inventory):
+            self.dismiss(index)
 
 
 class RoguelikeApp(App):
@@ -205,6 +262,16 @@ class RoguelikeApp(App):
         background: rgb(26,26,34);
         border-left: solid rgb(60,60,75);
     }
+    InventoryScreen {
+        align: center middle;
+    }
+    #inventory-panel {
+        width: 52;
+        max-height: 80%;
+        padding: 1 3;
+        background: rgb(30,30,40);
+        border: round rgb(120,125,150);
+    }
     """
 
     BINDINGS = [
@@ -213,6 +280,8 @@ class RoguelikeApp(App):
         Binding("left,a,h", "move('left')", "Left"),
         Binding("right,d,l", "move('right')", "Right"),
         Binding("space,period", "wait", "Wait"),
+        Binding("i", "inventory", "Inventory"),
+        Binding("greater_than_sign", "descend", "Descend"),
         Binding("n", "new_game", "New run"),
         Binding("q", "quit", "Quit"),
     ]
@@ -247,6 +316,21 @@ class RoguelikeApp(App):
     def action_wait(self) -> None:
         if self.game.wait():
             self.redraw()
+
+    def action_descend(self) -> None:
+        # Always redraw: a refused descent still logs why.
+        self.game.descend()
+        self.redraw()
+
+    def action_inventory(self) -> None:
+        """Open the pack, and use whatever the player picks."""
+
+        def use_choice(index: int | None) -> None:
+            if index is not None:
+                self.game.use_item(index)
+            self.redraw()
+
+        self.push_screen(InventoryScreen(self.game), use_choice)
 
     def action_new_game(self) -> None:
         """Abandon this run and roll a fresh dungeon."""

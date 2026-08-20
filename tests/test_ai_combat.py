@@ -6,40 +6,11 @@ letters are monsters, `#` walls, `.` floor, `+` doors.
 
 from __future__ import annotations
 
-from random import Random
-
 import pytest
 
-from roguelike.entities import MONSTER_TEMPLATES, Monster, make_player
+from helpers import build
+
 from roguelike.game import GameState
-from roguelike.map_gen import FLOOR, TileMap
-
-TEMPLATES = {template.char: template for template in MONSTER_TEMPLATES}
-
-
-def build(rows: list[str], seed: int = 0) -> GameState:
-    """A GameState laid out exactly as drawn."""
-    grid = [list(row) for row in rows]
-    tile_map = TileMap(width=len(grid[0]), height=len(grid), grid=grid)
-
-    player = None
-    monsters: list[Monster] = []
-    for y, row in enumerate(grid):
-        for x, char in enumerate(row):
-            if char == "@":
-                player = make_player(x, y)
-                grid[y][x] = FLOOR
-            elif char in TEMPLATES:
-                monsters.append(TEMPLATES[char].spawn(x, y))
-                grid[y][x] = FLOOR
-
-    assert player is not None, "map has no @ for the player"
-    game = GameState(
-        seed=seed, rng=Random(seed), tile_map=tile_map, player=player,
-        entities=list(monsters),
-    )
-    game.update_fov()
-    return game
 
 
 # A rat sees 6 tiles, so it starts within that range here.
