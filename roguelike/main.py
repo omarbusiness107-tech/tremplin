@@ -9,25 +9,36 @@ from __future__ import annotations
 from rich.text import Text
 from textual.app import App, ComposeResult, RenderResult
 from textual.binding import Binding
-from textual.containers import Horizontal
+from textual.containers import Horizontal, Vertical
 from textual.widget import Widget
 from textual.widgets import Footer, Header, Static
 
 from .game import GameState, camera_origin
 from .map_gen import DOOR, FLOOR, STAIRS_DOWN, WALL
 
-# How each glyph is painted. Entities carry their own colour.
+#: How each glyph is painted while it is in view. Entities carry their own colour.
 TILE_STYLES: dict[str, str] = {
-    WALL: "rgb(90,95,110)",
-    FLOOR: "rgb(130,125,110)",
-    DOOR: "bold rgb(190,140,60)",
+    WALL: "rgb(128,134,156)",
+    FLOOR: "rgb(152,146,124)",
+    DOOR: "bold rgb(212,156,72)",
     STAIRS_DOWN: "bold rgb(120,220,160)",
 }
+#: The same glyphs drawn from memory: seen before, not currently in view.
+MEMORY_STYLES: dict[str, str] = {
+    WALL: "rgb(56,59,74)",
+    FLOOR: "rgb(62,60,54)",
+    DOOR: "rgb(96,74,42)",
+    STAIRS_DOWN: "rgb(58,92,74)",
+}
 DEFAULT_TILE_STYLE = "white"
+UNSEEN = " "
+
+#: Lines of message log kept on screen.
+LOG_LINES = 6
 
 
 class MapView(Widget):
-    """Draws the slice of the dungeon around the player."""
+    """Draws the slice of the dungeon around the player, under fog of war."""
 
     def __init__(self, game: GameState, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -49,11 +60,14 @@ class MapView(Widget):
             tile_map.height,
         )
 
-        # Index entities by position so each tile is a single dict lookup.
+        # Only entities in view are drawn, so monsters stay hidden in the dark.
         occupied = {
-            entity.position: entity for entity in game.entities if entity.is_alive
+            entity.position: entity
+            for entity in game.entities
+            if entity.is_alive and entity.position in game.visible
         }
-        occupied[game.player.position] = game.player
+        if game.player.is_alive:
+            occupied[game.player.position] = game.player
 
         frame = Text()
         for row in range(height):
@@ -66,40 +80,94 @@ class MapView(Widget):
                 map_x = origin_x + column
                 if map_x >= tile_map.width:
                     break
-                entity = occupied.get((map_x, map_y))
-                if entity is not None:
+                position = (map_x, map_y)
+                visible = position in game.visible
+
+                if visible and position in occupied:
+                    entity = occupied[position]
                     frame.append(entity.char, style=f"bold {entity.color}")
                     continue
+
                 tile = tile_map.get(map_x, map_y)
-                frame.append(tile, style=TILE_STYLES.get(tile, DEFAULT_TILE_STYLE))
+                if visible:
+                    frame.append(tile, style=TILE_STYLES.get(tile, DEFAULT_TILE_STYLE))
+                elif position in game.explored:
+                    frame.append(tile, style=MEMORY_STYLES.get(tile, "grey35"))
+                else:
+                    frame.append(UNSEEN)
         return frame
 
 
-class StatusPanel(Static):
-    """Sidebar with the run's vital statistics."""
+class MessageLog(Static):
+    """The last few things that happened."""
 
     def __init__(self, game: GameState, **kwargs) -> None:
         super().__init__(**kwargs)
         self.game = game
 
+    def refresh_log(self) -> None:
+        text = Text()
+        for index, message in enumerate(self.game.recent_messages(LOG_LINES)):
+            if index:
+                text.append("\n")
+            text.append(message.text, style=message.color)
+        self.update(text)
+
+
+class StatusPanel(Static):
+    """Sidebar with the run's vital statistics."""
+
+    BAR_WIDTH = 16
+
+    def __init__(self, game: GameState, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.game = game
+
+    def _health_bar(self) -> str:
+        player = self.game.player
+        ratio = player.hp / player.max_hp if player.max_hp else 0.0
+        filled = round(ratio * self.BAR_WIDTH)
+        color = (
+            "rgb(120,220,140)"
+            if ratio > 0.5
+            else "rgb(230,200,90)"
+            if ratio > 0.25
+            else "rgb(230,90,90)"
+        )
+        return (
+            f"[{color}]{'█' * filled}[/][rgb(60,60,72)]"
+            f"{'█' * (self.BAR_WIDTH - filled)}[/]"
+        )
+
     def refresh_status(self) -> None:
         game = self.game
         player = game.player
+        seen = game.visible_monsters()
         lines = [
             "[b]STATUS[/b]",
             "",
             f"Floor    [b]{game.floor}[/b]",
-            f"HP       [b]{player.hp}[/b]/{player.max_hp}",
+            f"HP       [b]{max(player.hp, 0)}[/b]/{player.max_hp}",
+            self._health_bar(),
+            "",
             f"Attack   [b]{player.attack}[/b]",
             f"Defense  [b]{player.defense}[/b]",
             "",
+            f"Kills    {game.kills}",
             f"Turns    {game.turns}",
-            f"Position {player.x},{player.y}",
-            f"Seed     {game.seed}",
+            f"In view  {len(seen)}",
             "",
-            "[dim]@ you   # wall[/dim]",
-            "[dim]. floor + door[/dim]",
+            f"[dim]Seed {game.seed}[/dim]",
         ]
+        if seen:
+            lines += ["", "[b]NEARBY[/b]"]
+            lines += [
+                f"[{monster.color}]{monster.char}[/] {monster.name} "
+                f"{monster.hp}/{monster.max_hp}"
+                for monster in seen[:5]
+            ]
+        if game.game_over:
+            lines += ["", "[bold rgb(255,80,80)]YOU DIED[/]", "[dim]n — new run[/dim]"]
         self.update("\n".join(lines))
 
 
@@ -114,13 +182,24 @@ class RoguelikeApp(App):
     #play-area {
         height: 1fr;
     }
+    #left-column {
+        width: 1fr;
+        height: 1fr;
+    }
     MapView {
         width: 1fr;
         height: 1fr;
         background: rgb(16,16,22);
     }
+    MessageLog {
+        width: 1fr;
+        height: 8;
+        padding: 1 2;
+        background: rgb(22,22,29);
+        border-top: solid rgb(60,60,75);
+    }
     StatusPanel {
-        width: 24;
+        width: 26;
         height: 1fr;
         padding: 1 2;
         background: rgb(26,26,34);
@@ -133,7 +212,8 @@ class RoguelikeApp(App):
         Binding("down,s,j", "move('down')", "Down"),
         Binding("left,a,h", "move('left')", "Left"),
         Binding("right,d,l", "move('right')", "Right"),
-        Binding("n", "new_game", "New dungeon"),
+        Binding("space,period", "wait", "Wait"),
+        Binding("n", "new_game", "New run"),
         Binding("q", "quit", "Quit"),
     ]
 
@@ -144,29 +224,39 @@ class RoguelikeApp(App):
     def compose(self) -> ComposeResult:
         yield Header()
         with Horizontal(id="play-area"):
-            yield MapView(self.game, id="map")
+            with Vertical(id="left-column"):
+                yield MapView(self.game, id="map")
+                yield MessageLog(self.game, id="log")
             yield StatusPanel(self.game, id="status")
         yield Footer()
 
     def on_mount(self) -> None:
-        self.sub_title = f"Floor {self.game.floor}"
-        self.query_one(StatusPanel).refresh_status()
+        self.redraw()
 
     def redraw(self) -> None:
-        """Push the current game state to both panels."""
+        """Push the current game state to every panel."""
+        self.sub_title = f"Floor {self.game.floor}"
         self.query_one(MapView).refresh()
+        self.query_one(MessageLog).refresh_log()
         self.query_one(StatusPanel).refresh_status()
 
     def action_move(self, direction: str) -> None:
         if self.game.move_player_in_direction(direction):
             self.redraw()
 
+    def action_wait(self) -> None:
+        if self.game.wait():
+            self.redraw()
+
     def action_new_game(self) -> None:
-        """Abandon this dungeon and roll a fresh one."""
+        """Abandon this run and roll a fresh dungeon."""
         self.game = GameState.new_game()
-        for widget in (self.query_one(MapView), self.query_one(StatusPanel)):
+        for widget in (
+            self.query_one(MapView),
+            self.query_one(MessageLog),
+            self.query_one(StatusPanel),
+        ):
             widget.game = self.game
-        self.sub_title = f"Floor {self.game.floor}"
         self.redraw()
 
 

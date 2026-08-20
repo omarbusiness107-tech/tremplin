@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 
-from roguelike.main import MapView, RoguelikeApp, StatusPanel
+from roguelike.main import MapView, MessageLog, RoguelikeApp, StatusPanel
 
 
 def drive(coro_factory):
@@ -81,5 +81,67 @@ def test_player_never_walks_through_a_wall():
                     await pilot.press(key)
             await pilot.pause()
             assert app.game.tile_map.is_walkable(*app.game.player.position)
+
+    drive(scenario)
+
+
+def test_fog_hides_the_map_until_it_is_explored():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=(100, 40)) as pilot:
+            await pilot.pause()
+            frame = app.query_one(MapView).render().plain
+            # Far more of the screen is dark than is drawn.
+            assert frame.count(" ") > frame.count("#")
+
+            explored_before = len(app.game.explored)
+            for key in ["down"] * 6 + ["right"] * 6:
+                await pilot.press(key)
+            await pilot.pause()
+            assert len(app.game.explored) >= explored_before
+
+    drive(scenario)
+
+
+def test_the_message_log_shows_what_happened():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=(100, 40)) as pilot:
+            await pilot.pause()
+            log = app.query_one(MessageLog)
+            log.refresh_log()
+            assert "descend" in log.render().plain
+
+    drive(scenario)
+
+
+def test_waiting_lets_the_dungeon_act():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=(100, 40)) as pilot:
+            await pilot.pause()
+            await pilot.press("space")
+            await pilot.pause()
+            assert app.game.turns == 1
+
+    drive(scenario)
+
+
+def test_the_status_panel_announces_death():
+    async def scenario():
+        app = RoguelikeApp(seed=1234)
+        async with app.run_test(size=(100, 40)) as pilot:
+            await pilot.pause()
+            app.game.player.hp = 0
+            app.game.game_over = True
+            panel = app.query_one(StatusPanel)
+            panel.refresh_status()
+            assert "YOU DIED" in panel.render().plain
+
+            # A dead player's keys do nothing.
+            turns = app.game.turns
+            await pilot.press("right")
+            await pilot.pause()
+            assert app.game.turns == turns
 
     drive(scenario)

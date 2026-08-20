@@ -68,6 +68,63 @@ class Player(Actor):
     defense: int = 1
 
 
+@dataclass
+class Monster(Actor):
+    """A hostile actor that hunts the player on sight."""
+
+    sight_radius: int = 8
+
+
+@dataclass(frozen=True)
+class MonsterTemplate:
+    """A monster species, and the floors it shows up on."""
+
+    name: str
+    char: str
+    color: str
+    hp: int
+    attack: int
+    defense: int
+    sight_radius: int = 8
+    min_floor: int = 1
+    weight: int = 10
+
+    def spawn(self, x: int, y: int) -> Monster:
+        return Monster(
+            x=x,
+            y=y,
+            char=self.char,
+            name=self.name,
+            color=self.color,
+            hp=self.hp,
+            max_hp=self.hp,
+            attack=self.attack,
+            defense=self.defense,
+            sight_radius=self.sight_radius,
+        )
+
+
+MONSTER_TEMPLATES: tuple[MonsterTemplate, ...] = (
+    MonsterTemplate(
+        name="Rat", char="r", color="rgb(150,140,120)",
+        hp=4, attack=2, defense=0, sight_radius=6, min_floor=1, weight=10,
+    ),
+    MonsterTemplate(
+        name="Goblin", char="g", color="rgb(110,190,90)",
+        hp=8, attack=4, defense=0, sight_radius=8, min_floor=1, weight=8,
+    ),
+    MonsterTemplate(
+        name="Orc", char="o", color="rgb(220,110,80)",
+        hp=14, attack=6, defense=1, sight_radius=8, min_floor=2, weight=6,
+    ),
+)
+
+
+def templates_for_floor(floor: int) -> list[MonsterTemplate]:
+    """The species that can appear on ``floor``."""
+    return [t for t in MONSTER_TEMPLATES if t.min_floor <= floor]
+
+
 def make_player(x: int, y: int) -> Player:
     """A fresh player at full health standing on (x, y)."""
     return Player(x=x, y=y)

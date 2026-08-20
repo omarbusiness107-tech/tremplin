@@ -17,6 +17,8 @@ DOOR = "+"
 STAIRS_DOWN = ">"
 
 WALKABLE_TILES = frozenset({FLOOR, DOOR, STAIRS_DOWN})
+# Doorways block sight, so a room stays dark until the player steps into it.
+SIGHT_BLOCKING_TILES = frozenset({WALL, DOOR})
 
 # Tuning knobs for the BSP pass.
 MIN_LEAF_SIZE = 8  # a partition smaller than this is never split again
@@ -80,6 +82,9 @@ class TileMap:
 
     def is_walkable(self, x: int, y: int) -> bool:
         return self.get(x, y) in WALKABLE_TILES
+
+    def blocks_sight(self, x: int, y: int) -> bool:
+        return self.get(x, y) in SIGHT_BLOCKING_TILES
 
     def rows(self) -> list[str]:
         """The whole map as one string per row (handy for tests and debugging)."""
