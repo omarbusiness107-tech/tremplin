@@ -53,6 +53,27 @@ rewind one.
 - [x] Character progression — experience, levels, and stat gains, so the player's
       power curve keeps pace with the dungeon's
 
+## Playing it on a phone
+
+`web/ember-depths.html` is a self-contained browser port — one file, no build step,
+no dependencies. Open it in any browser, or serve the folder and visit it from a
+phone on the same network.
+
+It carries the rules over faithfully: the same BSP generation, the same shadowcast
+field of view, the same species, items, combat arithmetic and balance figures. A
+test compares the two builds' difficulty tables floor by floor and they match
+exactly. Two things are deliberately different:
+
+- **Seeds do not correspond.** The terminal build draws from Python's random number
+  generator, which the browser cannot reproduce, so the same seed number builds a
+  different dungeon in each.
+- **It is built for a touchscreen.** Tap a tile to step toward it, or use the thumb
+  pad; a run is suspended to `localStorage` rather than to a file. Torchlight also
+  falls off across three steps of brightness rather than the terminal's two, which
+  is the one thing the browser can do that a terminal cannot.
+
+The Python build in `roguelike/` remains the reference implementation.
+
 ## Quick start
 
 ```bash
