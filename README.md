@@ -53,6 +53,35 @@ rewind one.
 - [x] Character progression — experience, levels, and stat gains, so the player's
       power curve keeps pace with the dungeon's
 
+## Three builds
+
+| | |
+|---|---|
+| `roguelike/` | The Python + Textual terminal game. The reference implementation — the rules live here. |
+| `web/ember-depths.html` | A browser port that keeps the ASCII presentation. |
+| `web/ember-depths-pixel.html` | The same game with hand-drawn pixel art on a canvas. |
+
+![The pixel build](docs/pixel-explored.png)
+
+The pixel build shares the browser port's rules file for file — the same
+generation, field of view, species, items, combat arithmetic and balance
+figures. What changes is everything you can see, plus two things the art
+required:
+
+- **Sprites are drawn in code.** `web/sprites.js` holds every tile and creature
+  as a 16x16 grid of palette letters, painted into offscreen canvases once at
+  start-up. There are no image files, so the art can be edited a pixel at a time
+  in the source.
+- **The floor is 52x38 rather than 80x45.** A sprite viewport shows about
+  14x21 tiles where the text one showed 32x25; on the larger map that was a
+  keyhole. Room density is unchanged, so a floor still holds a comparable number
+  of monsters and items — the measuring bot reaches floors 4-6 either way.
+
+Light does the rest of the work: a warm pool that breathes around the player,
+three steps of falloff to the edge of sight, a flat dimness for rooms held in
+memory, and unexplored ground painted back to black so the torch never spills
+onto what has not been seen.
+
 ## Playing it on a phone
 
 `web/ember-depths.html` is a self-contained browser port — one file, no build step,
