@@ -135,6 +135,14 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   white-space:nowrap}
 .slot .note{font-size:10.5px;color:var(--ink-dim);white-space:nowrap}
 .empty{color:var(--ink-dim);font-size:12px;padding:14px 0;text-align:center}
+.minimap{image-rendering:pixelated;width:100%;height:auto;display:block;
+  background:#07080C;border:1px solid var(--edge);border-radius:2px}
+.maplegend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;
+  font-size:10.5px;color:var(--ink-dim)}
+.maplegend span{display:flex;align-items:center;gap:5px}
+.maplegend i{width:9px;height:9px;border-radius:1px;display:block}
+.act-row{display:flex;gap:5px}
+.act-row .act{flex:1;min-width:0}
 .about{font-size:11.5px;color:var(--ink-dim);line-height:1.6}
 .about p+p{margin-top:9px}
 .about b{color:var(--ink)}
@@ -183,7 +191,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
       <div class="keyhints">
         <b>Tap a tile</b><span>step toward it — walk into a monster to attack</span>
         <b>WASD / arrows</b><span>move · <b>space</b> wait</span>
-        <b>i</b><span>pack · <b>&gt;</b> stairs · <b>S</b> save &amp; quit</span>
+        <b>i</b><span>pack · <b>m</b> map · <b>&gt;</b> stairs · <b>S</b> save &amp; quit</span>
       </div>
       <button class="btn small" id="aboutBtn" style="align-self:flex-start">Bestiary &amp; about</button>
     </div>
@@ -227,6 +235,21 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   <h2>Pack</h2><p class="sub" id="packSub">Nothing carried</p>
   <div class="slots" id="packSlots"></div>
   <button class="btn" id="packClose" style="width:100%">Close</button>
+</div></div>
+
+<div class="overlay" id="mapOverlay"><div class="sheet">
+  <h2 id="mapTitle">The floor so far</h2>
+  <p class="sub" id="mapSub">Ground you have walked</p>
+  <canvas id="mapCanvas" class="minimap"></canvas>
+  <div class="maplegend">
+    <span><i style="background:#5D6980"></i>walked</span>
+    <span><i style="background:#333B4A"></i>wall</span>
+    <span><i style="background:#B08A50"></i>door</span>
+    <span><i style="background:#74D79A"></i>stairs</span>
+    <span><i style="background:#FFD98A"></i>you</span>
+    <span><i style="background:#E05A60"></i>in sight</span>
+  </div>
+  <button class="btn" id="mapClose" style="width:100%;margin-top:16px">Close</button>
 </div></div>
 
 <div class="overlay" id="overOverlay"><div class="sheet">
@@ -436,22 +459,22 @@ const SPR_STAIRS = [
 /* A hooded figure with a lit blade. The hood and shoulders make the silhouette
    read as a person even at a single tile. */
 const HERO = [
-  "................",
-  "......kkkk......",
-  ".....kccCck.....",
-  "....kcCdDCck....",
-  "....kcbnnbck....",
-  "....kcnnnnck....",
-  "....kcnkknck....",
-  ".....kcnnck.....",
-  "....kkCdDCkk....",
-  "...kCdDDDdCk.Ek.",
-  "..kcCdDDDdCck Ek",
-  "..kcCCdDdCCck.Ek",
-  "..kkcCCCCCckk.ek",
-  "....kcCCCck..lk.",
-  "....kwk.kwk.....",
-  "...kkk...kkk...."
+  ".....kfk........",
+  "....kOfOk.......",
+  "....kEEEk.......",
+  "...kEEEEEk......",
+  "...kbbbbbk......",
+  "...kEiiiEk..kik.",
+  "....kEEEk...kik.",
+  "..kEEkkkEEk.kik.",
+  ".kEEECCCEEEk.kik",
+  ".kEkCCOCCCkEkkik",
+  "..kCCCOCCCk.kOOk",
+  "..kCCCCCCCk..kwk",
+  ".kDCCCCCCCDk....",
+  ".kDkEEEEEkDk....",
+  "..kkEEkEEkk.....",
+  "...kkk.kkk......"
 ];
 
 /* ---------------- monsters ---------------- */
@@ -1937,6 +1960,11 @@ function drawFrame(){
     const [ex, ey] = drawnAt(game.player);
     const px = (ex - ox) * TILE, py = (ey - oy) * TILE + bobOffset(game.player);
     drawShadow(px, (ey - oy) * TILE);
+    const halo = ctx.createRadialGradient(px + 8, py + 8, 1, px + 8, py + 8, TILE * 0.95);
+    halo.addColorStop(0, "rgba(255,214,150,.16)");
+    halo.addColorStop(1, "rgba(255,214,150,0)");
+    ctx.fillStyle = halo;
+    ctx.fillRect(px - TILE, py - TILE, TILE * 3, TILE * 3);
     drawSprite(SPRITES.hero, px, py, anim.flashes.get(game.player));
   }
 
@@ -2117,12 +2145,12 @@ function drawLog(){
 function drawActions(){
   const box = el("actButtons");
   box.innerHTML = "";
-  const add = (label, tag, handler, className) => {
+  const add = (label, tag, handler, className, parent) => {
     const button = document.createElement("button");
     button.className = "act" + (className ? " " + className : "");
     button.innerHTML = `<span>${label}</span>` + (tag ? `<span class="tag">${tag}</span>` : "");
     button.addEventListener("click", handler);
-    box.appendChild(button);
+    (parent || box).appendChild(button);
     return button;
   };
   if (aiming){
@@ -2131,7 +2159,11 @@ function drawActions(){
     add("Cancel", "esc", cancelAim);
     return;
   }
-  add("Pack", `${game.pack.length}/${PACK_CAPACITY}`, openPack);
+  const pair = document.createElement("div");
+  pair.className = "act-row";
+  box.appendChild(pair);
+  add("Pack", `${game.pack.length}`, openPack, "", pair);
+  add("Map", "m", openMap, "", pair);
   const stairs = add("Descend", "&gt;", takeStairs, onStairs(game) ? "go" : "");
   if (!onStairs(game)) stairs.disabled = true;
   add("Save &amp; quit", "S", suspendRun);
@@ -2186,6 +2218,82 @@ function cancelAim(){
   aiming = null;
   log(game, "You put it away.", "var(--ink-dim)");
   redraw();
+}
+
+/* ---------- the floor map ---------- */
+/* Drawn from what has been explored, never from the floor plan itself, so it
+   only ever shows ground the player has actually stood in the light of. */
+const MAP_CELL = 3;
+let mapOpen = false;
+
+function paintMinimap(){
+  const c = el("mapCanvas");
+  if (c.width !== MAP_W * MAP_CELL){
+    c.width = MAP_W * MAP_CELL;
+    c.height = MAP_H * MAP_CELL;
+  }
+  const g = c.getContext("2d");
+  g.imageSmoothingEnabled = false;
+  g.fillStyle = "#07080C";
+  g.fillRect(0, 0, c.width, c.height);
+
+  const block = (x, y, colour, inset) => {
+    g.fillStyle = colour;
+    g.fillRect(x * MAP_CELL + (inset || 0), y * MAP_CELL + (inset || 0),
+               MAP_CELL - (inset || 0) * 2, MAP_CELL - (inset || 0) * 2);
+  };
+  for (let y = 0; y < MAP_H; y++){
+    for (let x = 0; x < MAP_W; x++){
+      if (!game.explored.has(key(x, y))) continue;
+      const tile = game.map.get(x, y);
+      if (tile === WALL) block(x, y, "#333B4A");
+      else if (tile === DOOR) block(x, y, "#B08A50");
+      else if (tile === STAIRS) block(x, y, "#74D79A");
+      else block(x, y, "#5D6980");
+    }
+  }
+  for (const [at, item] of game.items){
+    const [x, y] = at.split(",").map(Number);
+    if (game.explored.has(at)) block(x, y, item.color, 1);
+  }
+  for (const monster of game.monsters)
+    if (monster.hp > 0 && game.visible.has(key(monster.x, monster.y)))
+      block(monster.x, monster.y, "#E05A60");
+
+  // The player, breathing so they are easy to pick out of the plan.
+  const pulse = reduceMotion ? 1 : 0.72 + Math.sin(clock / 260) * 0.28;
+  g.globalAlpha = pulse;
+  block(game.player.x, game.player.y, "#FFD98A");
+  g.globalAlpha = 1;
+  g.strokeStyle = "rgba(255,217,138,.55)";
+  g.lineWidth = 1;
+  g.strokeRect(game.player.x * MAP_CELL - 1.5, game.player.y * MAP_CELL - 1.5,
+               MAP_CELL + 3, MAP_CELL + 3);
+
+  if (mapOpen) requestAnimationFrame(() => { if (mapOpen) paintMinimap(); });
+}
+function openMap(){
+  if (!game || aiming) return;
+  let walkable = 0, seen = 0;
+  for (let y = 0; y < MAP_H; y++)
+    for (let x = 0; x < MAP_W; x++)
+      if (game.map.walkable(x, y)){
+        walkable++;
+        if (game.explored.has(key(x, y))) seen++;
+      }
+  const share = walkable ? Math.round((seen / walkable) * 100) : 0;
+  el("mapTitle").textContent = `Floor ${game.floor}`;
+  el("mapSub").textContent = game.stairs && game.explored.has(key(game.stairs[0], game.stairs[1]))
+    ? `${share}% walked · the stairs down are marked`
+    : `${share}% walked · the stairs are still unfound`;
+  el("mapOverlay").classList.add("on");
+  mapOpen = true;
+  paintMinimap();
+  Sound.play("click", 0);
+}
+function closeMap(){
+  mapOpen = false;
+  el("mapOverlay").classList.remove("on");
 }
 
 /* ---------- the pack ---------- */
@@ -2260,6 +2368,7 @@ function renderStats(target, pairs){
 }
 function showTitle(){
   game = null; aiming = null;
+  closeMap();
   stopLoop();
   el("seedValue").textContent = nextSeed;
   el("continueBtn").hidden = !hasSave();
@@ -2322,6 +2431,10 @@ const KEY_DIRECTIONS = {ArrowUp:"up", ArrowDown:"down", ArrowLeft:"left", ArrowR
 document.addEventListener("keydown", event => {
   const packOpen = el("packOverlay").classList.contains("on");
   const overOpen = el("overOverlay").classList.contains("on");
+  if (el("mapOverlay").classList.contains("on")){
+    if (event.key === "Escape" || event.key === "m") closeMap();
+    return;
+  }
   const aboutOpen = el("aboutOverlay").classList.contains("on");
   if (aboutOpen){ if (event.key === "Escape") el("aboutOverlay").classList.remove("on"); return; }
   if (overOpen){
@@ -2353,6 +2466,7 @@ document.addEventListener("keydown", event => {
   if (event.key === "Tab" && aiming){ event.preventDefault(); nextTarget(); return; }
   if (event.key === "Escape" && aiming){ cancelAim(); return; }
   if (event.key === "i"){ openPack(); return; }
+  if (event.key === "m"){ openMap(); return; }
   if (event.key === ">"){ if (!aiming) takeStairs(); return; }
   if (event.key === "S"){ suspendRun(); }
 });
@@ -2392,6 +2506,8 @@ el("continueBtn").addEventListener("click", continueRun);
 el("rerollBtn").addEventListener("click", () => {
   nextSeed = randomSeed(); el("seedValue").textContent = nextSeed;
 });
+el("mapClose").addEventListener("click", closeMap);
+el("mapOverlay").addEventListener("click", e => { if (e.target === el("mapOverlay")) closeMap(); });
 el("packClose").addEventListener("click", closePack);
 el("packOverlay").addEventListener("click", e => { if (e.target === el("packOverlay")) closePack(); });
 el("overClose").addEventListener("click", () => {

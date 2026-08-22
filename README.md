@@ -123,6 +123,19 @@ context opens on the first press and everything before it is silent by design.
 The speaker in the status bar mutes it; the choice is remembered, and while muted
 the synth builds no audio nodes at all.
 
+### The floor map
+
+`m`, or the Map button, opens a plan of the floor drawn entirely from what has
+been explored — never from the floor plan itself, so it shows only ground the
+player has stood in the light of. Rooms and corridors in stone grey, doors in
+amber, the stairs down in green once found, remembered loot as single points,
+anything currently in sight in red, and the player pulsing in gold. The heading
+reports how much of the floor has been walked and whether the way down has
+turned up yet.
+
+The map is a plan, not a periscope: while it is open the dungeon takes no input,
+so it cannot be used to look around a corner during a fight.
+
 ## Playing it on a phone
 
 `web/ember-depths.html` is a self-contained browser port — one file, no build step,
