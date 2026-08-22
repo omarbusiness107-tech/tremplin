@@ -82,6 +82,29 @@ three steps of falloff to the edge of sight, a flat dimness for rooms held in
 memory, and unexplored ground painted back to black so the torch never spills
 onto what has not been seen.
 
+### Animation
+
+The dungeon moves, but the rules do not. A turn still resolves instantly, exactly
+as it does in the terminal. What the screen shows is worked out afterwards by
+comparing a snapshot taken before the turn with the state after it — who moved,
+who was hurt, who stopped existing — and playing that difference out:
+
+| | |
+|---|---|
+| Steps | entities slide between tiles, and the camera chases rather than snapping |
+| Attacks | the attacker shoves toward its target; the target whites out and sheds a damage number |
+| Taking a hit | the view shakes |
+| Deaths | the sprite fades and lifts while sparks scatter in its own colour |
+| Thrown flasks | the flask arcs and tumbles, and its damage is held back until it lands and bursts |
+| Levelling | a ring of light expands from the player |
+| Descending | the new floor lights up out of the dark |
+| Always | idle bob on every creature, items rocking gently, dust drifting through the torchlight |
+
+Because the animation only ever reads state, it cannot change the game. The
+measuring bot returns identical runs before and after it was added — same floors,
+kills, turns and killers, seed for seed — which is the check that keeps the
+balance work valid.
+
 ## Playing it on a phone
 
 `web/ember-depths.html` is a self-contained browser port — one file, no build step,

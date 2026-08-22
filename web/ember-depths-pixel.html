@@ -647,7 +647,9 @@ function itemSprite(item){
   return SPRITES.potion;
 }
 
+
 </script>
+
 <script>
 "use strict";
 /* Ember Depths — a browser port of the Python/Textual roguelike.
@@ -967,7 +969,9 @@ function describeItem(item){
 }
 const PACK_CAPACITY = 16;
 const SLOT_LETTERS = "abcdefghijklmnop";
+
 </script>
+
 <script>
 "use strict";
 /* ============================ the run ============================ */
@@ -1402,7 +1406,9 @@ function loadGame(){
     return game;
   } catch (error){ throw new Error("That saved run is missing some of its data."); }
 }
+
 </script>
+
 <script>
 "use strict";
 /* ============================ interface ============================ */
@@ -1412,8 +1418,169 @@ const stage = el("stage"), logEl = el("log"), promptEl = el("prompt");
 
 let game = null, aiming = null, nextSeed = randomSeed(), lastSummary = null;
 let cols = 15, rows = 15, displayTile = 26;
-let animating = false, frame = 0, hurtFlash = 0, lastHp = 0;
+let running = false, lastFrame = 0, clock = 0;
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ============================ animation ============================
+
+   The rules are untouched: a turn resolves instantly, exactly as it does in the
+   terminal build. What the screen shows is worked out afterwards, by comparing
+   a snapshot taken before the turn with the state after it — who moved, who was
+   hurt, who stopped existing. That keeps every number verified elsewhere true
+   here, and keeps the motion purely a matter of presentation.                */
+
+const SLIDE_MS = 120;      // a step from one tile to the next
+const LUNGE_MS = 200;      // the shove of an attack
+const FLASH_MS = 220;      // white-out on taking a hit
+const EASE = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+const anim = {
+  camX: 0, camY: 0, camReady: false,
+  slides: new Map(),   // entity -> {fx, fy, t}  where fx,fy is where it came from
+  lunges: new Map(),   // entity -> {dx, dy, t}
+  flashes: new Map(),  // entity -> t
+  effects: [],
+  motes: [],
+  fade: 0,
+  shake: 0
+};
+const bobOffset = entity => {
+  if (reduceMotion) return 0;
+  const phase = ((entity.x * 7 + entity.y * 13) % 10) / 10;
+  return Math.sin(clock / 420 + phase * Math.PI * 2) > 0.4 ? -1 : 0;
+};
+function snapshot(){
+  const seen = new Map();
+  seen.set(game.player, {x: game.player.x, y: game.player.y, hp: game.player.hp,
+                         level: game.player.level});
+  for (const monster of game.monsters)
+    seen.set(monster, {x: monster.x, y: monster.y, hp: monster.hp});
+  return seen;
+}
+/* Turn the difference between two snapshots into things to watch. */
+function playDiff(before, delay){
+  delay = delay || 0;
+  const living = new Set(game.monsters);
+  living.add(game.player);
+
+  for (const [entity, was] of before){
+    if (living.has(entity)){
+      if (entity.x !== was.x || entity.y !== was.y)
+        anim.slides.set(entity, {fx: was.x, fy: was.y, t: 0});
+      if (entity.hp < was.hp){
+        anim.flashes.set(entity, 0);
+        addEffect({kind: "damage", x: entity.x, y: entity.y, delay,
+                   text: "-" + (was.hp - entity.hp),
+                   colour: entity === game.player ? "#FF8A8A" : "#FFE08A"});
+        lungeAttacker(entity === game.player, entity.x, entity.y);
+      }
+    } else {
+      // Gone from the floor: it died where it last stood. The blow still shows,
+      // which matters most when something dies to a single hit.
+      addEffect({kind: "damage", x: was.x, y: was.y, delay,
+                 text: "-" + was.hp, colour: "#FFE08A"});
+      addEffect({kind: "death", x: was.x, y: was.y, delay,
+                 sprite: SPRITES[entity.name] || SPRITES.Goblin});
+      burst(was.x, was.y, entity.color || "#C25A4E", 7, delay);
+      lungeAttacker(false, was.x, was.y);
+    }
+  }
+  if (game.player.level > (before.get(game.player) || {}).level) celebrate();
+}
+/* Whoever was standing next to the wounded party gets the swing. Takes a
+   position rather than an entity so it still works for something that died. */
+function lungeAttacker(victimIsPlayer, vx, vy){
+  if (reduceMotion) return;
+  const adjacent = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1;
+  const attacker = victimIsPlayer
+    ? game.monsters.find(m => m.hp > 0 && adjacent(m, {x: vx, y: vy}))
+    : (adjacent(game.player, {x: vx, y: vy}) ? game.player : null);
+  if (!attacker) return;
+  anim.lunges.set(attacker, {dx: Math.sign(vx - attacker.x),
+                             dy: Math.sign(vy - attacker.y), t: 0});
+  if (victimIsPlayer) anim.shake = 1;
+}
+function addEffect(effect){
+  effect.t = 0;
+  effect.delay = effect.delay || 0;
+  anim.effects.push(effect);
+}
+function burst(x, y, colour, count, delay){
+  if (reduceMotion) return;
+  for (let i = 0; i < count; i++){
+    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+    const speed = 0.6 + Math.random() * 1.2;
+    addEffect({kind: "spark", x, y, delay, colour, life: 460,
+               vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 0.4});
+  }
+}
+function celebrate(){
+  addEffect({kind: "levelup", x: game.player.x, y: game.player.y, life: 900});
+  burst(game.player.x, game.player.y, "#F5D68A", 10, 0);
+}
+/* A thrown flask flies before it bursts, so hold the damage back until it lands. */
+function throwArc(fromX, fromY, toX, toY, sprite, blastRadius){
+  const flight = reduceMotion ? 0 : 260;
+  if (flight) addEffect({kind: "projectile", x: fromX, y: fromY, tx: toX, ty: toY,
+                         sprite, life: flight});
+  addEffect({kind: "blast", x: toX, y: toY, radius: blastRadius, delay: flight, life: 420});
+  burst(toX, toY, "#FFB55A", 10, flight);
+  return flight;
+}
+function finishMotion(){
+  for (const slide of anim.slides.values()) slide.t = 1;
+  anim.slides.clear();
+  anim.lunges.clear();
+}
+function advance(dt){
+  clock += dt;
+  for (const [entity, slide] of anim.slides){
+    slide.t += dt / SLIDE_MS;
+    if (slide.t >= 1) anim.slides.delete(entity);
+  }
+  for (const [entity, lunge] of anim.lunges){
+    lunge.t += dt / LUNGE_MS;
+    if (lunge.t >= 1) anim.lunges.delete(entity);
+  }
+  for (const [entity, t] of anim.flashes){
+    const next = t + dt / FLASH_MS;
+    if (next >= 1) anim.flashes.delete(entity); else anim.flashes.set(entity, next);
+  }
+  for (let i = anim.effects.length - 1; i >= 0; i--){
+    const effect = anim.effects[i];
+    if (effect.delay > 0){ effect.delay -= dt; continue; }
+    effect.t += dt;
+    if (effect.t >= (effect.life || 700)) anim.effects.splice(i, 1);
+  }
+  if (anim.fade > 0) anim.fade = Math.max(0, anim.fade - dt / 260);
+  if (anim.shake > 0) anim.shake = Math.max(0, anim.shake - dt / 220);
+  updateMotes(dt);
+  // The camera chases the player rather than snapping to them.
+  const [tx, ty] = cameraTarget();
+  if (!anim.camReady){ anim.camX = tx; anim.camY = ty; anim.camReady = true; }
+  else if (reduceMotion){ anim.camX = tx; anim.camY = ty; }
+  else {
+    const chase = Math.min(1, dt / 90);
+    anim.camX += (tx - anim.camX) * chase;
+    anim.camY += (ty - anim.camY) * chase;
+    if (Math.abs(tx - anim.camX) < 0.002) anim.camX = tx;
+    if (Math.abs(ty - anim.camY) < 0.002) anim.camY = ty;
+  }
+}
+/* Motes of dust drifting in the torchlight. */
+function updateMotes(dt){
+  if (reduceMotion) return;
+  while (anim.motes.length < 14)
+    anim.motes.push({x: Math.random() * cols, y: Math.random() * rows,
+                     vy: -(0.04 + Math.random() * 0.05),
+                     vx: (Math.random() - 0.5) * 0.03,
+                     a: 0.10 + Math.random() * 0.22, phase: Math.random() * 6.3});
+  for (const mote of anim.motes){
+    mote.x += mote.vx * dt / 16;
+    mote.y += mote.vy * dt / 16;
+    if (mote.y < -1){ mote.y = rows + 1; mote.x = Math.random() * cols; }
+  }
+}
 
 /* ---------- sizing ---------- */
 function fitStage(){
@@ -1430,19 +1597,33 @@ function fitStage(){
   canvas.style.width = (cols * displayTile) + "px";
   canvas.style.height = (rows * displayTile) + "px";
   ctx.imageSmoothingEnabled = false;
+  anim.motes.length = 0;
 }
-function cameraOrigin(){
-  const ox = game.player.x - (cols >> 1), oy = game.player.y - (rows >> 1);
-  return [Math.max(0, Math.min(ox, Math.max(0, MAP_W - cols))),
-          Math.max(0, Math.min(oy, Math.max(0, MAP_H - rows)))];
+function cameraTarget(){
+  const x = game.player.x - (cols - 1) / 2, y = game.player.y - (rows - 1) / 2;
+  return [Math.max(0, Math.min(x, Math.max(0, MAP_W - cols))),
+          Math.max(0, Math.min(y, Math.max(0, MAP_H - rows)))];
+}
+/* Where an entity should be drawn right now, in tiles. */
+function drawnAt(entity){
+  let x = entity.x, y = entity.y;
+  const slide = anim.slides.get(entity);
+  if (slide){
+    const k = EASE(Math.min(1, slide.t));
+    x = slide.fx + (x - slide.fx) * k;
+    y = slide.fy + (y - slide.fy) * k;
+  }
+  const lunge = anim.lunges.get(entity);
+  if (lunge){
+    const push = Math.sin(Math.min(1, lunge.t) * Math.PI) * 0.38;
+    x += lunge.dx * push;
+    y += lunge.dy * push;
+  }
+  return [x, y];
 }
 
 /* ---------- drawing ---------- */
-const FLOOR_VARIANTS = () => [SPRITES.floorA, SPRITES.floorB, SPRITES.floorC];
 const tileHash = (x, y) => ((x * 73856093) ^ (y * 19349663)) >>> 0;
-
-/* Torchlight: full strength underfoot, falling away to the edge of sight, then
-   a flat dimness for tiles held in memory only. */
 function lighting(dx, dy, lit){
   if (!lit) return {dark: 0.60, warm: 0};
   const ratio = Math.min(1, Math.sqrt(dx * dx + dy * dy) / FOV_RADIUS);
@@ -1454,33 +1635,52 @@ function drawShadow(px, py){
   ctx.ellipse(px + 8, py + 14, 5, 2, 0, 0, Math.PI * 2);
   ctx.fill();
 }
+/* A sprite with an optional white-out, used when something has just been hit. */
+function drawSprite(sprite, px, py, flash){
+  ctx.drawImage(sprite, px, py);
+  if (!flash) return;
+  ctx.save();
+  ctx.globalCompositeOperation = "source-atop";
+  ctx.globalAlpha = (1 - flash) * 0.85;
+  ctx.fillStyle = "#FFF3E0";
+  ctx.fillRect(px, py, TILE, TILE);
+  ctx.restore();
+}
 function drawFrame(){
   if (!game) return;
-  const [ox, oy] = cameraOrigin();
-  const floors = FLOOR_VARIANTS();
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const floors = [SPRITES.floorA, SPRITES.floorB, SPRITES.floorC];
+  const camX = anim.camX, camY = anim.camY;
+  const ox = Math.floor(camX), oy = Math.floor(camY);
+  let shiftX = -Math.round((camX - ox) * TILE);
+  let shiftY = -Math.round((camY - oy) * TILE);
+  if (anim.shake > 0 && !reduceMotion){
+    shiftX += Math.round((Math.random() - 0.5) * anim.shake * 3);
+    shiftY += Math.round((Math.random() - 0.5) * anim.shake * 3);
+  }
+
   ctx.fillStyle = "#07080C";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(shiftX, shiftY);
 
+  const wide = cols + 2, tall = rows + 2;
+  const drawn = new Uint8Array(wide * tall);
   const monsters = new Map();
   for (const m of game.monsters)
     if (m.hp > 0 && game.visible.has(key(m.x, m.y))) monsters.set(key(m.x, m.y), m);
-  const drawn = new Uint8Array(cols * rows);
 
-  for (let row = 0; row < rows; row++){
-    for (let col = 0; col < cols; col++){
+  for (let row = 0; row < tall; row++){
+    for (let col = 0; col < wide; col++){
       const mx = ox + col, my = oy + row;
-      if (mx >= MAP_W || my >= MAP_H) continue;
+      if (mx < 0 || my < 0 || mx >= MAP_W || my >= MAP_H) continue;
       const at = key(mx, my);
       const lit = game.visible.has(at);
       if (!lit && !game.explored.has(at)) continue;
-      drawn[row * cols + col] = 1;
+      drawn[row * wide + col] = 1;
 
       const px = col * TILE, py = row * TILE;
       const tile = game.map.get(mx, my);
-
       if (tile === WALL){
-        // A wall with open ground below it shows its face; the rest is bedrock.
         const openBelow = my + 1 < MAP_H && game.map.get(mx, my + 1) !== WALL;
         ctx.drawImage(openBelow ? SPRITES.wallFace : SPRITES.wallTop, px, py);
       } else {
@@ -1488,31 +1688,45 @@ function drawFrame(){
         if (tile === DOOR) ctx.drawImage(SPRITES.door, px, py);
         else if (tile === STAIRS) ctx.drawImage(SPRITES.stairs, px, py);
       }
-
       if (lit){
         const item = game.items.get(at);
-        if (item){ drawShadow(px, py); ctx.drawImage(itemSprite(item), px, py); }
-        const monster = monsters.get(at);
-        if (monster){
+        if (item){
+          const lift = reduceMotion ? 0
+            : Math.round(Math.sin(clock / 500 + tileHash(mx, my) % 6) * 0.9);
           drawShadow(px, py);
-          ctx.drawImage(SPRITES[monster.name] || SPRITES.Goblin, px, py);
-        }
-        if (game.player.hp > 0 && game.player.x === mx && game.player.y === my){
-          drawShadow(px, py);
-          ctx.drawImage(SPRITES.hero, px, py);
+          ctx.drawImage(itemSprite(item), px, py + lift);
         }
       }
-
       const {dark, warm} = lighting(mx - game.player.x, my - game.player.y, lit);
       if (dark > 0){ ctx.fillStyle = `rgba(7,8,12,${dark})`; ctx.fillRect(px, py, TILE, TILE); }
       if (warm > 0){ ctx.fillStyle = `rgba(216,154,70,${warm})`; ctx.fillRect(px, py, TILE, TILE); }
     }
   }
 
-  // The torch itself: a warm pool that breathes, centred on the player.
-  const flicker = reduceMotion ? 1 : 1 + Math.sin(frame / 17) * 0.035 + Math.sin(frame / 6) * 0.015;
-  const hx = (game.player.x - ox) * TILE + TILE / 2;
-  const hy = (game.player.y - oy) * TILE + TILE / 2;
+  // Actors ride above the tile pass so a lunge can cross a tile edge.
+  for (const monster of game.monsters){
+    if (monster.hp <= 0 || !game.visible.has(key(monster.x, monster.y))) continue;
+    const [ex, ey] = drawnAt(monster);
+    const px = (ex - ox) * TILE, py = (ey - oy) * TILE + bobOffset(monster);
+    drawShadow(px, (ey - oy) * TILE);
+    drawSprite(SPRITES[monster.name] || SPRITES.Goblin, px, py, anim.flashes.get(monster));
+    const {dark} = lighting(monster.x - game.player.x, monster.y - game.player.y, true);
+    if (dark > 0){ ctx.fillStyle = `rgba(7,8,12,${dark})`; ctx.fillRect(px, py, TILE, TILE); }
+  }
+  if (game.player.hp > 0){
+    const [ex, ey] = drawnAt(game.player);
+    const px = (ex - ox) * TILE, py = (ey - oy) * TILE + bobOffset(game.player);
+    drawShadow(px, (ey - oy) * TILE);
+    drawSprite(SPRITES.hero, px, py, anim.flashes.get(game.player));
+  }
+
+  drawEffects(ox, oy);
+
+  // The torch: a warm pool that breathes, centred on where the player is drawn.
+  const flicker = reduceMotion ? 1
+    : 1 + Math.sin(clock / 260) * 0.035 + Math.sin(clock / 90) * 0.015;
+  const [hxT, hyT] = drawnAt(game.player);
+  const hx = (hxT - ox) * TILE + TILE / 2, hy = (hyT - oy) * TILE + TILE / 2;
   const reach = FOV_RADIUS * TILE * 0.82 * flicker;
   const glow = ctx.createRadialGradient(hx, hy, TILE * 0.5, hx, hy, reach);
   glow.addColorStop(0, "rgba(255,190,110,.20)");
@@ -1520,18 +1734,19 @@ function drawFrame(){
   glow.addColorStop(1, "rgba(216,154,70,0)");
   ctx.globalCompositeOperation = "lighter";
   ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(-TILE, -TILE, canvas.width + TILE * 2, canvas.height + TILE * 2);
   ctx.globalCompositeOperation = "source-over";
 
   // Unexplored ground takes no light: paint it back to void.
   ctx.fillStyle = "#07080C";
-  for (let row = 0; row < rows; row++)
-    for (let col = 0; col < cols; col++)
-      if (!drawn[row * cols + col]) ctx.fillRect(col * TILE, row * TILE, TILE, TILE);
+  for (let row = 0; row < tall; row++)
+    for (let col = 0; col < wide; col++)
+      if (!drawn[row * wide + col]) ctx.fillRect(col * TILE, row * TILE, TILE, TILE);
 
+  drawMotes();
   if (aiming) drawAimOverlay(ox, oy);
+  ctx.restore();
 
-  // Edge vignette, so the viewport reads as a lit pocket rather than a window.
   const vignette = ctx.createRadialGradient(
     canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) * 0.32,
     canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) * 0.72);
@@ -1540,9 +1755,72 @@ function drawFrame(){
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  if (hurtFlash > 0){
-    ctx.fillStyle = `rgba(190,50,55,${hurtFlash * 0.4})`;
+  if (anim.fade > 0){
+    ctx.fillStyle = `rgba(7,8,12,${anim.fade})`;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+}
+function drawMotes(){
+  if (reduceMotion) return;
+  for (const mote of anim.motes){
+    const px = mote.x * TILE, py = mote.y * TILE;
+    const twinkle = 0.6 + Math.sin(clock / 300 + mote.phase) * 0.4;
+    ctx.fillStyle = `rgba(255,214,150,${mote.a * twinkle})`;
+    ctx.fillRect(Math.round(px), Math.round(py), 1, 1);
+  }
+}
+function drawEffects(ox, oy){
+  for (const effect of anim.effects){
+    if (effect.delay > 0) continue;
+    const life = effect.life || 700;
+    const k = Math.min(1, effect.t / life);
+    if (effect.kind === "damage"){
+      const px = (effect.x - ox) * TILE + TILE / 2;
+      const py = (effect.y - oy) * TILE - k * 11;
+      ctx.globalAlpha = 1 - k * k;
+      ctx.font = "bold 7px monospace";
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#0C0E14";
+      ctx.fillText(effect.text, px + 1, py + 1);
+      ctx.fillStyle = effect.colour;
+      ctx.fillText(effect.text, px, py);
+      ctx.globalAlpha = 1;
+    } else if (effect.kind === "death"){
+      ctx.globalAlpha = 1 - k;
+      ctx.drawImage(effect.sprite, (effect.x - ox) * TILE, (effect.y - oy) * TILE - k * 5);
+      ctx.globalAlpha = 1;
+    } else if (effect.kind === "spark"){
+      const px = (effect.x - ox) * TILE + TILE / 2 + effect.vx * effect.t / 12;
+      const py = (effect.y - oy) * TILE + TILE / 2 + effect.vy * effect.t / 12
+               + Math.pow(effect.t / 90, 2) * 0.7;
+      ctx.globalAlpha = 1 - k;
+      ctx.fillStyle = effect.colour;
+      ctx.fillRect(Math.round(px), Math.round(py), 2, 2);
+      ctx.globalAlpha = 1;
+    } else if (effect.kind === "projectile"){
+      const px = (effect.x + (effect.tx - effect.x) * k - ox) * TILE;
+      const arc = Math.sin(k * Math.PI) * TILE * 0.9;
+      const py = (effect.y + (effect.ty - effect.y) * k - oy) * TILE - arc;
+      ctx.save();
+      ctx.translate(px + TILE / 2, py + TILE / 2);
+      ctx.rotate(k * Math.PI * 2);
+      ctx.drawImage(effect.sprite, -TILE / 2, -TILE / 2);
+      ctx.restore();
+    } else if (effect.kind === "blast"){
+      const px = (effect.x - ox) * TILE + TILE / 2, py = (effect.y - oy) * TILE + TILE / 2;
+      const radius = (0.35 + k * 0.9) * (effect.radius + 0.5) * TILE;
+      const ring = ctx.createRadialGradient(px, py, 0, px, py, radius);
+      ring.addColorStop(0, `rgba(255,236,180,${(1 - k) * 0.85})`);
+      ring.addColorStop(0.5, `rgba(255,150,60,${(1 - k) * 0.55})`);
+      ring.addColorStop(1, "rgba(200,70,20,0)");
+      ctx.fillStyle = ring;
+      ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2); ctx.fill();
+    } else if (effect.kind === "levelup"){
+      const px = (effect.x - ox) * TILE + TILE / 2, py = (effect.y - oy) * TILE + TILE / 2;
+      ctx.strokeStyle = `rgba(245,214,138,${(1 - k) * 0.9})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(px, py, 4 + k * 22, 0, Math.PI * 2); ctx.stroke();
+    }
   }
 }
 function drawAimOverlay(ox, oy){
@@ -1551,31 +1829,44 @@ function drawAimOverlay(ox, oy){
   const radius = aiming.item.blast;
   ctx.fillStyle = ok ? "rgba(216,154,70,.20)" : "rgba(190,60,60,.18)";
   for (let dy = -radius; dy <= radius; dy++)
-    for (let dx = -radius; dx <= radius; dx++){
-      const tx = cx + dx - ox, ty = cy + dy - oy;
-      if (tx < 0 || ty < 0 || tx >= cols || ty >= rows) continue;
-      ctx.fillRect(tx * TILE, ty * TILE, TILE, TILE);
-    }
+    for (let dx = -radius; dx <= radius; dx++)
+      ctx.fillRect((cx + dx - ox) * TILE, (cy + dy - oy) * TILE, TILE, TILE);
   const px = (cx - ox) * TILE, py = (cy - oy) * TILE;
-  if (px < 0 || py < 0 || px >= canvas.width || py >= canvas.height) return;
   ctx.strokeStyle = ok ? "#F0C978" : "#E0707A";
   ctx.lineWidth = 1;
-  const pulse = reduceMotion ? 0 : (Math.sin(frame / 8) + 1) * 0.5;
+  const pulse = reduceMotion ? 0 : (Math.sin(clock / 130) + 1) * 0.5;
   ctx.globalAlpha = 0.65 + pulse * 0.35;
   ctx.strokeRect(px + 0.5, py + 0.5, TILE - 1, TILE - 1);
   ctx.globalAlpha = 1;
 }
 
-/* ---------- animation loop ---------- */
-function tick(){
-  if (!animating) return;
-  frame += 1;
-  if (hurtFlash > 0) hurtFlash = Math.max(0, hurtFlash - 0.045);
+/* ---------- the frame loop ---------- */
+function loop(now){
+  if (!running) return;
+  const dt = Math.min(64, now - (lastFrame || now));
+  lastFrame = now;
+  advance(dt);
   drawFrame();
-  requestAnimationFrame(tick);
+  requestAnimationFrame(loop);
 }
-function startAnimating(){ if (!animating){ animating = true; requestAnimationFrame(tick); } }
-function stopAnimating(){ animating = false; }
+function startLoop(){
+  if (running) return;
+  running = true; lastFrame = 0;
+  requestAnimationFrame(loop);
+}
+function stopLoop(){ running = false; }
+
+/* Every player action goes through here, so the screen always knows what
+   changed and can show it. */
+function act(perform, options){
+  if (!game || game.gameOver) return false;
+  finishMotion();
+  const before = snapshot();
+  const outcome = perform();
+  if (outcome !== false) playDiff(before, options && options.delay);
+  redraw();
+  return outcome;
+}
 
 /* ---------- panels ---------- */
 function drawStatus(){
@@ -1620,15 +1911,12 @@ function drawActions(){
     return;
   }
   add("Pack", `${game.pack.length}/${PACK_CAPACITY}`, openPack);
-  const stairs = add("Descend", "&gt;", () => { descend(game); redraw(); },
-                     onStairs(game) ? "go" : "");
+  const stairs = add("Descend", "&gt;", takeStairs, onStairs(game) ? "go" : "");
   if (!onStairs(game)) stairs.disabled = true;
   add("Save &amp; quit", "S", suspendRun);
 }
 function redraw(){
-  if (game.player.hp < lastHp) hurtFlash = 1;
-  lastHp = game.player.hp;
-  drawStatus(); drawLog(); drawActions(); drawFrame();
+  drawStatus(); drawLog(); drawActions();
   promptEl.classList.toggle("on", !!aiming);
   if (aiming){
     const ok = canTarget(game, aiming.cursor[0], aiming.cursor[1], aiming.item.range);
@@ -1666,8 +1954,11 @@ function confirmAim(){
   const {index, cursor, item} = aiming;
   if (!canTarget(game, cursor[0], cursor[1], item.range)){ redraw(); return; }
   aiming = null;
-  useItem(game, index, cursor);
-  redraw();
+  // The flask flies before it bursts, so the damage it deals is held back until
+  // it lands rather than appearing the instant the button is pressed.
+  const flight = throwArc(game.player.x, game.player.y, cursor[0], cursor[1],
+                          itemSprite(item), item.blast);
+  act(() => useItem(game, index, cursor), {delay: flight});
 }
 function cancelAim(){
   if (!aiming) return;
@@ -1714,7 +2005,20 @@ const closePack = () => el("packOverlay").classList.remove("on");
 function chooseItem(index){
   if (index < 0 || index >= game.pack.length) return;
   if (needsTarget(game.pack[index])) beginAiming(index);
-  else { useItem(game, index); redraw(); }
+  else act(() => useItem(game, index));
+}
+
+function takeStairs(){
+  if (!game || aiming) return;
+  const wasFloor = game.floor;
+  descend(game);
+  if (game.floor !== wasFloor){
+    finishMotion();
+    anim.effects.length = 0;
+    anim.camReady = false;
+    anim.fade = 1;                       // the new floor lights up out of the dark
+  }
+  redraw();
 }
 
 /* ---------- screens ---------- */
@@ -1732,7 +2036,7 @@ function renderStats(target, pairs){
 }
 function showTitle(){
   game = null; aiming = null;
-  stopAnimating();
+  stopLoop();
   el("seedValue").textContent = nextSeed;
   el("continueBtn").hidden = !hasSave();
   el("titleErr").hidden = true;
@@ -1742,10 +2046,11 @@ function showTitle(){
 }
 function enterGame(loaded){
   game = loaded;
-  lastHp = game.player.hp;
-  hurtFlash = 0;
+  anim.slides.clear(); anim.lunges.clear(); anim.flashes.clear();
+  anim.effects.length = 0; anim.motes.length = 0;
+  anim.camReady = false; anim.fade = 1; anim.shake = 0;
   showScreen("game");
-  requestAnimationFrame(() => { fitStage(); redraw(); startAnimating(); });
+  requestAnimationFrame(() => { fitStage(); redraw(); startLoop(); });
 }
 const startRun = seed => enterGame(newGame(seed));
 function continueRun(){
@@ -1780,11 +2085,11 @@ function showGameOver(){
 function handleDirection(dir){
   if (!game || game.gameOver) return;
   if (aiming) nudgeCursor(dir);
-  else if (moveDir(game, dir)) redraw();
+  else act(() => moveDir(game, dir));
 }
 function handleWait(){
   if (!game || game.gameOver || aiming) return;
-  if (waitTurn(game)) redraw();
+  act(() => waitTurn(game));
 }
 const KEY_DIRECTIONS = {ArrowUp:"up", ArrowDown:"down", ArrowLeft:"left", ArrowRight:"right",
   w:"up", s:"down", a:"left", d:"right", k:"up", j:"down", h:"left", l:"right"};
@@ -1822,7 +2127,7 @@ document.addEventListener("keydown", event => {
   if (event.key === "Tab" && aiming){ event.preventDefault(); nextTarget(); return; }
   if (event.key === "Escape" && aiming){ cancelAim(); return; }
   if (event.key === "i"){ openPack(); return; }
-  if (event.key === ">"){ if (!aiming){ descend(game); redraw(); } return; }
+  if (event.key === ">"){ if (!aiming) takeStairs(); return; }
   if (event.key === "S"){ suspendRun(); }
 });
 for (const pad of document.querySelectorAll(".pad[data-dir]"))
@@ -1880,4 +2185,5 @@ for (const species of SPECIES){
   bestiary.append(line);
 }
 showTitle();
+
 </script>
