@@ -63,10 +63,10 @@ rewind one.
 
 ![The pixel build](docs/pixel-explored.png)
 
-The pixel build shares the browser port's rules file for file — the same
-generation, field of view, species, items, combat arithmetic and balance
-figures. What changes is everything you can see, plus two things the art
-required:
+The pixel build began as a re-skin of the browser port and has since grown its
+own rules: furniture, chests, braziers and a boss on every floor. The parts they
+still share — generation, field of view, species behaviour, items, combat
+arithmetic, levelling — remain identical. What differs:
 
 - **Sprites are drawn in code.** `web/sprites.js` holds every tile and creature
   as a 16x16 grid of palette letters, painted into offscreen canvases once at
@@ -134,7 +134,42 @@ reports how much of the floor has been walked and whether the way down has
 turned up yet.
 
 The map is a plan, not a periscope: while it is open the dungeon takes no input,
-so it cannot be used to look around a corner during a fight.
+so it cannot be used to look around a corner during a fight. Chests you have
+seen are marked in gold and a boss in sight in pink, since those are the two
+things worth walking towards.
+
+### Furnished floors
+
+Rooms are dressed from a theme — hall, store, crypt, barracks, shrine, ruin —
+rather than left as bare rectangles, and the amount of furniture scales with the
+floor space. Grand halls get a colonnade of pillars and braziers at the corners
+instead of a scatter, so architecture reads as intent.
+
+| | |
+|---|---|
+| Braziers | throw their own pool of light, up to three to a room |
+| Pillars | solid, immovable, and in the way |
+| Chests | walk into one to prise it open for an item |
+| Barrels, crates | walk into one to smash it; about two in five hide something |
+| Bones, rubble, rugs | dressing, walked straight over |
+
+**Nothing furniture does can seal a floor off.** A solid piece is only kept if a
+flood fill shows every open tile is still reachable without it, so crowding a
+room can never cut it off. A test generates fifty floors and checks exactly that.
+
+### Bosses
+
+Every floor is ruled by one, standing in the room with the stairs, so the way
+down has to be taken from something. Each is the crowned form of the species
+that rules that depth — Rat King, Goblin Chieftain, Orc Warlord, Ogre Tyrant,
+Wraith Lord — with its own sprite, a name and health bar across the top of the
+dungeon while it is in sight, and whatever it was guarding left on the floor
+where it fell.
+
+They are costed against the player's actual strength at the depth they appear,
+taking roughly a third to a half of a full health bar to bring down, and are
+worth about a level in experience. The first attempt was not costed at all and
+the measuring bot died to the floor-one Rat King in three runs out of five.
 
 ## Playing it on a phone
 
@@ -154,6 +189,8 @@ exactly. Two things are deliberately different:
   pad; a run is suspended to `localStorage` rather than to a file. Torchlight also
   falls off across three steps of brightness rather than the terminal's two, which
   is the one thing the browser can do that a terminal cannot.
+- **It is harder.** Furniture blocks the way and bosses hold the stairs, which
+  costs the measuring bot two floors: 2-5 here against 4-6 in the text builds.
 
 The Python build in `roguelike/` remains the reference implementation.
 

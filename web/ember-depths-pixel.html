@@ -82,6 +82,15 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 #stage{flex:1;min-height:0;position:relative;overflow:hidden;display:flex;
   align-items:center;justify-content:center;background:#07080C}
 #view{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+#bossBar{position:absolute;top:8px;left:50%;transform:translateX(-50%);
+  width:min(84%,320px);display:flex;flex-direction:column;gap:3px;pointer-events:none}
+#bossBar[hidden]{display:none}
+#bossName{font-family:var(--display);font-size:14px;font-weight:600;letter-spacing:.03em;
+  color:#FFD98A;text-align:center;text-shadow:0 1px 3px #07080C}
+.boss-track{display:block;height:6px;background:#1A0E12;border:1px solid #7E3138;
+  border-radius:1px;overflow:hidden}
+.boss-fill{display:block;height:100%;width:100%;background:linear-gradient(90deg,#E0565F,#F09A6A);
+  transition:width .18s ease}
 
 #prompt{flex-shrink:0;padding:5px 12px;background:var(--ember-glow);
   border-top:1px solid var(--ember-lo);font-size:11px;color:var(--ember);display:none}
@@ -215,7 +224,10 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
       </div>
       <button id="muteBtn" class="mute" aria-label="Mute sound" title="Sound">♪</button>
     </div>
-    <div id="stage"><canvas id="view"></canvas></div>
+    <div id="stage"><canvas id="view"></canvas>
+      <div id="bossBar" hidden><span id="bossName">Boss</span>
+        <span class="boss-track"><span class="boss-fill" id="bossFill"></span></span></div>
+    </div>
     <div id="prompt"></div>
     <div id="log"></div>
     <div id="controls">
@@ -248,6 +260,8 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
     <span><i style="background:#74D79A"></i>stairs</span>
     <span><i style="background:#FFD98A"></i>you</span>
     <span><i style="background:#E05A60"></i>in sight</span>
+    <span><i style="background:#F0C978"></i>chest</span>
+    <span><i style="background:#FF9BC0"></i>boss</span>
   </div>
   <button class="btn" id="mapClose" style="width:100%;margin-top:16px">Close</button>
 </div></div>
@@ -306,7 +320,7 @@ const PALETTE = {
   // metal
   e: "#6E7686", E: "#B9C2D4", i: "#E8EDF7",
   // reds
-  r: "#7E3129", R: "#C2534A", q: "#E88A72",
+  r: "#6E2B24", R: "#8E3A33", q: "#C2705A",
   // greens
   h: "#2F5A2C", H: "#5D9A42", j: "#8FC963",
   // magenta (ogre)
@@ -315,7 +329,8 @@ const PALETTE = {
   v: "#3B2F63", V: "#8571C6", x: "#C4B6F2",
   // misc
   z: "#D8D2C2", Z: "#F2EEE0", D: "#7E96D6",
-  a: "#272D3A", b: "#333B4A", c: "#3C4557"
+  a: "#272D3A", b: "#333B4A", c: "#3C4557",
+  m2: "#5A2A26"
 };
 
 /* ---------------- floors ---------------- */
@@ -643,12 +658,250 @@ const BLADE = [
   "................"
 ];
 
+const BRAZIER = [
+  "................",
+  "......kfk.......",
+  ".....kfFfk......",
+  "....kOfFfOk.....",
+  "....kOOfOOk.....",
+  "...kOOOOOOOk....",
+  "..kEEEEEEEEEk...",
+  "..kEeeeeeeeEk...",
+  "...kEEeeeEEk....",
+  "....kEeeeEk.....",
+  "....kEeeeEk.....",
+  "....kEeeeEk.....",
+  "...kEEeeeEEk....",
+  "..kEEEEEEEEEk...",
+  "..kkkkkkkkkkk...",
+  "................"
+];
+const BARREL = [
+  "................",
+  "................",
+  "...kWWWWWWWk....",
+  "..kWlLLLLLlWk...",
+  "..kEEEEEEEEEk...",
+  "..kWlLLLLLlWk...",
+  "..kWlLLLLLlWk...",
+  "..kEEEEEEEEEk...",
+  "..kWlLLLLLlWk...",
+  "..kWlLLLLLlWk...",
+  "..kEEEEEEEEEk...",
+  "..kWlLLLLLlWk...",
+  "...kWWWWWWWk....",
+  "....kkkkkkk.....",
+  "................",
+  "................"
+];
+const CRATE = [
+  "................",
+  "................",
+  "..kWWWWWWWWWk...",
+  "..kWLllllllWk...",
+  "..kWlLllllLWk...",
+  "..kWllLllLlWk...",
+  "..kWlllLLllWk...",
+  "..kWlllLLllWk...",
+  "..kWllLllLlWk...",
+  "..kWlLllllLWk...",
+  "..kWLllllllWk...",
+  "..kWWWWWWWWWk...",
+  "...kkkkkkkkk....",
+  "................",
+  "................",
+  "................"
+];
+const PILLAR = [
+  "..kEEEEEEEEk....",
+  "..kEuuuuuuEk....",
+  "...kEEEEEEk.....",
+  "...kTuuuuTk.....",
+  "...kTuuuuTk.....",
+  "...kTuTTuTk.....",
+  "...kTuuuuTk.....",
+  "...kTuuuuTk.....",
+  "...kTuTTuTk.....",
+  "...kTuuuuTk.....",
+  "...kTuuuuTk.....",
+  "...kTuuuuTk.....",
+  "...kEEEEEEk.....",
+  "..kEuuuuuuEk....",
+  "..kEEEEEEEEk....",
+  "..kkkkkkkkkk...."
+];
+const CHEST = [
+  "................",
+  "................",
+  "..kWWWWWWWWWk...",
+  "..kWLLLLLLLWk...",
+  "..kWLOOOOOLWk...",
+  "..kWLLLLLLLWk...",
+  "..kEEEEEEEEEk...",
+  "..kEEEOOEEEEk...",
+  "..kWLLLOOLLLWk..",
+  "..kWLLLLLLLWk...",
+  "..kWlllllllWk...",
+  "..kWLLLLLLLWk...",
+  "..kWWWWWWWWWk...",
+  "...kkkkkkkkk....",
+  "................",
+  "................"
+];
+const BONES = [
+  "................",
+  "................",
+  "................",
+  "................",
+  "................",
+  "................",
+  "....kzzzk.......",
+  "...kzZZZzk..kzk.",
+  "...kzkZkzk.kzZk.",
+  "...kzZZZzk.kzzk.",
+  "....kzzzk...kk..",
+  "..kzk..kzk......",
+  "..kzZkkzZk......",
+  "...kzzzzk.......",
+  "................",
+  "................"
+];
+const RUBBLE = [
+  "................",
+  "................",
+  "................",
+  "................",
+  "................",
+  "........kTk.....",
+  ".....kTk.kuk....",
+  "....kTuTkkTk....",
+  "....kuuTk.kTk...",
+  "....kTTk.kTuTk..",
+  "..kTk....kTTk...",
+  "..kTuTk...kk....",
+  "..kTTk..........",
+  "...kk...........",
+  "................",
+  "................"
+];
+const RUG = [
+  "................",
+  "................",
+  "..kaaaaaaaaaak..",
+  "..kaRRRRRRRRak..",
+  "..kaRLLLLLLRak..",
+  "..kaRLRRRRLRak..",
+  "..kaRLRqqRLRak..",
+  "..kaRLRqqRLRak..",
+  "..kaRLRRRRLRak..",
+  "..kaRLLLLLLRak..",
+  "..kaRRRRRRRRak..",
+  "..kaaaaaaaaaak..",
+  "................",
+  "................",
+  "................",
+  "................"
+];
+const RatKing = [
+  "................",
+  "......kOfOk.....",
+  ".....kOfffOk....",
+  "......kfkfk..kk.",
+  "....kk...kkWWk..",
+  ".kkkWWkkkWWWWk..",
+  "kWnnWWWWWWWWk...",
+  "kWnkWWWWWWWWWkk.",
+  "kWnWWWWWWWWWWWWk",
+  "kkWWWWWWWWWWWWWk",
+  ".kWWWWWWWWWWWkk.",
+  "..kWkkWkkWkkWk..",
+  "...kk.kk.kk.kk..",
+  "................",
+  "................",
+  "................"
+];
+const GoblinChief = [
+  "................",
+  "....kEEEEEk.....",
+  "...kEfOOOfEk....",
+  "...kEEkkkEEk....",
+  "..khkkHHHHkkhk..",
+  "...kHHHHHHHHk...",
+  "...kHHkHHkHHk...",
+  "...kHHHHHHHHk...",
+  "....kHqqqqHk....",
+  "..kEkkHHHHkkEk..",
+  "..kEkHHHHHHkEk..",
+  "..kEkHHHHHHkEk..",
+  "..kHkkkHHHkkkHk.",
+  "...k..kHHHk..k..",
+  "......kHkHk.....",
+  ".....kkk.kkk...."
+];
+const OrcWarlord = [
+  "..kk........kk..",
+  "..kEk......kEk..",
+  "...kEkkkkkkEk...",
+  "..kEEEEEEEEEEk..",
+  "..kEkRRRRRRkEk..",
+  "..kRRkRRRRkRRk..",
+  "..kRRRRRRRRRRk..",
+  "..kRRqqRRqqRRk..",
+  "..kZRRRRRRRRZk..",
+  "..kkRRRRRRRRkk..",
+  ".kERRRRRRRRRREk.",
+  "kEERRRRRRRRRREEk",
+  "kEkRRkRRRRkRRkEk",
+  "k.k.kRRkkRRk.k.k",
+  "....kRRk kRRk...",
+  "...kkkk   kkkk.."
+];
+const OgreTyrant = [
+  ".k..........k...",
+  "kEk...kk...kEk..",
+  "kEEkkkPPkkkEEk..",
+  ".kEPPPPPPPPPEk..",
+  "..kPkPPPPPPkPk..",
+  "..kPPPPPPPPPPk..",
+  "..kPZPPPPPPZPk..",
+  ".kEPPPPPPPPPPEk.",
+  "kEEPPPPPPPPPPEEk",
+  "kEEPPPPPPPPPPEEk",
+  "kEkPPPkPPkPPPkEk",
+  ".kkPPkkPPkkPPkk.",
+  "..kPPk.kPPk.kPk.",
+  "..kkk..kPPk..kk.",
+  "......kPPPPk....",
+  ".....kkk..kkk..."
+];
+const WraithLord = [
+  "....kOfffOk.....",
+  "...kOfFFFfOk....",
+  "...kvVVVVVvk....",
+  "..kvVVVVVVVvk...",
+  "..kvVkxxkVvk....",
+  "..kvVxFFxVvk....",
+  "..kvVVVVVVvk....",
+  ".kvVVVVVVVVvk...",
+  ".kvVVVVVVVVvk..k",
+  ".kvVVVVVVVVvkkik",
+  "kvVVVVVVVVVVvkik",
+  "kvVVvVVVVvVVvkik",
+  ".kvVkvVVvvkVvkOk",
+  "..kvk.kvvk.kvk..",
+  "...k...kk...k...",
+  "................"
+];
 const SPRITE_SOURCE = {
   floorA: FLOOR_A, floorB: FLOOR_B, floorC: FLOOR_C,
   wallFace: WALL_FACE, wallTop: WALL_TOP,
   door: SPR_DOOR, stairs: SPR_STAIRS, hero: HERO,
   Rat: RAT, Goblin: GOBLIN, Orc: ORC, Ogre: OGRE, Wraith: WRAITH,
-  potion: POTION, flask: FLASK, scroll: SCROLL, blade: BLADE
+  potion: POTION, flask: FLASK, scroll: SCROLL, blade: BLADE,
+  brazier: BRAZIER, barrel: BARREL, crate: CRATE, pillar: PILLAR,
+  chest: CHEST, bones: BONES, rubble: RUBBLE, rug: RUG,
+  RatKing: RatKing, GoblinChief: GoblinChief, OrcWarlord: OrcWarlord,
+  OgreTyrant: OgreTyrant, WraithLord: WraithLord
 };
 
 /* Paint every sprite once into its own canvas. */
@@ -913,7 +1166,8 @@ function spawnMonster(species, x, y, floor){
   const depth = Math.max(0, floor - species.minFloor);
   const hp = species.hp + depth;
   return {
-    x, y, char: species.char, name: species.name, color: species.color,
+    x, y, char: species.char, name: species.name, sprite: species.name,
+    color: species.color,
     hp, maxHp: hp,
     attack: species.attack + Math.floor(depth / 3) + Math.floor((floor - 1) / DEPTH_PER_ATTACK),
     defense: species.defense, sight: species.sight, behaviour: species.behaviour,
@@ -921,7 +1175,12 @@ function spawnMonster(species, x, y, floor){
   };
 }
 const isHurt = m => m.hp <= m.maxHp * FLEE_THRESHOLD;
-const xpValue = m => m.maxHp + m.attack * 2 + m.defense * 3;
+/* A boss costs about half a health bar to bring down, so it is worth roughly a
+   level rather than roughly two rats. */
+const xpValue = m => {
+  const base = m.maxHp + m.attack * 2 + m.defense * 3;
+  return m.boss ? Math.round(base * 2.5) : base;
+};
 const withArticle = name => ("aeiou".includes(name[0].toLowerCase()) ? "an " : "a ") + name;
 
 /* ============================ levelling ============================ */
@@ -997,6 +1256,65 @@ function describeItem(item){
   if (item.kind === "weapon") return `+${item.power} attack`;
   return "unknown effect";
 }
+/* ============================ furniture ============================
+   Rooms are dressed from a theme so a floor reads as a place rather than a
+   grid. Anything that blocks the way is only ever placed after checking the
+   floor still joins up — see placeProps. */
+const PROP_KINDS = {
+  brazier: {sprite: "brazier", blocks: true,  light: true,  name: "brazier"},
+  pillar:  {sprite: "pillar",  blocks: true,                name: "pillar"},
+  barrel:  {sprite: "barrel",  blocks: true,  breakable: true, loot: 0.40, name: "barrel"},
+  crate:   {sprite: "crate",   blocks: true,  breakable: true, loot: 0.40, name: "crate"},
+  chest:   {sprite: "chest",   blocks: true,  chest: true,  name: "chest"},
+  bones:   {sprite: "bones",   blocks: false,               name: "bones"},
+  rubble:  {sprite: "rubble",  blocks: false,               name: "rubble"},
+  rug:     {sprite: "rug",     blocks: false,               name: "rug"}
+};
+const ROOM_THEMES = [
+  {name: "hall",     fill: ["pillar", "pillar", "brazier", "rug", "rubble"]},
+  {name: "store",    fill: ["barrel", "barrel", "crate", "crate", "chest"]},
+  {name: "crypt",    fill: ["bones", "bones", "rubble", "pillar", "bones"]},
+  {name: "barracks", fill: ["crate", "barrel", "rug", "bones", "brazier"]},
+  {name: "shrine",   fill: ["brazier", "brazier", "rug", "bones", "pillar"]},
+  {name: "ruin",     fill: ["rubble", "rubble", "bones", "pillar", "rubble"]}
+];
+
+/* ============================ bosses ============================
+   One to a floor, standing between the player and the stairs. Each is the
+   crowned form of the species that rules that depth. */
+const BOSSES = [
+  {name: "Rat King",         sprite: "RatKing",     color: "#D8B45A",
+   hp: 18, attack: 4,  defense: 0, sight: 9,  behaviour: HUNTER,
+   minFloor: 1, maxFloor: 2},
+  {name: "Goblin Chieftain", sprite: "GoblinChief", color: "#8FD96A",
+   hp: 28, attack: 5,  defense: 1, sight: 9,  behaviour: HUNTER,
+   minFloor: 2, maxFloor: 3},
+  {name: "Orc Warlord",      sprite: "OrcWarlord",  color: "#F0846A",
+   hp: 40, attack: 7,  defense: 2, sight: 9,  behaviour: HUNTER,
+   minFloor: 3, maxFloor: 5},
+  {name: "Ogre Tyrant",      sprite: "OgreTyrant",  color: "#E27CB4",
+   hp: 60, attack: 12, defense: 3, sight: 9,  behaviour: SLOW,
+   minFloor: 5, maxFloor: 7},
+  {name: "Wraith Lord",      sprite: "WraithLord",  color: "#C4B0FF",
+   hp: 52, attack: 10, defense: 4, sight: 12, behaviour: STALKER,
+   minFloor: 6, maxFloor: null}
+];
+function bossFor(floor, rng){
+  const eligible = BOSSES.filter(b =>
+    b.minFloor <= floor && (b.maxFloor === null || floor <= b.maxFloor));
+  if (!eligible.length) return null;
+  const chosen = eligible[eligible.length - 1];
+  const depth = Math.max(0, floor - chosen.minFloor);
+  return {
+    x: 0, y: 0, char: "B", name: chosen.name, sprite: chosen.sprite,
+    color: chosen.color,
+    hp: chosen.hp + depth * 2, maxHp: chosen.hp + depth * 2,
+    attack: chosen.attack + Math.floor(depth / 2),
+    defense: chosen.defense, sight: chosen.sight, behaviour: chosen.behaviour,
+    lastSeen: null, resting: false, boss: true
+  };
+}
+
 const PACK_CAPACITY = 16;
 const SLOT_LETTERS = "abcdefghijklmnop";
 
@@ -1016,9 +1334,10 @@ const key = (x, y) => x + "," + y;
 function newGame(seed){
   const game = {
     seed, rng: makeRng(seed), floor: 1, turns: 0, kills: 0, itemsFound: 0,
-    xpEarned: 0, gameOver: false, killedBy: null,
+    xpEarned: 0, bossesFelled: 0, chestsOpened: 0, gameOver: false, killedBy: null,
     map: null, player: makePlayer(0, 0), monsters: [], items: new Map(),
-    pack: [], stairs: null, messages: [], visible: new Set(), explored: new Set()
+    props: new Map(), pack: [], stairs: null, messages: [],
+    visible: new Set(), explored: new Set()
   };
   generateFloor(game);
   log(game, "You descend into the dungeon.", "#8FB8E6");
@@ -1036,6 +1355,8 @@ function generateFloor(game){
   game.stairs = placeStairs(game);
   game.monsters = spawnMonsters(game);
   game.items = spawnItems(game);
+  game.props = placeProps(game);
+  placeBoss(game);
   game.visible = new Set();
   game.explored = new Set();
   updateFov(game);
@@ -1100,6 +1421,121 @@ function spawnItems(game){
   return items;
 }
 
+/* Flood fill of the walkable floor, treating a set of tiles as solid. */
+function reachableCount(game, blocked){
+  const start = key(game.player.x, game.player.y);
+  if (blocked.has(start)) return -1;
+  const seen = new Set([start]);
+  const queue = [[game.player.x, game.player.y]];
+  while (queue.length){
+    const [x, y] = queue.pop();
+    for (const [dx, dy] of Object.values(DIRECTIONS)){
+      const nx = x + dx, ny = y + dy, at = key(nx, ny);
+      if (seen.has(at) || blocked.has(at) || !game.map.walkable(nx, ny)) continue;
+      seen.add(at);
+      queue.push([nx, ny]);
+    }
+  }
+  return seen.size;
+}
+/* Dress each room from a theme. Anything solid is only kept if the floor still
+   joins up without it — furniture may crowd a room, never seal one. */
+function placeProps(game){
+  const props = new Map();
+  const rooms = game.map.rooms;
+  if (!rooms.length) return props;
+
+  let openTiles = 0;
+  for (let y = 0; y < MAP_H; y++)
+    for (let x = 0; x < MAP_W; x++)
+      if (game.map.walkable(x, y)) openTiles++;
+
+  const spoken = new Set([key(game.player.x, game.player.y)]);
+  if (game.stairs) spoken.add(key(game.stairs[0], game.stairs[1]));
+  for (const at of game.items.keys()) spoken.add(at);
+  for (const monster of game.monsters) spoken.add(key(monster.x, monster.y));
+
+  const blocked = new Set();
+  /* Try to stand one piece of furniture on a tile. Solid pieces are only kept
+     when the floor still joins up without them. */
+  const tryPlace = (x, y, kind) => {
+    const at = key(x, y);
+    if (spoken.has(at) || props.has(at)) return false;
+    if (game.map.get(x, y) !== FLOOR) return false;
+    for (const [dx, dy] of Object.values(DIRECTIONS))
+      if (game.map.get(x + dx, y + dy) === DOOR) return false;   // keep doorways clear
+    const def = PROP_KINDS[kind];
+    if (def.blocks){
+      blocked.add(at);
+      if (reachableCount(game, blocked) !== openTiles - blocked.size){
+        blocked.delete(at);
+        return false;
+      }
+    }
+    props.set(at, {kind, opened: false});
+    return true;
+  };
+
+  const BRAZIERS_PER_ROOM = 3;   // enough to light a hall, short of a lamp shop
+  for (let index = 0; index < rooms.length; index++){
+    const room = rooms[index];
+    const theme = game.rng.pick(ROOM_THEMES);
+    const grand = room.w >= 7 && room.h >= 6;
+    let lit = 0;
+    const place = (x, y, kind) => {
+      if (kind === "brazier"){
+        if (lit >= BRAZIERS_PER_ROOM) return false;
+        if (tryPlace(x, y, kind)){ lit++; return true; }
+        return false;
+      }
+      return tryPlace(x, y, kind);
+    };
+
+    // Big rooms get laid out rather than littered: pillars on a colonnade,
+    // braziers flanking the middle. Architecture reads as intent.
+    if (grand && (theme.name === "hall" || theme.name === "shrine")){
+      for (const [px, py] of [[room.x + 1, room.y + 1], [room.x2 - 2, room.y + 1],
+                              [room.x + 1, room.y2 - 2], [room.x2 - 2, room.y2 - 2]])
+        place(px, py, theme.name === "hall" ? "pillar" : "brazier");
+      if (theme.name === "hall"){
+        place(room.cx, room.y + 1, "brazier");
+        place(room.cx, room.y2 - 2, "brazier");
+      }
+      place(room.cx, room.cy, "rug");
+    }
+
+    // Then scatter the rest, in proportion to how much floor there is to fill.
+    const area = room.w * room.h;
+    let count = Math.max(2, Math.min(12, Math.round(area / 9)));
+    if (index === 0) count = Math.max(1, count - 3);   // the room you arrive in stays walkable
+    for (let n = 0; n < count; n++)
+      place(room.x + game.rng.below(room.w),
+            room.y + game.rng.below(room.h),
+            game.rng.pick(theme.fill));
+  }
+  return props;
+}
+/* The boss holds the room with the stairs in it. */
+function placeBoss(game){
+  const boss = bossFor(game.floor, game.rng);
+  if (!boss || !game.stairs) return;
+  const [sx, sy] = game.stairs;
+  const spots = [];
+  for (let radius = 1; radius <= 4 && !spots.length; radius++)
+    for (let dy = -radius; dy <= radius; dy++)
+      for (let dx = -radius; dx <= radius; dx++){
+        const x = sx + dx, y = sy + dy;
+        if (!game.map.walkable(x, y)) continue;
+        if (x === game.player.x && y === game.player.y) continue;
+        if (monsterAt(game, x, y) || game.props.has(key(x, y))) continue;
+        spots.push([x, y]);
+      }
+  if (!spots.length) return;
+  const [x, y] = game.rng.pick(spots);
+  boss.x = x; boss.y = y;
+  game.monsters.push(boss);
+}
+
 /* ---------- visibility ---------- */
 function updateFov(game){
   const blocks = (x, y) => game.map.blocksSight(x, y);
@@ -1128,11 +1564,17 @@ function revealFloor(game){
 
 /* ---------- queries ---------- */
 const monsterAt = (game, x, y) => game.monsters.find(m => m.hp > 0 && m.x === x && m.y === y) || null;
+const propAt = (game, x, y) => game.props.get(key(x, y)) || null;
+function propBlocks(game, x, y){
+  const prop = propAt(game, x, y);
+  return !!prop && PROP_KINDS[prop.kind].blocks;
+}
 const onStairs = game =>
   !!game.stairs && game.player.x === game.stairs[0] && game.player.y === game.stairs[1];
 const isAdjacent = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1;
 function openForMonster(game, x, y){
   if (!game.map.walkable(x, y)) return false;
+  if (propBlocks(game, x, y)) return false;
   if (game.player.hp > 0 && game.player.x === x && game.player.y === y) return false;
   return !monsterAt(game, x, y);
 }
@@ -1151,7 +1593,9 @@ function movePlayer(game, dx, dy){
   const tx = game.player.x + dx, ty = game.player.y + dy;
   const target = monsterAt(game, tx, ty);
   if (target) playerAttacks(game, target);
-  else if (game.map.walkable(tx, ty)){
+  else if (propBlocks(game, tx, ty)){
+    if (!disturbProp(game, tx, ty)) return false;
+  } else if (game.map.walkable(tx, ty)){
     game.player.x = tx; game.player.y = ty;
     pickUp(game);
   } else return false;
@@ -1177,6 +1621,36 @@ function pickUp(game){
   game.itemsFound += 1;
   log(game, `You pick up the ${item.name}.`, item.color);
 }
+/* Walking into furniture: prise open a chest, break a barrel, or fail to shift
+   a pillar. Returns whether the turn was worth spending. */
+function disturbProp(game, x, y){
+  const at = key(x, y);
+  const prop = game.props.get(at);
+  const def = PROP_KINDS[prop.kind];
+  if (def.chest){
+    game.props.delete(at);
+    const templates = itemsFor(game.floor);
+    const reward = spawnItem(game.rng.weighted(templates, t => t.weight));
+    game.items.set(at, reward);
+    log(game, `You prise the chest open: ${reward.name}.`, reward.color);
+    game.chestsOpened = (game.chestsOpened || 0) + 1;
+    return true;
+  }
+  if (def.breakable){
+    game.props.delete(at);
+    log(game, `You smash the ${def.name} apart.`, "var(--ink-dim)");
+    if (game.rng.random() < def.loot){
+      const templates = itemsFor(game.floor);
+      const reward = spawnItem(game.rng.weighted(templates, t => t.weight));
+      game.items.set(at, reward);
+      log(game, `Something was stashed inside: ${reward.name}.`, reward.color);
+    }
+    return true;
+  }
+  log(game, `The ${def.name} will not budge.`, "var(--ink-dim)");
+  return false;
+}
+
 function playerAttacks(game, target){
   const damage = damageFor(game.player, target);
   log(game, damage ? `You hit the ${target.name} for ${damage}.`
@@ -1193,7 +1667,20 @@ function monsterDied(game, monster){
   game.kills += 1;
   const index = game.monsters.indexOf(monster);
   if (index >= 0) game.monsters.splice(index, 1);
-  log(game, `The ${monster.name} dies!`, "var(--moss)");
+  if (monster.boss){
+    game.bossesFelled = (game.bossesFelled || 0) + 1;
+    log(game, `The ${monster.name} falls!`, "#F5D68A");
+    // What it was guarding is left where it stood.
+    const at = key(monster.x, monster.y);
+    if (!game.items.has(at)){
+      const templates = itemsFor(game.floor + 2);
+      const prize = spawnItem(game.rng.weighted(templates, t => t.weight));
+      game.items.set(at, prize);
+      log(game, `It was guarding ${prize.name}.`, prize.color);
+    }
+  } else {
+    log(game, `The ${monster.name} dies!`, "var(--moss)");
+  }
   const earned = xpValue(monster);
   game.xpEarned += earned;
   const levels = gainXp(game.player, earned);
@@ -1378,6 +1865,8 @@ function runSummary(game){
     ["Character level", String(game.player.level)],
     ["Experience",     String(game.xpEarned)],
     ["Monsters slain", String(game.kills)],
+    ["Bosses felled",  String(game.bossesFelled || 0)],
+    ["Chests opened",  String(game.chestsOpened || 0)],
     ["Turns survived", String(game.turns)],
     ["Items found",    String(game.itemsFound)],
     ["Final attack",   String(game.player.attack)],
@@ -1390,13 +1879,15 @@ function runSummary(game){
 /* ---------- suspending a run ---------- */
 /* A save is a way to stop playing, not a way to retry: loading consumes it and
    dying deletes it, so a run can be put down but never rewound. */
-const SAVE_KEY = "ember-depths-save-v1";
+const SAVE_KEY = "ember-depths-save-v2";
 function saveGame(game){
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify({
-      version: 1, seed: game.seed, rngState: game.rng.state,
+      version: 2, seed: game.seed, rngState: game.rng.state,
       floor: game.floor, turns: game.turns, kills: game.kills,
       itemsFound: game.itemsFound, xpEarned: game.xpEarned,
+      bossesFelled: game.bossesFelled || 0, chestsOpened: game.chestsOpened || 0,
+      props: [...game.props].map(([at, prop]) => [at, prop]),
       gameOver: game.gameOver, killedBy: game.killedBy,
       rows: game.map.rows(),
       rooms: game.map.rooms.map(r => [r.x, r.y, r.w, r.h]),
@@ -1418,7 +1909,7 @@ function loadGame(){
   let data;
   try { data = JSON.parse(localStorage.getItem(SAVE_KEY)); }
   catch (error){ throw new Error("That saved run could not be read."); }
-  if (!data || data.version !== 1) throw new Error("That saved run is from another version.");
+  if (!data || data.version !== 2) throw new Error("That saved run is from another version.");
   try {
     const map = makeTileMap(data.rows[0].length, data.rows.length);
     data.rows.forEach((row, y) => { map.grid[y] = row.split(""); });
@@ -1426,6 +1917,8 @@ function loadGame(){
     const game = {
       seed: data.seed, rng: makeRng(data.seed), floor: data.floor, turns: data.turns,
       kills: data.kills, itemsFound: data.itemsFound, xpEarned: data.xpEarned,
+      bossesFelled: data.bossesFelled || 0, chestsOpened: data.chestsOpened || 0,
+      props: new Map(data.props || []),
       gameOver: data.gameOver, killedBy: data.killedBy, map,
       player: data.player, monsters: data.monsters,
       items: new Map(data.items), pack: data.pack, stairs: data.stairs,
@@ -1582,6 +2075,17 @@ const Sound = (() => {
                        tone({when: (when || 0) + i * 0.20, freq: f, dur: 0.55,
                              type: "triangle", gain: 0.15})),
     click: when => tone({when, freq: 520, dur: 0.05, type: "square", gain: 0.07}),
+    chest: when => { noise({when, dur: 0.16, gain: 0.12, from: 900, to: 300});
+                     [523, 784, 1047].forEach((f, i) =>
+                       tone({when: (when || 0) + 0.05 + i * 0.06, freq: f, dur: 0.22,
+                             type: "triangle", gain: 0.10})); },
+    smash: when => { noise({when, dur: 0.24, gain: 0.20, filter: "highpass",
+                            from: 900, to: 2600});
+                     tone({when, freq: 160, to: 70, dur: 0.18, type: "square", gain: 0.10}); },
+    immovable: when => noise({when, dur: 0.09, gain: 0.11, from: 260, to: 110}),
+    bossFalls: when => [392, 330, 262, 196].forEach((f, i) =>
+                        tone({when: (when || 0) + i * 0.11, freq: f, dur: 0.5,
+                              type: "sawtooth", gain: 0.13})),
     drip: when => tone({when, freq: 1500 * vary(0.4), to: 700, dur: 0.13,
                         type: "sine", gain: 0.05})
   };
@@ -1677,6 +2181,9 @@ const bobOffset = entity => {
 function snapshot(){
   const seen = new Map();
   seen.foundBefore = game.itemsFound;
+  seen.propsBefore = game.props.size;
+  seen.chestsBefore = game.chestsOpened || 0;
+  seen.bossesBefore = game.bossesFelled || 0;
   seen.set(game.player, {x: game.player.x, y: game.player.y, hp: game.player.hp,
                          level: game.player.level});
   for (const monster of game.monsters)
@@ -1712,7 +2219,7 @@ function playDiff(before, delay){
       addEffect({kind: "damage", x: was.x, y: was.y, delay,
                  text: "-" + was.hp, colour: "#FFE08A"});
       addEffect({kind: "death", x: was.x, y: was.y, delay,
-                 sprite: SPRITES[entity.name] || SPRITES.Goblin});
+                 sprite: SPRITES[entity.sprite || entity.name] || SPRITES.Goblin});
       burst(was.x, was.y, entity.color || "#C25A4E", 7, delay);
       lungeAttacker(false, was.x, was.y);
       // A killing blow is still a blow: it gets the swing as well as the death.
@@ -1720,6 +2227,9 @@ function playDiff(before, delay){
       fell = true;
     }
   }
+  if ((game.chestsOpened || 0) > before.chestsBefore) Sound.play("chest", seconds);
+  else if (game.props.size < before.propsBefore) Sound.play("smash", seconds);
+  if ((game.bossesFelled || 0) > before.bossesBefore) Sound.play("bossFalls", seconds + 0.2);
   if (stepped) Sound.play("step", seconds);
   if (struck){ Sound.play("swing", seconds); Sound.play("hit", seconds + 0.05); }
   if (wounded) Sound.play("hurt", seconds);
@@ -1908,6 +2418,7 @@ function drawFrame(){
 
   const wide = cols + 2, tall = rows + 2;
   const drawn = new Uint8Array(wide * tall);
+  const braziers = [];
   const monsters = new Map();
   for (const m of game.monsters)
     if (m.hp > 0 && game.visible.has(key(m.x, m.y))) monsters.set(key(m.x, m.y), m);
@@ -1931,6 +2442,15 @@ function drawFrame(){
         if (tile === DOOR) ctx.drawImage(SPRITES.door, px, py);
         else if (tile === STAIRS) ctx.drawImage(SPRITES.stairs, px, py);
       }
+      const prop = game.props.get(at);
+      if (prop && (lit || game.explored.has(at))){
+        const def = PROP_KINDS[prop.kind];
+        if (def.blocks) drawShadow(px, py);
+        const sway = (!reduceMotion && def.light)
+          ? Math.round(Math.sin(clock / 150 + tileHash(mx, my) % 7) * 0.8) : 0;
+        ctx.drawImage(SPRITES[def.sprite], px, py + sway);
+        if (def.light && lit) braziers.push([px, py]);
+      }
       if (lit){
         const item = game.items.get(at);
         if (item){
@@ -1952,7 +2472,8 @@ function drawFrame(){
     const [ex, ey] = drawnAt(monster);
     const px = (ex - ox) * TILE, py = (ey - oy) * TILE + bobOffset(monster);
     drawShadow(px, (ey - oy) * TILE);
-    drawSprite(SPRITES[monster.name] || SPRITES.Goblin, px, py, anim.flashes.get(monster));
+    drawSprite(SPRITES[monster.sprite || monster.name] || SPRITES.Goblin,
+               px, py, anim.flashes.get(monster));
     const {dark} = lighting(monster.x - game.player.x, monster.y - game.player.y, true);
     if (dark > 0){ ctx.fillStyle = `rgba(7,8,12,${dark})`; ctx.fillRect(px, py, TILE, TILE); }
   }
@@ -1983,6 +2504,17 @@ function drawFrame(){
   ctx.globalCompositeOperation = "lighter";
   ctx.fillStyle = glow;
   ctx.fillRect(-TILE, -TILE, canvas.width + TILE * 2, canvas.height + TILE * 2);
+  // Each brazier throws its own pool, so a lit hall reads as lit by something.
+  for (const [bx, by] of braziers){
+    const beat = reduceMotion ? 1 : 1 + Math.sin(clock / 190 + bx) * 0.09;
+    const reachB = TILE * 2.6 * beat;
+    const pool = ctx.createRadialGradient(bx + 8, by + 7, 1, bx + 8, by + 7, reachB);
+    pool.addColorStop(0, "rgba(255,196,110,.34)");
+    pool.addColorStop(0.5, "rgba(230,140,50,.14)");
+    pool.addColorStop(1, "rgba(230,140,50,0)");
+    ctx.fillStyle = pool;
+    ctx.fillRect(bx - TILE * 3, by - TILE * 3, TILE * 7, TILE * 7);
+  }
   ctx.globalCompositeOperation = "source-over";
 
   // Unexplored ground takes no light: paint it back to void.
@@ -2112,12 +2644,21 @@ function act(perform, options){
   const before = snapshot();
   const outcome = perform();
   if (outcome !== false) playDiff(before, options && options.delay);
-  else if (options && options.thud) Sound.play("blocked", 0);
+  else if (options && options.thud) Sound.play(options.thud, 0);
   redraw();
   return outcome;
 }
 
 /* ---------- panels ---------- */
+function drawBossBar(){
+  const bar = el("bossBar");
+  const boss = game.monsters.find(m =>
+    m.boss && m.hp > 0 && game.visible.has(key(m.x, m.y)));
+  if (!boss){ bar.hidden = true; return; }
+  bar.hidden = false;
+  el("bossName").textContent = boss.name;
+  el("bossFill").style.width = Math.max(0, (boss.hp / boss.maxHp) * 100) + "%";
+}
 function drawStatus(){
   const p = game.player;
   el("floorNum").textContent = game.floor;
@@ -2169,7 +2710,7 @@ function drawActions(){
   add("Save &amp; quit", "S", suspendRun);
 }
 function redraw(){
-  drawStatus(); drawLog(); drawActions();
+  drawStatus(); drawBossBar(); drawLog(); drawActions();
   promptEl.classList.toggle("on", !!aiming);
   if (aiming){
     const ok = canTarget(game, aiming.cursor[0], aiming.cursor[1], aiming.item.range);
@@ -2256,9 +2797,16 @@ function paintMinimap(){
     const [x, y] = at.split(",").map(Number);
     if (game.explored.has(at)) block(x, y, item.color, 1);
   }
-  for (const monster of game.monsters)
-    if (monster.hp > 0 && game.visible.has(key(monster.x, monster.y)))
-      block(monster.x, monster.y, "#E05A60");
+  for (const [at, prop] of game.props){
+    if (!game.explored.has(at)) continue;
+    if (prop.kind !== "chest") continue;
+    const [x, y] = at.split(",").map(Number);
+    block(x, y, "#F0C978");
+  }
+  for (const monster of game.monsters){
+    if (monster.hp <= 0 || !game.visible.has(key(monster.x, monster.y))) continue;
+    block(monster.x, monster.y, monster.boss ? "#FF9BC0" : "#E05A60");
+  }
 
   // The player, breathing so they are easy to pick out of the plan.
   const pulse = reduceMotion ? 1 : 0.72 + Math.sin(clock / 260) * 0.28;
@@ -2349,6 +2897,8 @@ function takeStairs(){
     anim.camReady = false;
     anim.fade = 1;                       // the new floor lights up out of the dark
     Sound.play("descend", 0);
+    const boss = game.monsters.find(m => m.boss);
+    if (boss) log(game, `Something rules this floor: ${boss.name}.`, "#F5D68A");
   }
   redraw();
 }
@@ -2419,8 +2969,10 @@ function showGameOver(){
 /* ---------- input ---------- */
 function handleDirection(dir){
   if (!game || game.gameOver) return;
-  if (aiming) nudgeCursor(dir);
-  else act(() => moveDir(game, dir), {thud: true});
+  if (aiming){ nudgeCursor(dir); return; }
+  const [dx, dy] = DIRECTIONS[dir];
+  const immovable = propBlocks(game, game.player.x + dx, game.player.y + dy);
+  act(() => moveDir(game, dir), {thud: immovable ? "immovable" : "blocked"});
 }
 function handleWait(){
   if (!game || game.gameOver || aiming) return;
