@@ -262,6 +262,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
     <span><i style="background:#E05A60"></i>in sight</span>
     <span><i style="background:#F0C978"></i>chest</span>
     <span><i style="background:#FF9BC0"></i>boss</span>
+    <span><i style="background:#8FD8FF"></i>vault</span>
   </div>
   <button class="btn" id="mapClose" style="width:100%;margin-top:16px">Close</button>
 </div></div>
@@ -302,7 +303,6 @@ const TILE = 16;
 
 const PALETTE = {
   k: "#0C0E14", // outline
-  b: "#171B26", // deep shadow
   // stone
   s: "#2B3140", S: "#3A4254", t: "#4A5468", T: "#5D6980", u: "#727E96",
   // floor stone — deliberately low contrast so tiles read as one surface
@@ -316,7 +316,7 @@ const PALETTE = {
   // flesh
   n: "#C9A07A", N: "#E4C39A",
   // cloak (hero)
-  c: "#26325A", C: "#3C5188", d: "#5C77BE",
+  C: "#3C5188", d: "#5C77BE",
   // metal
   e: "#6E7686", E: "#B9C2D4", i: "#E8EDF7",
   // reds
@@ -327,7 +327,7 @@ const PALETTE = {
   p: "#7A3560", P: "#C05F92", y: "#E894BE",
   // violet (wraith)
   v: "#3B2F63", V: "#8571C6", x: "#C4B6F2",
-  // misc
+  // misc; a/b/c are the flat greys the floor, walls and stairs are built from
   z: "#D8D2C2", Z: "#F2EEE0", D: "#7E96D6",
   a: "#272D3A", b: "#333B4A", c: "#3C4557",
   m2: "#5A2A26"
@@ -892,6 +892,132 @@ const WraithLord = [
   "...k...kk...k...",
   "................"
 ];
+const STATUE = [
+  "................",
+  "......kkkk......",
+  ".....kTuuTk.....",
+  ".....kTuuTk.....",
+  "....kTuTTuTk....",
+  "....kTuuuuTk....",
+  "...kTTuuuuTTk...",
+  "...kTuuTTuuTk...",
+  "...kTuuTTuuTk...",
+  "...kTTuuuuTTk...",
+  "....kTuuuuTk....",
+  "....kTuuuuTk....",
+  "...kEEEEEEEEk...",
+  "..kEuuuuuuuuEk..",
+  "..kEEEEEEEEEEk..",
+  "..kkkkkkkkkkkk.."
+];
+const SIGIL = [
+  "................",
+  "................",
+  "....kkkkkkkk....",
+  "...kttttttttk...",
+  "..kttkkkkkkttk..",
+  "..ktkSSSSSSktk..",
+  "..ktkSkkkkSktk..",
+  "..ktkSksskSktk..",
+  "..ktkSksskSktk..",
+  "..ktkSkkkkSktk..",
+  "..ktkSSSSSSktk..",
+  "..kttkkkkkkttk..",
+  "...kttttttttk...",
+  "....kkkkkkkk....",
+  "................",
+  "................"
+];
+const SIGIL_LIT = [
+  "................",
+  "................",
+  "....kkkkkkkk....",
+  "...kOOOOOOOOk...",
+  "..kOOkkkkkkOOk..",
+  "..kOkffffffkOk..",
+  "..kOkfkkkkfkOk..",
+  "..kOkfkFFkfkOk..",
+  "..kOkfkFFkfkOk..",
+  "..kOkfkkkkfkOk..",
+  "..kOkffffffkOk..",
+  "..kOOkkkkkkOOk..",
+  "...kOOOOOOOOk...",
+  "....kkkkkkkk....",
+  "................",
+  "................"
+];
+const RUNE = [
+  "................",
+  ".kkkkkkkkkkkkk..",
+  ".kaaaaaaaaaaak..",
+  ".kaakaaaaakaak..",
+  ".kaakaaaaakaak..",
+  ".kaaakaaakaaak..",
+  ".kaaaakakaaaak..",
+  ".kaaaaakaaaaak..",
+  ".kaaaakakaaaak..",
+  ".kaaakaaakaaak..",
+  ".kaakaaaaakaak..",
+  ".kaakaaaaakaak..",
+  ".kaaaaaaaaaaak..",
+  ".kkkkkkkkkkkkk..",
+  "................",
+  "................"
+];
+const RUNE_LIT = [
+  "................",
+  ".kkkkkkkkkkkkk..",
+  ".kvVVVVVVVVVvk..",
+  ".kvVkxxxxxkVvk..",
+  ".kvVkxxxxxkVvk..",
+  ".kvVVkxxxkVVvk..",
+  ".kvVVVkxkVVVvk..",
+  ".kvVVVVkVVVVvk..",
+  ".kvVVVkxkVVVvk..",
+  ".kvVVkxxxkVVvk..",
+  ".kvVkxxxxxkVvk..",
+  ".kvVkxxxxxkVvk..",
+  ".kvVVVVVVVVVvk..",
+  ".kkkkkkkkkkkkk..",
+  "................",
+  "................"
+];
+const GATE = [
+  "kkkkkkkkkkkkkkkk",
+  "kEEEEEEEEEEEEEEk",
+  "kEkkEkkEkkEkkEEk",
+  "kEkkEkkEkkEkkEEk",
+  "kEEEEEEEEEEEEEEk",
+  "kEkkEkkEkkEkkEEk",
+  "kEkkEkkEkkEkkEEk",
+  "kEkkEkkEkkEkkEEk",
+  "kEEOOEEEEEEEEEEk",
+  "kEEOOEkkEkkEkkEk",
+  "kEkkEkkEkkEkkEEk",
+  "kEkkEkkEkkEkkEEk",
+  "kEEEEEEEEEEEEEEk",
+  "kEkkEkkEkkEkkEEk",
+  "kEkkEkkEkkEkkEEk",
+  "kkkkkkkkkkkkkkkk"
+];
+const KEYSTONE = [
+  "................",
+  "................",
+  ".....kkkkkk.....",
+  "....kEEEEEEk....",
+  "...kEEaaaaEEk...",
+  "..kEEaaaaaaEEk..",
+  "..kEaaOOOOaaEk..",
+  "..kEaaOffOaaEk..",
+  "..kEaaOffOaaEk..",
+  "..kEaaOOOOaaEk..",
+  "..kEEaaaaaaEEk..",
+  "...kEEaaaaEEk...",
+  "....kEEEEEEk....",
+  ".....kkkkkk.....",
+  "................",
+  "................"
+];
 const SPRITE_SOURCE = {
   floorA: FLOOR_A, floorB: FLOOR_B, floorC: FLOOR_C,
   wallFace: WALL_FACE, wallTop: WALL_TOP,
@@ -901,7 +1027,9 @@ const SPRITE_SOURCE = {
   brazier: BRAZIER, barrel: BARREL, crate: CRATE, pillar: PILLAR,
   chest: CHEST, bones: BONES, rubble: RUBBLE, rug: RUG,
   RatKing: RatKing, GoblinChief: GoblinChief, OrcWarlord: OrcWarlord,
-  OgreTyrant: OgreTyrant, WraithLord: WraithLord
+  OgreTyrant: OgreTyrant, WraithLord: WraithLord,
+  statue: STATUE, sigil: SIGIL, sigilLit: SIGIL_LIT,
+  rune: RUNE, runeLit: RUNE_LIT, gate: GATE, keystone: KEYSTONE
 };
 
 /* Paint every sprite once into its own canvas. */
@@ -1267,6 +1395,11 @@ const PROP_KINDS = {
   crate:   {sprite: "crate",   blocks: true,  breakable: true, loot: 0.40, name: "crate"},
   chest:   {sprite: "chest",   blocks: true,  chest: true,  name: "chest"},
   bones:   {sprite: "bones",   blocks: false,               name: "bones"},
+  statue:  {sprite: "statue",  blocks: true,  pushable: true, name: "statue"},
+  sigil:   {sprite: "sigil",   blocks: false,               name: "sigil"},
+  rune:    {sprite: "rune",    blocks: false,               name: "rune"},
+  gate:    {sprite: "gate",    blocks: true,                name: "gate"},
+  keystone:{sprite: "keystone",blocks: false,               name: "keystone"},
   rubble:  {sprite: "rubble",  blocks: false,               name: "rubble"},
   rug:     {sprite: "rug",     blocks: false,               name: "rug"}
 };
@@ -1278,6 +1411,340 @@ const ROOM_THEMES = [
   {name: "shrine",   fill: ["brazier", "brazier", "rug", "bones", "pillar"]},
   {name: "ruin",     fill: ["rubble", "rubble", "bones", "pillar", "rubble"]}
 ];
+
+/* ============================ puzzles ============================
+
+   Two kinds, one to a floor, each sealing a vault that holds something better
+   than the floor would otherwise give up. Both are generated backwards from a
+   solved state — statues are pulled off their sigils, the lattice is scrambled
+   by toggling it — so a solution is guaranteed to exist by construction rather
+   than by hoping a random layout happens to work.                            */
+
+/* Puzzles bite harder the deeper you go: statues are dragged further from
+   home, and lattices are scrambled with more presses. */
+const pullsFor = floor => Math.min(22, 12 + floor);
+const minWorkFor = floor => Math.min(14, 6 + Math.floor(floor / 2));
+const pressesFor = (floor, cells) =>
+  Math.min(cells - 2, 5 + Math.floor(floor / 2));
+
+/* Cut a one-tile vault through a room wall, sealed by a gate. The alcove is
+   surrounded by rock on its other three sides, so the gate is the only way in
+   and nothing else on the floor is affected. */
+function carveVault(game, room, rng){
+  const faces = [];
+  for (let x = room.x; x < room.x2; x++){
+    faces.push([x, room.y - 1, 0, -1]);
+    faces.push([x, room.y2, 0, 1]);
+  }
+  for (let y = room.y; y < room.y2; y++){
+    faces.push([room.x - 1, y, -1, 0]);
+    faces.push([room.x2, y, 1, 0]);
+  }
+  for (let i = faces.length - 1; i > 0; i--){
+    const j = rng.below(i + 1);
+    [faces[i], faces[j]] = [faces[j], faces[i]];
+  }
+  for (const [wx, wy, dx, dy] of faces){
+    if (game.map.get(wx, wy) !== WALL) continue;
+    const ax = wx + dx, ay = wy + dy;
+    if (game.map.get(ax, ay) !== WALL) continue;
+    // the alcove must be blind: rock on every side but the way in
+    let sealed = true;
+    for (const [ox, oy] of Object.values(DIRECTIONS)){
+      if (ox === -dx && oy === -dy) continue;
+      if (game.map.get(ax + ox, ay + oy) !== WALL) sealed = false;
+    }
+    if (!sealed) continue;
+    game.map.set(wx, wy, FLOOR);
+    game.map.set(ax, ay, FLOOR);
+    return {gate: [wx, wy], vault: [ax, ay], approach: [wx - dx, wy - dy]};
+  }
+  return null;
+}
+
+/* Statues onto sigils. Built by putting every statue home and then dragging
+   them off, which is the exact reverse of the pushes that solve it. */
+function buildStatuePuzzle(game, room, cut, rng){
+  const inside = [];
+  for (let y = room.y; y < room.y2; y++)
+    for (let x = room.x; x < room.x2; x++){
+      if (x === cut.approach[0] && y === cut.approach[1]) continue;
+      let besideDoor = false;
+      for (const [dx, dy] of Object.values(DIRECTIONS))
+        if (game.map.get(x + dx, y + dy) === DOOR) besideDoor = true;
+      if (!besideDoor) inside.push([x, y]);
+    }
+  if (inside.length < 12) return null;
+
+  const pulls = pullsFor(game.floor), minWork = minWorkFor(game.floor);
+  const count = Math.min(3, Math.floor(inside.length / 6));
+  const shuffled = inside.slice();
+  for (let i = shuffled.length - 1; i > 0; i--){
+    const j = rng.below(i + 1);
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  const sigils = shuffled.slice(0, count);
+  const statues = sigils.map(s => s.slice());
+  const occupied = () => new Set(statues.map(s => key(s[0], s[1])));
+  const freeFor = (x, y, taken) =>
+    room.contains(x, y) && game.map.get(x, y) === FLOOR && !taken.has(key(x, y));
+
+  /* Drag the statues off their sigils. Never pulling a statue straight back the
+     way it just came stops the scramble undoing itself, which is what left the
+     first version solvable in a single push. */
+  const scramble = () => {
+    const placed = sigils.map(s => s.slice());
+    const lastDir = placed.map(() => null);
+    const pulled = [];
+    for (let attempt = 0; attempt < pulls * 6 && pulled.length < pulls; attempt++){
+      const index = rng.below(placed.length);
+      const [sx, sy] = placed[index];
+      const dirs = Object.values(DIRECTIONS).filter(([dx, dy]) => {
+        const back = lastDir[index];
+        return !back || !(dx === -back[0] && dy === -back[1]);
+      });
+      const [dx, dy] = dirs[rng.below(dirs.length)];
+      const taken = new Set(placed.map(s => key(s[0], s[1])));
+      taken.delete(key(sx, sy));
+      if (!freeFor(sx - dx, sy - dy, taken)) continue;
+      if (!freeFor(sx - dx * 2, sy - dy * 2, taken)) continue;
+      placed[index] = [sx - dx, sy - dy];
+      lastDir[index] = [dx, dy];
+      pulled.push({index, d: [dx, dy]});
+    }
+    const work = placed.reduce((sum, s, i) =>
+      sum + Math.abs(s[0] - sigils[i][0]) + Math.abs(s[1] - sigils[i][1]), 0);
+    return {placed, work, pulled, plan: replayPulls(placed, pulled)};
+  };
+
+  /* Walking a statue backwards is not the same as being able to push it: the
+     player has to get behind it each time, and the other statues are in the
+     way. Replay the pulls in reverse and check the player can actually walk to
+     every pushing spot — a puzzle that fails this is thrown away rather than
+     handed to the player unsolvable. Returns the number of pushes, or -1. */
+  function replayPulls(placed, pulled){
+    const at = placed.map(s => s.slice());
+    let px = cut.approach[0], py = cut.approach[1];
+    const walkable = (x, y, taken) =>
+      room.contains(x, y) && game.map.get(x, y) === FLOOR && !taken.has(key(x, y));
+    const canWalk = (tx, ty, taken) => {
+      if (px === tx && py === ty) return true;
+      if (!walkable(tx, ty, taken)) return false;
+      const seen = new Set([key(px, py)]);
+      const queue = [[px, py]];
+      while (queue.length){
+        const [x, y] = queue.pop();
+        for (const [dx, dy] of Object.values(DIRECTIONS)){
+          const nx = x + dx, ny = y + dy, at2 = key(nx, ny);
+          if (seen.has(at2) || !walkable(nx, ny, taken)) continue;
+          if (nx === tx && ny === ty) return true;
+          seen.add(at2); queue.push([nx, ny]);
+        }
+      }
+      return false;
+    };
+    for (let n = pulled.length - 1; n >= 0; n--){
+      const {index, d} = pulled[n];
+      const [sx, sy] = at[index];
+      const taken = new Set(at.map(s => key(s[0], s[1])));
+      taken.delete(key(sx, sy));
+      if (!canWalk(sx - d[0], sy - d[1], taken)) return -1;
+      at[index] = [sx + d[0], sy + d[1]];
+      px = sx; py = sy;
+    }
+    return at.every((s, i) => s[0] === sigils[i][0] && s[1] === sigils[i][1])
+      ? pulled.length : -1;
+  }
+
+  /* Keep the hardest scramble that is provably solvable. */
+  let best = null;
+  for (let retry = 0; retry < 24; retry++){
+    const attempt = scramble();
+    if (attempt.plan < 0) continue;
+    if (!best || attempt.work > best.work) best = attempt;
+    if (best.work >= minWork) break;
+  }
+  if (!best || best.work < 3) return null;
+  for (let i = 0; i < statues.length; i++) statues[i] = best.placed[i];
+
+  if (statues.every((s, i) => s[0] === sigils[i][0] && s[1] === sigils[i][1])) return null;
+
+  const keystone = shuffled.find(([x, y]) =>
+    !statues.some(s => s[0] === x && s[1] === y) &&
+    !sigils.some(s => s[0] === x && s[1] === y));
+  for (const [x, y] of sigils) game.props.set(key(x, y), {kind: "sigil"});
+  for (const [x, y] of statues) game.props.set(key(x, y), {kind: "statue"});
+  if (keystone) game.props.set(key(keystone[0], keystone[1]), {kind: "keystone"});
+  return {
+    kind: "statues", sigils, start: statues.map(s => s.slice()),
+    keystone: keystone || null, work: best.work, plan: best.plan
+  };
+}
+
+/* Which runes each press flips: itself and its neighbours in the lattice. */
+function latticeMasks(cols, rows){
+  const masks = [];
+  for (let index = 0; index < cols * rows; index++){
+    const i = index % cols, j = Math.floor(index / cols);
+    let mask = 1 << index;
+    if (i > 0) mask ^= 1 << (index - 1);
+    if (i < cols - 1) mask ^= 1 << (index + 1);
+    if (j > 0) mask ^= 1 << (index - cols);
+    if (j < rows - 1) mask ^= 1 << (index + cols);
+    masks.push(mask);
+  }
+  return masks;
+}
+/* Some sets of presses cancel out entirely and leave the lattice as it was.
+   They are what stops a six-press scramble from having a two-press answer, so
+   the shortest solution is our press set compared against every one of them.
+   Worked out once per lattice size and kept. */
+const QUIET_PATTERNS = new Map();
+function latticeQuiet(cols, rows){
+  const size = cols + "x" + rows;
+  if (QUIET_PATTERNS.has(size)) return QUIET_PATTERNS.get(size);
+  const n = cols * rows, masks = latticeMasks(cols, rows), quiet = [];
+  for (let combo = 0; combo < (1 << n); combo++){
+    let state = 0;
+    for (let t = 0; t < n; t++) if (combo & (1 << t)) state ^= masks[t];
+    if (state === 0) quiet.push(combo);
+  }
+  QUIET_PATTERNS.set(size, quiet);
+  return quiet;
+}
+const popcount = v => { let c = 0; while (v){ v &= v - 1; c++; } return c; };
+
+/* A lattice of runes, spaced a tile apart so each can be trodden on its own.
+   Stepping on one flips it and its neighbours in the lattice; light them all.
+   Built by pressing runes on a solved lattice, so the presses that undo it are
+   known exactly rather than hoped for. */
+function buildLatticePuzzle(game, room, cut, rng){
+  for (const [cols, rows] of [[4, 4], [3, 3]]){
+    const needW = cols * 2 - 1, needH = rows * 2 - 1;
+    if (room.w < needW || room.h < needH) continue;
+    const x0 = room.x + Math.floor((room.w - needW) / 2);
+    const y0 = room.y + Math.floor((room.h - needH) / 2);
+    const cells = [];
+    let usable = true;
+    for (let j = 0; j < rows; j++)
+      for (let i = 0; i < cols; i++){
+        const x = x0 + i * 2, y = y0 + j * 2;
+        if (game.map.get(x, y) !== FLOOR) usable = false;
+        if (x === cut.approach[0] && y === cut.approach[1]) usable = false;
+        cells.push([x, y]);
+      }
+    if (!usable) continue;
+
+    const n = cols * rows;
+    const masks = latticeMasks(cols, rows);
+    const quiet = latticeQuiet(cols, rows);
+    const shortest = presses =>
+      quiet.reduce((least, z) => Math.min(least, popcount(presses ^ z)), n);
+
+    // Scramble with a handful of presses, keeping the set whose shortest
+    // answer is longest; a lattice that unpicks in two steps is not a puzzle.
+    const presses = pressesFor(game.floor, n), wanted = presses - 1;
+    let chosen = 0, cost = 0;
+    for (let attempt = 0; attempt < 40; attempt++){
+      const order = [...Array(n).keys()];
+      for (let i = n - 1; i > 0; i--){
+        const j = rng.below(i + 1);
+        [order[i], order[j]] = [order[j], order[i]];
+      }
+      let candidate = 0;
+      for (let i = 0; i < presses; i++) candidate |= 1 << order[i];
+      const length = shortest(candidate);
+      if (length > cost){ cost = length; chosen = candidate; }
+      if (cost >= wanted) break;
+    }
+    if (cost < 3) continue;
+
+    const lit = new Array(n).fill(true);
+    for (let t = 0; t < n; t++){
+      if (!(chosen & (1 << t))) continue;
+      for (let u = 0; u < n; u++) if (masks[t] & (1 << u)) lit[u] = !lit[u];
+    }
+
+    for (const [x, y] of cells) game.props.set(key(x, y), {kind: "rune"});
+    return {kind: "lattice", cols, rows, cells, lit, minPresses: cost};
+  }
+  return null;
+}
+
+/* Statues are solid, so a scrambled layout could in principle wall off part of
+   the room — or the vault door itself. Check both the state the player finds
+   and the state that solves it, and throw the puzzle away if either is bad. */
+function puzzleIsFair(game, puzzle){
+  let open = 0;
+  for (let y = 0; y < MAP_H; y++)
+    for (let x = 0; x < MAP_W; x++)
+      if (game.map.walkable(x, y)) open++;
+
+  const solidNow = new Set();
+  for (const [at, prop] of game.props)
+    if (PROP_KINDS[prop.kind].blocks) solidNow.add(at);
+  // As found: everything reachable but the sealed alcove.
+  if (reachableCount(game, solidNow) !== open - solidNow.size - 1) return false;
+
+  // As solved: gate lifted, statues home, and the vault reachable.
+  const solidThen = new Set(solidNow);
+  solidThen.delete(key(puzzle.gate[0], puzzle.gate[1]));
+  if (puzzle.kind === "statues"){
+    for (const [x, y] of puzzle.start) solidThen.delete(key(x, y));
+    for (const [x, y] of puzzle.sigils) solidThen.add(key(x, y));
+  }
+  return reachableCount(game, solidThen) === open - solidThen.size;
+}
+
+function placePuzzle(game){
+  const rooms = game.map.rooms;
+  if (rooms.length < 3) return null;
+  const stairsRoom = game.stairs
+    ? rooms.find(r => r.contains(game.stairs[0], game.stairs[1])) : null;
+  const candidates = rooms.filter(r =>
+    r !== rooms[0] && r !== stairsRoom && r.w >= 6 && r.h >= 5);
+  if (!candidates.length) return null;
+
+  const room = game.rng.pick(candidates);
+  const cut = carveVault(game, room, game.rng);
+  if (!cut) return null;
+
+  // clear the room of ordinary furniture; a puzzle floor should read as one
+  for (let y = room.y; y < room.y2; y++)
+    for (let x = room.x; x < room.x2; x++) game.props.delete(key(x, y));
+  for (const monster of game.monsters.slice())
+    if (room.contains(monster.x, monster.y) && !monster.boss)
+      game.monsters.splice(game.monsters.indexOf(monster), 1);
+
+  const first = game.rng.random() < 0.5 ? buildStatuePuzzle : buildLatticePuzzle;
+  const second = first === buildStatuePuzzle ? buildLatticePuzzle : buildStatuePuzzle;
+  let puzzle = null;
+  for (const build of [first, second]){
+    const before = new Set(game.props.keys());
+    const attempt = build(game, room, cut, game.rng);
+    if (attempt){
+      attempt.gate = cut.gate;
+      attempt.vault = cut.vault;
+      game.props.set(key(cut.gate[0], cut.gate[1]), {kind: "gate"});
+      if (puzzleIsFair(game, attempt)){ puzzle = attempt; break; }
+    }
+    for (const at of [...game.props.keys()]) if (!before.has(at)) game.props.delete(at);
+  }
+  if (!puzzle){
+    game.map.set(cut.gate[0], cut.gate[1], WALL);
+    game.map.set(cut.vault[0], cut.vault[1], WALL);
+    return null;
+  }
+  // The vault is worth the trouble: loot from two floors deeper.
+  const templates = itemsFor(game.floor + 2);
+  game.items.set(key(cut.vault[0], cut.vault[1]),
+                 spawnItem(game.rng.weighted(templates, t => t.weight)));
+  puzzle.room = {x: room.x, y: room.y, w: room.w, h: room.h};
+  puzzle.gate = cut.gate;
+  puzzle.vault = cut.vault;
+  puzzle.solved = false;
+  return puzzle;
+}
 
 /* ============================ bosses ============================
    One to a floor, standing between the player and the stairs. Each is the
@@ -1334,9 +1801,10 @@ const key = (x, y) => x + "," + y;
 function newGame(seed){
   const game = {
     seed, rng: makeRng(seed), floor: 1, turns: 0, kills: 0, itemsFound: 0,
-    xpEarned: 0, bossesFelled: 0, chestsOpened: 0, gameOver: false, killedBy: null,
+    xpEarned: 0, bossesFelled: 0, chestsOpened: 0, puzzlesSolved: 0,
+    gameOver: false, killedBy: null,
     map: null, player: makePlayer(0, 0), monsters: [], items: new Map(),
-    props: new Map(), pack: [], stairs: null, messages: [],
+    props: new Map(), puzzle: null, puzzlesSolved: 0, pack: [], stairs: null, messages: [],
     visible: new Set(), explored: new Set()
   };
   generateFloor(game);
@@ -1356,6 +1824,7 @@ function generateFloor(game){
   game.monsters = spawnMonsters(game);
   game.items = spawnItems(game);
   game.props = placeProps(game);
+  game.puzzle = placePuzzle(game);
   placeBoss(game);
   game.visible = new Set();
   game.explored = new Set();
@@ -1538,7 +2007,12 @@ function placeBoss(game){
 
 /* ---------- visibility ---------- */
 function updateFov(game){
-  const blocks = (x, y) => game.map.blocksSight(x, y);
+  // A vault gate is a slab of stone: what it seals stays unseen until it lifts,
+  // so the alcove is a reward rather than something dangled out of reach.
+  const gate = game.puzzle && !game.puzzle.solved
+    ? key(game.puzzle.gate[0], game.puzzle.gate[1]) : null;
+  const blocks = (x, y) =>
+    game.map.blocksSight(x, y) || (gate !== null && key(x, y) === gate);
   game.visible = computeFov(blocks, game.player.x, game.player.y, FOV_RADIUS);
   for (const tile of game.visible) game.explored.add(tile);
 }
@@ -1594,10 +2068,16 @@ function movePlayer(game, dx, dy){
   const target = monsterAt(game, tx, ty);
   if (target) playerAttacks(game, target);
   else if (propBlocks(game, tx, ty)){
-    if (!disturbProp(game, tx, ty)) return false;
+    const blocking = game.props.get(key(tx, ty));
+    if (blocking && PROP_KINDS[blocking.kind].pushable){
+      if (!pushStatue(game, tx, ty, dx, dy)) return false;
+    } else if (!disturbProp(game, tx, ty)) return false;
   } else if (game.map.walkable(tx, ty)){
     game.player.x = tx; game.player.y = ty;
     pickUp(game);
+    const underfoot = game.props.get(key(tx, ty));
+    if (underfoot && underfoot.kind === "rune") treadRune(game, tx, ty);
+    else if (underfoot && underfoot.kind === "keystone") resetStatues(game);
   } else return false;
   endTurn(game);
   return true;
@@ -1627,6 +2107,11 @@ function disturbProp(game, x, y){
   const at = key(x, y);
   const prop = game.props.get(at);
   const def = PROP_KINDS[prop.kind];
+  if (prop.kind === "gate"){
+    log(game, "The gate holds fast. Something on this floor unlocks it.",
+        "var(--ink-dim)");
+    return false;
+  }
   if (def.chest){
     game.props.delete(at);
     const templates = itemsFor(game.floor);
@@ -1649,6 +2134,88 @@ function disturbProp(game, x, y){
   }
   log(game, `The ${def.name} will not budge.`, "var(--ink-dim)");
   return false;
+}
+
+/* ---------- puzzles in play ---------- */
+function statueAt(game, x, y){
+  const prop = game.props.get(key(x, y));
+  return prop && prop.kind === "statue" ? prop : null;
+}
+/* Shove a statue one tile, if there is somewhere for it to go. */
+function pushStatue(game, x, y, dx, dy){
+  const beyondX = x + dx, beyondY = y + dy;
+  if (game.map.get(beyondX, beyondY) !== FLOOR && game.map.get(beyondX, beyondY) !== STAIRS){
+    log(game, "The statue grinds against stone and stops.", "var(--ink-dim)");
+    return false;
+  }
+  const blocker = game.props.get(key(beyondX, beyondY));
+  if ((blocker && PROP_KINDS[blocker.kind].blocks) || monsterAt(game, beyondX, beyondY)){
+    log(game, "The statue will not go that way.", "var(--ink-dim)");
+    return false;
+  }
+  game.props.delete(key(x, y));
+  restoreSigil(game, x, y);
+  game.props.set(key(beyondX, beyondY), {kind: "statue"});
+  game.player.x = x; game.player.y = y;
+  pickUp(game);
+  log(game, "The statue grates across the floor.", "var(--ink-dim)");
+  checkPuzzle(game);
+  return true;
+}
+/* A statue standing on a sigil hides it in the prop map; put it back when the
+   statue moves on, so the mark survives being covered. */
+function restoreSigil(game, x, y){
+  const puzzle = game.puzzle;
+  if (!puzzle || puzzle.kind !== "statues") return;
+  if (puzzle.sigils.some(([sx, sy]) => sx === x && sy === y))
+    game.props.set(key(x, y), {kind: "sigil"});
+}
+function resetStatues(game){
+  const puzzle = game.puzzle;
+  if (!puzzle || puzzle.kind !== "statues" || puzzle.solved) return;
+  for (const [at, prop] of [...game.props])
+    if (prop.kind === "statue") game.props.delete(at);
+  for (const [x, y] of puzzle.sigils) game.props.set(key(x, y), {kind: "sigil"});
+  for (const [x, y] of puzzle.start) game.props.set(key(x, y), {kind: "statue"});
+  log(game, "The keystone sinks, and the statues grind back into place.",
+      "rgb(150,200,255)");
+}
+/* Treading a rune flips it and its neighbours in the lattice. */
+function treadRune(game, x, y){
+  const puzzle = game.puzzle;
+  if (!puzzle || puzzle.kind !== "lattice" || puzzle.solved) return;
+  const index = puzzle.cells.findIndex(c => c[0] === x && c[1] === y);
+  if (index < 0) return;
+  const i = index % puzzle.cols, j = Math.floor(index / puzzle.cols);
+  const touched = [index];
+  if (i > 0) touched.push(index - 1);
+  if (i < puzzle.cols - 1) touched.push(index + 1);
+  if (j > 0) touched.push(index - puzzle.cols);
+  if (j < puzzle.rows - 1) touched.push(index + puzzle.cols);
+  for (const t of touched) puzzle.lit[t] = !puzzle.lit[t];
+  checkPuzzle(game);
+}
+function puzzleSolved(game){
+  const puzzle = game.puzzle;
+  if (!puzzle) return false;
+  if (puzzle.kind === "lattice") return puzzle.lit.every(Boolean);
+  return puzzle.sigils.every(([x, y]) => !!statueAt(game, x, y));
+}
+function checkPuzzle(game){
+  const puzzle = game.puzzle;
+  if (!puzzle || puzzle.solved || !puzzleSolved(game)) return;
+  puzzle.solved = true;
+  game.puzzlesSolved = (game.puzzlesSolved || 0) + 1;
+  game.props.delete(key(puzzle.gate[0], puzzle.gate[1]));
+  log(game, "Stone grinds on stone. The vault stands open.", "#F5D68A");
+}
+/* Where the player stands, in relation to a puzzle. */
+function inPuzzleRoom(game){
+  const puzzle = game.puzzle;
+  if (!puzzle) return false;
+  const r = puzzle.room;
+  return game.player.x >= r.x - 1 && game.player.x < r.x + r.w + 1 &&
+         game.player.y >= r.y - 1 && game.player.y < r.y + r.h + 1;
 }
 
 function playerAttacks(game, target){
@@ -1814,7 +2381,9 @@ function takeMonsterTurn(game, monster){
     monster.resting = !monster.resting;
     if (monster.resting) return;              // heavy things act every other turn
   }
-  const sees = lineOfSight((x, y) => game.map.blocksSight(x, y),
+  const sees = lineOfSight((x, y) => game.map.blocksSight(x, y) ||
+                             (game.puzzle && !game.puzzle.solved &&
+                              x === game.puzzle.gate[0] && y === game.puzzle.gate[1]),
                            monster.x, monster.y, game.player.x, game.player.y, monster.sight);
   if (sees) monster.lastSeen = [game.player.x, game.player.y];
 
@@ -1867,6 +2436,7 @@ function runSummary(game){
     ["Monsters slain", String(game.kills)],
     ["Bosses felled",  String(game.bossesFelled || 0)],
     ["Chests opened",  String(game.chestsOpened || 0)],
+    ["Vaults opened",  String(game.puzzlesSolved || 0)],
     ["Turns survived", String(game.turns)],
     ["Items found",    String(game.itemsFound)],
     ["Final attack",   String(game.player.attack)],
@@ -1888,6 +2458,7 @@ function saveGame(game){
       itemsFound: game.itemsFound, xpEarned: game.xpEarned,
       bossesFelled: game.bossesFelled || 0, chestsOpened: game.chestsOpened || 0,
       props: [...game.props].map(([at, prop]) => [at, prop]),
+      puzzle: game.puzzle, puzzlesSolved: game.puzzlesSolved || 0,
       gameOver: game.gameOver, killedBy: game.killedBy,
       rows: game.map.rows(),
       rooms: game.map.rooms.map(r => [r.x, r.y, r.w, r.h]),
@@ -1919,6 +2490,7 @@ function loadGame(){
       kills: data.kills, itemsFound: data.itemsFound, xpEarned: data.xpEarned,
       bossesFelled: data.bossesFelled || 0, chestsOpened: data.chestsOpened || 0,
       props: new Map(data.props || []),
+      puzzle: data.puzzle || null, puzzlesSolved: data.puzzlesSolved || 0,
       gameOver: data.gameOver, killedBy: data.killedBy, map,
       player: data.player, monsters: data.monsters,
       items: new Map(data.items), pack: data.pack, stairs: data.stairs,
@@ -2087,7 +2659,29 @@ const Sound = (() => {
                         tone({when: (when || 0) + i * 0.11, freq: f, dur: 0.5,
                               type: "sawtooth", gain: 0.13})),
     drip: when => tone({when, freq: 1500 * vary(0.4), to: 700, dur: 0.13,
-                        type: "sine", gain: 0.05})
+                        type: "sine", gain: 0.05}),
+    /* Stone dragged over stone: a long, gritty scrape with weight under it. */
+    grind: when => { noise({when, dur: 0.34, gain: 0.16, filter: "bandpass",
+                            from: 380 * vary(0.2), to: 190, q: 0.8});
+                     tone({when, freq: 74, to: 52, dur: 0.36, type: "square",
+                           gain: 0.09}); },
+    rune: when => { tone({when, freq: 740 * vary(0.06), dur: 0.13,
+                          type: "sine", gain: 0.11});
+                    tone({when: (when || 0) + 0.05, freq: 1110, dur: 0.16,
+                          type: "sine", gain: 0.06}); },
+    runeOut: when => tone({when, freq: 620, to: 330, dur: 0.16,
+                           type: "sine", gain: 0.08}),
+    keystone: when => { tone({when, freq: 130, to: 88, dur: 0.30,
+                              type: "square", gain: 0.11});
+                        noise({when: (when || 0) + 0.05, dur: 0.40, gain: 0.14,
+                               filter: "bandpass", from: 300, to: 170, q: 0.7}); },
+    /* The vault: a slab lifting, then the chord that says it was worth it. */
+    vault: when => { noise({when, dur: 0.70, gain: 0.20, filter: "bandpass",
+                            from: 260, to: 620, q: 0.9});
+                     tone({when, freq: 60, to: 96, dur: 0.72, type: "sine", gain: 0.16});
+                     [523, 659, 880, 1319].forEach((f, i) =>
+                       tone({when: (when || 0) + 0.28 + i * 0.08, freq: f, dur: 0.42,
+                             type: "triangle", gain: 0.11})); }
   };
 
   /* A low room tone with the occasional drip, so silence never feels like a bug. */
@@ -2178,12 +2772,22 @@ const bobOffset = entity => {
   const phase = ((entity.x * 7 + entity.y * 13) % 10) / 10;
   return Math.sin(clock / 420 + phase * Math.PI * 2) > 0.4 ? -1 : 0;
 };
+/* Enough of the puzzle to tell what changed over a turn, and nothing more. */
+function puzzleState(game){
+  const puzzle = game.puzzle;
+  if (!puzzle) return null;
+  const statues = [];
+  for (const [at, prop] of game.props) if (prop.kind === "statue") statues.push(at);
+  return {solved: puzzle.solved, statues: statues.sort().join("|"),
+          lit: puzzle.kind === "lattice" ? puzzle.lit.filter(Boolean).length : 0};
+}
 function snapshot(){
   const seen = new Map();
   seen.foundBefore = game.itemsFound;
   seen.propsBefore = game.props.size;
   seen.chestsBefore = game.chestsOpened || 0;
   seen.bossesBefore = game.bossesFelled || 0;
+  seen.puzzleBefore = puzzleState(game);
   seen.set(game.player, {x: game.player.x, y: game.player.y, hp: game.player.hp,
                          level: game.player.level});
   for (const monster of game.monsters)
@@ -2227,8 +2831,9 @@ function playDiff(before, delay){
       fell = true;
     }
   }
+  const puzzled = playPuzzleDiff(before.puzzleBefore, seconds);
   if ((game.chestsOpened || 0) > before.chestsBefore) Sound.play("chest", seconds);
-  else if (game.props.size < before.propsBefore) Sound.play("smash", seconds);
+  else if (!puzzled && game.props.size < before.propsBefore) Sound.play("smash", seconds);
   if ((game.bossesFelled || 0) > before.bossesBefore) Sound.play("bossFalls", seconds + 0.2);
   if (stepped) Sound.play("step", seconds);
   if (struck){ Sound.play("swing", seconds); Sound.play("hit", seconds + 0.05); }
@@ -2236,6 +2841,29 @@ function playDiff(before, delay){
   if (fell) Sound.play("die", seconds + 0.06);
   if (game.itemsFound > (before.foundBefore ?? game.itemsFound)) Sound.play("pickup", seconds);
   if (game.player.level > (before.get(game.player) || {}).level) celebrate();
+}
+/* Sound for what the room did this turn. Returns whether it made any, so the
+   gate lifting is never mistaken for furniture being smashed. */
+function playPuzzleDiff(was, seconds){
+  const puzzle = game.puzzle;
+  if (!was || !puzzle) return false;
+  const now = puzzleState(game);
+  let heard = false;
+  if (now.statues !== was.statues){
+    const home = puzzle.start.map(([x, y]) => key(x, y)).sort().join("|");
+    Sound.play(now.statues === home ? "keystone" : "grind", seconds);
+    heard = true;
+  }
+  if (now.lit !== was.lit){
+    Sound.play(now.lit > was.lit ? "rune" : "runeOut", seconds);
+    heard = true;
+  }
+  if (now.solved && !was.solved){
+    Sound.play("vault", seconds + 0.18);
+    flashPuzzle();
+    heard = true;
+  }
+  return heard;
 }
 /* Whoever was standing next to the wounded party gets the swing. Takes a
    position rather than an entity so it still works for something that died. */
@@ -2268,6 +2896,18 @@ function celebrate(){
   addEffect({kind: "levelup", x: game.player.x, y: game.player.y, life: 900});
   burst(game.player.x, game.player.y, "#F5D68A", 10, 0);
   Sound.play("levelUp", 0);
+}
+/* The vault opening deserves to be seen from across the room: sparks at every
+   sigil, and a longer shower where the gate used to be. */
+function flashPuzzle(){
+  const puzzle = game.puzzle;
+  if (!puzzle) return;
+  const marks = puzzle.kind === "statues" ? puzzle.sigils : puzzle.cells;
+  for (const [x, y] of marks) burst(x, y, "#8FD8FF", 5, 0);
+  burst(puzzle.gate[0], puzzle.gate[1], "#F5D68A", 14, 120);
+  addEffect({kind: "blast", x: puzzle.gate[0], y: puzzle.gate[1],
+             radius: 2, delay: 100, life: 480});
+  anim.shake = Math.max(anim.shake, reduceMotion ? 0 : 4);
 }
 /* A thrown flask flies before it bursts, so hold the damage back until it lands. */
 function throwArc(fromX, fromY, toX, toY, sprite, blastRadius){
@@ -2399,6 +3039,15 @@ function drawSprite(sprite, px, py, flash){
   ctx.fillRect(px, py, TILE, TILE);
   ctx.restore();
 }
+/* Most props draw as themselves; the lattice runes light as they are trodden. */
+function spriteForProp(game, prop, x, y){
+  const def = PROP_KINDS[prop.kind];
+  if (prop.kind !== "rune") return def.sprite;
+  const puzzle = game.puzzle;
+  if (!puzzle || puzzle.kind !== "lattice") return def.sprite;
+  const index = puzzle.cells.findIndex(c => c[0] === x && c[1] === y);
+  return index >= 0 && puzzle.lit[index] ? "runeLit" : def.sprite;
+}
 function drawFrame(){
   if (!game) return;
   const floors = [SPRITES.floorA, SPRITES.floorB, SPRITES.floorC];
@@ -2418,6 +3067,7 @@ function drawFrame(){
 
   const wide = cols + 2, tall = rows + 2;
   const drawn = new Uint8Array(wide * tall);
+  const puzzle = game.puzzle;
   const braziers = [];
   const monsters = new Map();
   for (const m of game.monsters)
@@ -2442,13 +3092,18 @@ function drawFrame(){
         if (tile === DOOR) ctx.drawImage(SPRITES.door, px, py);
         else if (tile === STAIRS) ctx.drawImage(SPRITES.stairs, px, py);
       }
+      // A sigil is painted under whatever stands on it, so a statue coming to
+      // rest reads as the sigil lighting beneath its feet.
+      if (puzzle && puzzle.kind === "statues" && (lit || game.explored.has(at)) &&
+          puzzle.sigils.some(([sx, sy]) => sx === mx && sy === my))
+        ctx.drawImage(SPRITES[statueAt(game, mx, my) ? "sigilLit" : "sigil"], px, py);
       const prop = game.props.get(at);
       if (prop && (lit || game.explored.has(at))){
         const def = PROP_KINDS[prop.kind];
         if (def.blocks) drawShadow(px, py);
         const sway = (!reduceMotion && def.light)
           ? Math.round(Math.sin(clock / 150 + tileHash(mx, my) % 7) * 0.8) : 0;
-        ctx.drawImage(SPRITES[def.sprite], px, py + sway);
+        ctx.drawImage(SPRITES[spriteForProp(game, prop, mx, my)], px, py + sway);
         if (def.light && lit) braziers.push([px, py]);
       }
       if (lit){
@@ -2709,14 +3364,29 @@ function drawActions(){
   if (!onStairs(game)) stairs.disabled = true;
   add("Save &amp; quit", "S", suspendRun);
 }
+/* Standing in the puzzle room, the prompt bar says what the room wants and how
+   far along it is; the rules themselves are never explained twice. */
+function puzzleHint(game){
+  const puzzle = game.puzzle;
+  if (!puzzle || !inPuzzleRoom(game)) return "";
+  if (puzzle.solved) return "The vault stands open.";
+  if (puzzle.kind === "statues"){
+    const home = puzzle.sigils.filter(([x, y]) => !!statueAt(game, x, y)).length;
+    return `${home}/${puzzle.sigils.length} sigils lit — walk into a statue to shove it` +
+           (puzzle.keystone ? ". The keystone puts them back." : ".");
+  }
+  const lit = puzzle.lit.filter(Boolean).length;
+  return `${lit}/${puzzle.lit.length} runes lit — treading one flips it and its neighbours.`;
+}
 function redraw(){
   drawStatus(); drawBossBar(); drawLog(); drawActions();
-  promptEl.classList.toggle("on", !!aiming);
+  const hint = aiming ? "" : puzzleHint(game);
+  promptEl.classList.toggle("on", !!aiming || !!hint);
   if (aiming){
     const ok = canTarget(game, aiming.cursor[0], aiming.cursor[1], aiming.item.range);
     promptEl.textContent = ok ? `Aiming ${aiming.item.name} — tap a tile, or use the pad`
                               : `No clear shot there — ${aiming.item.name}`;
-  }
+  } else if (hint) promptEl.textContent = hint;
   if (game.gameOver && !el("overOverlay").classList.contains("on")) showGameOver();
 }
 
@@ -2803,6 +3473,25 @@ function paintMinimap(){
     const [x, y] = at.split(",").map(Number);
     block(x, y, "#F0C978");
   }
+  // The puzzle room, once found: its outline, and the vault it guards.
+  const puzzle = game.puzzle;
+  if (puzzle && game.explored.has(key(puzzle.gate[0], puzzle.gate[1]))){
+    const r = puzzle.room;
+    g.strokeStyle = puzzle.solved ? "rgba(143,216,255,.75)" : "rgba(143,216,255,.35)";
+    g.lineWidth = 1;
+    g.strokeRect(r.x * MAP_CELL - 0.5, r.y * MAP_CELL - 0.5,
+                 r.w * MAP_CELL + 1, r.h * MAP_CELL + 1);
+    // One map cell is three pixels, so the vault gets a ring around it as well
+    // as a dot — otherwise it is lost among the walls.
+    const glow = reduceMotion || puzzle.solved
+      ? 1 : 0.45 + Math.sin(clock / 300) * 0.35;
+    g.globalAlpha = glow;
+    block(puzzle.vault[0], puzzle.vault[1], "#8FD8FF");
+    g.strokeStyle = "#8FD8FF";
+    g.strokeRect(puzzle.vault[0] * MAP_CELL - 2.5, puzzle.vault[1] * MAP_CELL - 2.5,
+                 MAP_CELL + 5, MAP_CELL + 5);
+    g.globalAlpha = 1;
+  }
   for (const monster of game.monsters){
     if (monster.hp <= 0 || !game.visible.has(key(monster.x, monster.y))) continue;
     block(monster.x, monster.y, monster.boss ? "#FF9BC0" : "#E05A60");
@@ -2831,9 +3520,11 @@ function openMap(){
       }
   const share = walkable ? Math.round((seen / walkable) * 100) : 0;
   el("mapTitle").textContent = `Floor ${game.floor}`;
-  el("mapSub").textContent = game.stairs && game.explored.has(key(game.stairs[0], game.stairs[1]))
-    ? `${share}% walked · the stairs down are marked`
-    : `${share}% walked · the stairs are still unfound`;
+  const stairsKnown = game.stairs && game.explored.has(key(game.stairs[0], game.stairs[1]));
+  let note = stairsKnown ? "the stairs down are marked" : "the stairs are still unfound";
+  if (game.puzzle && game.explored.has(key(game.puzzle.gate[0], game.puzzle.gate[1])))
+    note = game.puzzle.solved ? "the vault stands open" : "a sealed vault waits";
+  el("mapSub").textContent = `${share}% walked · ${note}`;
   el("mapOverlay").classList.add("on");
   mapOpen = true;
   paintMinimap();
