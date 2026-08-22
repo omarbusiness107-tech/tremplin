@@ -105,6 +105,24 @@ measuring bot returns identical runs before and after it was added — same floo
 kills, turns and killers, seed for seed — which is the check that keeps the
 balance work valid.
 
+### Sound
+
+Every sound is synthesised at runtime from oscillators and filtered noise — the
+same principle as the sprites being drawn in code. There are no audio files,
+which is just as well, since the page is served under a policy that would refuse
+them.
+
+Sounds hang off the same before-and-after comparison the animation uses, so a
+swing, an impact and a death land in the order they happened, and a thrown
+flask's burst waits until it lands. Steps, blocked steps, drinking, wielding,
+reading, levelling, descending and dying each have their own voice, over a low
+room tone with the occasional drip so silence never reads as a fault.
+
+Browsers refuse to start audio until someone interacts with the page, so the
+context opens on the first press and everything before it is silent by design.
+The speaker in the status bar mutes it; the choice is remembered, and while muted
+the synth builds no audio nodes at all.
+
 ## Playing it on a phone
 
 `web/ember-depths.html` is a self-contained browser port — one file, no build step,

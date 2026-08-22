@@ -72,6 +72,11 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .stat-right{display:flex;flex-direction:column;align-items:flex-end;gap:1px;font-size:10px;
   color:var(--ink-dim);white-space:nowrap}
 .stat-right b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.mute{flex-shrink:0;width:26px;height:26px;border:1px solid var(--edge);border-radius:3px;
+  background:var(--raised);color:var(--ember);font-size:13px;line-height:1;
+  display:flex;align-items:center;justify-content:center;transition:color .15s,border-color .15s}
+.mute[data-off="1"]{color:var(--ink-faint)}
+.mute:hover{border-color:var(--ember-lo)}
 
 /* the dungeon */
 #stage{flex:1;min-height:0;position:relative;overflow:hidden;display:flex;
@@ -163,6 +168,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
         <span class="seed-label">Seed</span>
         <span class="seed-value" id="seedValue">—</span>
         <button class="btn small" id="rerollBtn">Reroll</button>
+        <button class="btn small" id="muteBtnTitle">Sound: on</button>
       </div>
       <div class="btn-row">
         <button class="btn primary" id="beginBtn">Begin the descent</button>
@@ -199,6 +205,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
         <div>LVL <b id="lvlNum">1</b></div>
         <div>ATK <b id="atkNum">5</b> · DEF <b id="defNum">1</b></div>
       </div>
+      <button id="muteBtn" class="mute" aria-label="Mute sound" title="Sound">♪</button>
     </div>
     <div id="stage"><canvas id="view"></canvas></div>
     <div id="prompt"></div>
@@ -1411,6 +1418,201 @@ function loadGame(){
 
 <script>
 "use strict";
+/* ============================ sound ============================
+
+   Every sound is synthesised at runtime — oscillators and filtered noise, the
+   same principle as the sprites being drawn in code. There are no audio files
+   to load, which is just as well: the page is served under a policy that would
+   refuse them anyway.
+
+   Browsers will not start audio until someone interacts with the page, so the
+   context is created on the first press and everything before that is silent
+   by design.                                                                */
+
+const Sound = (() => {
+  const MASTER_GAIN = 0.30;
+  let ctx = null, master = null, ambientGain = null;
+  let noiseBuffer = null, ambientOn = false;
+  const lastPlayed = new Map();
+
+  let enabled = true;
+  try { enabled = localStorage.getItem("ember-depths-mute") !== "1"; }
+  catch (error){ /* private browsing: fall back to sound on */ }
+
+  function ensure(){
+    if (ctx){
+      if (ctx.state === "suspended") ctx.resume();
+      return ctx;
+    }
+    const Context = window.AudioContext || window.webkitAudioContext;
+    if (!Context) return null;
+    try { ctx = new Context(); } catch (error){ return null; }
+    master = ctx.createGain();
+    master.gain.value = enabled ? MASTER_GAIN : 0;
+    master.connect(ctx.destination);
+    return ctx;
+  }
+  function noiseSource(c){
+    if (!noiseBuffer){
+      const length = Math.floor(c.sampleRate * 0.8);
+      noiseBuffer = c.createBuffer(1, length, c.sampleRate);
+      const data = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
+    }
+    const source = c.createBufferSource();
+    source.buffer = noiseBuffer;
+    source.loop = true;
+    return source;
+  }
+  /* A shaped oscillator: pitch may glide, loudness always fades out. */
+  function tone(options){
+    const c = ensure();
+    if (!c || !enabled) return;
+    const at = c.currentTime + (options.when || 0);
+    const dur = options.dur || 0.12;
+    const osc = c.createOscillator(), gain = c.createGain();
+    osc.type = options.type || "sine";
+    osc.frequency.setValueAtTime(options.freq, at);
+    if (options.to)
+      osc.frequency.exponentialRampToValueAtTime(Math.max(20, options.to), at + dur);
+    gain.gain.setValueAtTime(0.0001, at);
+    gain.gain.exponentialRampToValueAtTime(options.gain || 0.18, at + (options.attack || 0.006));
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+    osc.connect(gain).connect(master);
+    osc.start(at);
+    osc.stop(at + dur + 0.03);
+  }
+  /* Filtered noise: the basis of every impact, whoosh and burst here. */
+  function noise(options){
+    const c = ensure();
+    if (!c || !enabled) return;
+    const at = c.currentTime + (options.when || 0);
+    const dur = options.dur || 0.1;
+    const source = noiseSource(c);
+    const filter = c.createBiquadFilter();
+    filter.type = options.filter || "lowpass";
+    filter.frequency.setValueAtTime(options.from || 1200, at);
+    if (options.to)
+      filter.frequency.exponentialRampToValueAtTime(Math.max(40, options.to), at + dur);
+    filter.Q.value = options.q || 1;
+    const gain = c.createGain();
+    gain.gain.setValueAtTime(0.0001, at);
+    gain.gain.exponentialRampToValueAtTime(options.gain || 0.16, at + (options.attack || 0.004));
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+    source.connect(filter).connect(gain).connect(master);
+    source.start(at);
+    source.stop(at + dur + 0.03);
+  }
+  /* Three deaths in one blast should not be three times as loud. */
+  function throttled(name, when, play){
+    const now = performance.now() + (when || 0) * 1000;
+    const previous = lastPlayed.get(name) || -1e9;
+    if (now - previous < 45) return false;
+    lastPlayed.set(name, now);
+    play();
+    return true;
+  }
+  const vary = spread => 1 + (Math.random() - 0.5) * spread;
+
+  const voices = {
+    step: when => noise({when, dur: 0.05, gain: 0.05, filter: "lowpass",
+                         from: 480 * vary(0.5), to: 180}),
+    blocked: when => { noise({when, dur: 0.07, gain: 0.09, from: 300, to: 120});
+                       tone({when, freq: 90, to: 62, dur: 0.09, type: "sine", gain: 0.10}); },
+    swing: when => noise({when, dur: 0.11, gain: 0.09, filter: "bandpass",
+                          from: 700, to: 2400, q: 1.4}),
+    hit: when => { noise({when, dur: 0.10, gain: 0.17, from: 1600 * vary(0.3), to: 220});
+                   tone({when, freq: 150 * vary(0.2), to: 80, dur: 0.11,
+                         type: "triangle", gain: 0.16}); },
+    hurt: when => { noise({when, dur: 0.16, gain: 0.20, from: 900, to: 130});
+                    tone({when, freq: 190, to: 70, dur: 0.20, type: "sawtooth", gain: 0.13}); },
+    die: when => { noise({when, dur: 0.26, gain: 0.15, from: 2000, to: 90});
+                   tone({when, freq: 220 * vary(0.3), to: 55, dur: 0.28,
+                         type: "square", gain: 0.09}); },
+    pickup: when => { tone({when, freq: 660, dur: 0.07, type: "triangle", gain: 0.13});
+                      tone({when: (when || 0) + 0.06, freq: 990, dur: 0.09,
+                            type: "triangle", gain: 0.11}); },
+    drink: when => { tone({when, freq: 300, to: 560, dur: 0.24, type: "sine", gain: 0.13});
+                     noise({when, dur: 0.20, gain: 0.05, filter: "bandpass",
+                            from: 500, to: 1400, q: 3}); },
+    equip: when => { tone({when, freq: 880, dur: 0.13, type: "triangle", gain: 0.13});
+                     tone({when: (when || 0) + 0.03, freq: 1320, dur: 0.20,
+                           type: "triangle", gain: 0.09}); },
+    scroll: when => { noise({when, dur: 0.30, gain: 0.06, filter: "highpass",
+                             from: 1800, to: 5000});
+                      [784, 1047, 1319].forEach((f, i) =>
+                        tone({when: (when || 0) + i * 0.045, freq: f, dur: 0.22,
+                              type: "sine", gain: 0.07})); },
+    throwArc: when => noise({when, dur: 0.22, gain: 0.10, filter: "bandpass",
+                             from: 400, to: 1800, q: 2}),
+    blast: when => { noise({when, dur: 0.42, gain: 0.26, from: 2600, to: 150});
+                     tone({when, freq: 120, to: 44, dur: 0.44, type: "sine", gain: 0.20}); },
+    levelUp: when => [523, 659, 784, 1047].forEach((f, i) =>
+                      tone({when: (when || 0) + i * 0.075, freq: f, dur: 0.30,
+                            type: "triangle", gain: 0.12})),
+    heal: when => [523, 784].forEach((f, i) =>
+                    tone({when: (when || 0) + i * 0.07, freq: f, dur: 0.26,
+                          type: "sine", gain: 0.10})),
+    descend: when => { noise({when, dur: 0.75, gain: 0.16, from: 700, to: 60});
+                       tone({when, freq: 200, to: 62, dur: 0.80, type: "sine", gain: 0.15}); },
+    gameOver: when => [330, 262, 196, 147].forEach((f, i) =>
+                       tone({when: (when || 0) + i * 0.20, freq: f, dur: 0.55,
+                             type: "triangle", gain: 0.15})),
+    click: when => tone({when, freq: 520, dur: 0.05, type: "square", gain: 0.07}),
+    drip: when => tone({when, freq: 1500 * vary(0.4), to: 700, dur: 0.13,
+                        type: "sine", gain: 0.05})
+  };
+
+  /* A low room tone with the occasional drip, so silence never feels like a bug. */
+  function startAmbient(){
+    const c = ensure();
+    if (!c || ambientOn) return;
+    ambientOn = true;
+    ambientGain = c.createGain();
+    ambientGain.gain.value = 0.05;
+    const filter = c.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = 220;
+    filter.connect(ambientGain).connect(master);
+    for (const freq of [55, 55.6, 82.5]){
+      const osc = c.createOscillator();
+      osc.type = "sawtooth";
+      osc.frequency.value = freq;
+      const level = c.createGain();
+      level.gain.value = 0.18;
+      osc.connect(level).connect(filter);
+      osc.start();
+    }
+    const scheduleDrip = () => {
+      if (!ambientOn) return;
+      if (enabled) voices.drip(0);
+      setTimeout(scheduleDrip, 6000 + Math.random() * 12000);
+    };
+    setTimeout(scheduleDrip, 4000 + Math.random() * 6000);
+  }
+
+  return {
+    play(name, when){
+      if (!enabled) return;
+      const voice = voices[name];
+      if (voice) throttled(name, when, () => voice(when || 0));
+    },
+    unlock(){ ensure(); startAmbient(); },
+    get enabled(){ return enabled; },
+    toggle(){
+      enabled = !enabled;
+      try { localStorage.setItem("ember-depths-mute", enabled ? "0" : "1"); }
+      catch (error){ /* nothing to remember it with */ }
+      if (enabled){ ensure(); startAmbient(); }
+      if (master) master.gain.value = enabled ? MASTER_GAIN : 0;
+      return enabled;
+    }
+  };
+})();
+
+</script>
+<script>
+"use strict";
 /* ============================ interface ============================ */
 const el = id => document.getElementById(id);
 const canvas = el("view"), ctx = canvas.getContext("2d");
@@ -1451,6 +1653,7 @@ const bobOffset = entity => {
 };
 function snapshot(){
   const seen = new Map();
+  seen.foundBefore = game.itemsFound;
   seen.set(game.player, {x: game.player.x, y: game.player.y, hp: game.player.hp,
                          level: game.player.level});
   for (const monster of game.monsters)
@@ -1463,16 +1666,22 @@ function playDiff(before, delay){
   const living = new Set(game.monsters);
   living.add(game.player);
 
+  const seconds = (delay || 0) / 1000;
+  let stepped = false, struck = false, wounded = false, fell = false;
+
   for (const [entity, was] of before){
     if (living.has(entity)){
-      if (entity.x !== was.x || entity.y !== was.y)
+      if (entity.x !== was.x || entity.y !== was.y){
         anim.slides.set(entity, {fx: was.x, fy: was.y, t: 0});
+        if (entity === game.player) stepped = true;
+      }
       if (entity.hp < was.hp){
         anim.flashes.set(entity, 0);
         addEffect({kind: "damage", x: entity.x, y: entity.y, delay,
                    text: "-" + (was.hp - entity.hp),
                    colour: entity === game.player ? "#FF8A8A" : "#FFE08A"});
         lungeAttacker(entity === game.player, entity.x, entity.y);
+        if (entity === game.player) wounded = true; else struck = true;
       }
     } else {
       // Gone from the floor: it died where it last stood. The blow still shows,
@@ -1483,8 +1692,16 @@ function playDiff(before, delay){
                  sprite: SPRITES[entity.name] || SPRITES.Goblin});
       burst(was.x, was.y, entity.color || "#C25A4E", 7, delay);
       lungeAttacker(false, was.x, was.y);
+      // A killing blow is still a blow: it gets the swing as well as the death.
+      struck = true;
+      fell = true;
     }
   }
+  if (stepped) Sound.play("step", seconds);
+  if (struck){ Sound.play("swing", seconds); Sound.play("hit", seconds + 0.05); }
+  if (wounded) Sound.play("hurt", seconds);
+  if (fell) Sound.play("die", seconds + 0.06);
+  if (game.itemsFound > (before.foundBefore ?? game.itemsFound)) Sound.play("pickup", seconds);
   if (game.player.level > (before.get(game.player) || {}).level) celebrate();
 }
 /* Whoever was standing next to the wounded party gets the swing. Takes a
@@ -1517,6 +1734,7 @@ function burst(x, y, colour, count, delay){
 function celebrate(){
   addEffect({kind: "levelup", x: game.player.x, y: game.player.y, life: 900});
   burst(game.player.x, game.player.y, "#F5D68A", 10, 0);
+  Sound.play("levelUp", 0);
 }
 /* A thrown flask flies before it bursts, so hold the damage back until it lands. */
 function throwArc(fromX, fromY, toX, toY, sprite, blastRadius){
@@ -1525,6 +1743,8 @@ function throwArc(fromX, fromY, toX, toY, sprite, blastRadius){
                          sprite, life: flight});
   addEffect({kind: "blast", x: toX, y: toY, radius: blastRadius, delay: flight, life: 420});
   burst(toX, toY, "#FFB55A", 10, flight);
+  Sound.play("throwArc", 0);
+  Sound.play("blast", flight / 1000);
   return flight;
 }
 function finishMotion(){
@@ -1864,6 +2084,7 @@ function act(perform, options){
   const before = snapshot();
   const outcome = perform();
   if (outcome !== false) playDiff(before, options && options.delay);
+  else if (options && options.thud) Sound.play("blocked", 0);
   redraw();
   return outcome;
 }
@@ -2004,8 +2225,10 @@ function openPack(){
 const closePack = () => el("packOverlay").classList.remove("on");
 function chooseItem(index){
   if (index < 0 || index >= game.pack.length) return;
-  if (needsTarget(game.pack[index])) beginAiming(index);
-  else act(() => useItem(game, index));
+  const item = game.pack[index];
+  if (needsTarget(item)){ beginAiming(index); return; }
+  const voice = item.kind === "weapon" ? "equip" : item.kind === "scroll" ? "scroll" : "drink";
+  if (act(() => useItem(game, index)) !== false) Sound.play(voice, 0);
 }
 
 function takeStairs(){
@@ -2017,6 +2240,7 @@ function takeStairs(){
     anim.effects.length = 0;
     anim.camReady = false;
     anim.fade = 1;                       // the new floor lights up out of the dark
+    Sound.play("descend", 0);
   }
   redraw();
 }
@@ -2045,6 +2269,7 @@ function showTitle(){
   showScreen("title");
 }
 function enterGame(loaded){
+  Sound.unlock();
   game = loaded;
   anim.slides.clear(); anim.lunges.clear(); anim.flashes.clear();
   anim.effects.length = 0; anim.motes.length = 0;
@@ -2075,6 +2300,7 @@ function suspendRun(){
   showTitle();
 }
 function showGameOver(){
+  Sound.play("gameOver", 0.15);
   deleteSave();
   lastSummary = runSummary(game);
   renderStats(el("overStats"), lastSummary);
@@ -2085,7 +2311,7 @@ function showGameOver(){
 function handleDirection(dir){
   if (!game || game.gameOver) return;
   if (aiming) nudgeCursor(dir);
-  else act(() => moveDir(game, dir));
+  else act(() => moveDir(game, dir), {thud: true});
 }
 function handleWait(){
   if (!game || game.gameOver || aiming) return;
@@ -2148,6 +2374,18 @@ canvas.addEventListener("click", event => {
   handleDirection(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left")
                                               : (dy > 0 ? "down" : "up"));
 });
+
+function paintMuteButtons(){
+  const on = Sound.enabled;
+  const badge = el("muteBtn");
+  badge.textContent = on ? "♪" : "✕";
+  badge.dataset.off = on ? "0" : "1";
+  badge.setAttribute("aria-label", on ? "Turn sound off" : "Turn sound on");
+  el("muteBtnTitle").textContent = "Sound: " + (on ? "on" : "off");
+}
+for (const id of ["muteBtn", "muteBtnTitle"])
+  el(id).addEventListener("click", () => { Sound.toggle(); paintMuteButtons(); Sound.play("click", 0); });
+paintMuteButtons();
 
 el("beginBtn").addEventListener("click", () => startRun(nextSeed));
 el("continueBtn").addEventListener("click", continueRun);
