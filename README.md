@@ -30,6 +30,7 @@ npm run artifact # build a single-file embeddable page (artifact/page.html shell
 | Flask | `Q` — heal, grounded only |
 | Pray | `W`/`Up` at an altar |
 | Map / Pause | `Tab` / `Esc` |
+| Mute / Volume | `M` / `-` and `+` |
 
 A standard gamepad works too, if one is connected.
 
@@ -55,6 +56,44 @@ Parry is the centre of the design, so everything else is built to serve it.
 
 Frame data lives in one place, `src/game/playerStats.ts`, so the feel can be
 tuned without touching logic.
+
+## Sound
+
+There are no audio files either. Every sound is synthesised at runtime through
+one graph:
+
+```
+voices ──┬─ dry ─────────────────┬─ sfx bus ───┐
+         └─ send ─> convolver ───┘             ├─> master ─> limiter ─> out
+                     music ─> fade stage ──────┘
+```
+
+- **The reverb** is a `ConvolverNode` running a generated impulse response —
+  exponentially decaying noise with a short pre-delay. It is the single thing
+  that makes the rooms sound like stone.
+- **Bells** (the parry chime, the altar, the boss tolls) are built from real
+  inharmonic partials — hum, prime, tierce, quint, nominal. The minor-third
+  tierce is why they sound mournful rather than like a beep.
+- **The score's voice** is Karplus-Strong: a noise burst fed through a short
+  averaging delay line, rendered into a buffer and cached per pitch. It reads as
+  a plucked nylon string.
+- **A limiter** on the master means levels can sit where they belong instead of
+  being kept timid in case several loud sounds land on the same frame.
+
+The music is generated, not looped. It sits in **E Phrygian** and leans on the
+**Andalusian cadence** (Am–G–F–E), the progression behind Spanish liturgical and
+flamenco music — the same well the setting draws from. Notes are scheduled
+against the audio clock a fraction of a second ahead, so tempo never wobbles
+with the frame rate. Each room mood picks a score: sparser and lower in the
+cistern, denser and faster on the approach, and a two-chord tritone theme for
+the Abbot.
+
+Crossfades run through a dedicated gain stage rather than scaling each note as
+it is queued. That distinction matters: a bar is scheduled seconds before it
+sounds, so a fade applied at schedule time lands on the wrong notes and leaves
+a whole bar of dead air on every room change.
+
+`M` mutes, `-` and `+` set the volume, and both persist.
 
 ## The map
 
@@ -100,10 +139,10 @@ shared telegraph tint. Override `blocks` to add a guard.
 ## Layout
 
 ```
-src/core/      loop, input, math, rng      — no game knowledge
-src/engine/    canvas, camera, tilemap, physics, fx, font, backdrop, draw
-src/game/      player, combat, enemies, rooms, world, progression, ui
-src/content/   rooms, palette              — data, not code
+src/core/      loop, input, math, rng, pitch   — no game knowledge
+src/engine/    canvas, camera, tilemap, physics, fx, font, backdrop, draw, audio
+src/game/      player, combat, enemies, rooms, world, progression, music, ui
+src/content/   rooms, palette, sfx             — data, not code
 artifact/      page.html — the designed shell the game is embedded in
 tools/         inline.mjs and artifact.mjs (single-file builds),
                smoke.mjs and verify-artifact.mjs (headless checks)
@@ -121,3 +160,8 @@ death, crosses a door, opens the map, dies and checks that guilt is left behind,
 rises at the altar, tests the double-jump gate in both directions, and reaches
 the boss arena — failing on any console error along the way. Screenshots land in
 `dist/shots/`.
+
+It also measures the master bus through an `AnalyserNode`: that the game makes
+an audible sound, that every entry in the sound library plays without throwing,
+and that muting actually silences the output. "No errors were thrown" is not
+evidence that a synthesised soundtrack made a sound.

@@ -122,9 +122,14 @@ export class Room {
     return this.def.boss === true;
   }
 
+  /** True while the fight is live: the arena is sealed and the music changes. */
+  get bossAwake(): boolean {
+    return this.bossTriggered && this.boss !== null && !this.boss.defeated;
+  }
+
   /** Boss arenas seal shut until the fight is over. */
   get exitsSealed(): boolean {
-    return this.isBossRoom && this.bossTriggered && this.boss !== null && !this.boss.defeated;
+    return this.isBossRoom && this.bossAwake;
   }
 
   private buildItems(): void {

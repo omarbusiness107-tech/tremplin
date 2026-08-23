@@ -2,6 +2,7 @@ import { rect, type Rect } from "../core/math";
 import { fx } from "../engine/fx";
 import { Tilemap } from "../engine/tilemap";
 import { PAL } from "../content/palette";
+import { playSfxVaried } from "../content/sfx";
 import { HitResult, makeHit, Team, type Damageable, type HitResolver } from "./combat";
 
 export interface ProjectileOptions {
@@ -89,6 +90,7 @@ export class Projectile {
     this.dead = true;
     fx.blood(this.x, this.y, 0, 4);
     fx.embers(this.x, this.y, 6);
+    playSfxVaried("burst", 0.12, 0.8);
   }
 
   render(ctx: CanvasRenderingContext2D, camX: number, camY: number): void {

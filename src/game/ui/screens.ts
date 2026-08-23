@@ -13,6 +13,7 @@ const CONTROLS: readonly (readonly [string, string])[] = [
   ["flask", "q      heal, only on the ground"],
   ["pray", "w / up at an altar"],
   ["map", "tab            pause: esc"],
+  ["sound", "m to mute      - / + volume"],
 ];
 
 function dim(ctx: CanvasRenderingContext2D, alpha = 0.86): void {

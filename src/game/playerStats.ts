@@ -55,6 +55,7 @@ export const FERVOUR = {
 export const COMBO: readonly AttackDef[] = [
   {
     name: "cut",
+    sfx: "swing1",
     startup: 5,
     active: 4,
     recovery: 11,
@@ -70,6 +71,7 @@ export const COMBO: readonly AttackDef[] = [
   },
   {
     name: "backcut",
+    sfx: "swing2",
     startup: 5,
     active: 4,
     recovery: 12,
@@ -85,6 +87,7 @@ export const COMBO: readonly AttackDef[] = [
   },
   {
     name: "finisher",
+    sfx: "swing3",
     startup: 9,
     active: 6,
     recovery: 19,
@@ -103,6 +106,7 @@ export const COMBO: readonly AttackDef[] = [
 /** Slow, committed heavy swing. Breaks guard. */
 export const HEAVY: AttackDef = {
   name: "heavy",
+  sfx: "heavy",
   startup: 15,
   active: 6,
   recovery: 22,
@@ -120,6 +124,7 @@ export const HEAVY: AttackDef = {
 /** Downward stab performed in the air while holding down. */
 export const PLUNGE: AttackDef = {
   name: "plunge",
+  sfx: "plunge",
   startup: 4,
   active: 30,
   recovery: 10,

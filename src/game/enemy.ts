@@ -4,6 +4,7 @@ import { fx } from "../engine/fx";
 import { bodyRect, makeBody, moveBody, type Body } from "../engine/physics";
 import { Tilemap } from "../engine/tilemap";
 import { PAL } from "../content/palette";
+import { playSfx, playSfxVaried, type SfxName } from "../content/sfx";
 import { HitResult, makeHit, Team, type Damageable, type Hit, type HitResolver } from "./combat";
 import type { Player } from "./player";
 import type { Projectile } from "./projectile";
@@ -50,6 +51,8 @@ export abstract class Enemy implements Damageable {
   protected hitSet = new Set<Damageable>();
   /** Set true once the player has been noticed; enemies idle until then. */
   protected aware = false;
+  /** Overridden by the boss, which dies to a different sound. */
+  protected deathSfx: SfxName = "enemyDeath";
 
   /** `feetY` is the world Y the actor stands on, not the top of its box. */
   constructor(x: number, feetY: number, spec: EnemySpec) {
@@ -163,6 +166,7 @@ export abstract class Enemy implements Damageable {
       this.hitFlash = 3;
       fx.sparks(this.centerX + sign(hit.originX - this.centerX) * 8, this.centerY, 6);
       fx.hitstop(5);
+      playSfx("hitBlocked");
       return HitResult.Blocked;
     }
 
@@ -178,6 +182,7 @@ export abstract class Enemy implements Damageable {
     fx.hitstop(hit.hitstop);
     fx.blood(this.centerX, this.centerY, dir, 8 + hit.damage * 3);
     fx.popText(this.centerX, this.body.y - 4, `${hit.damage}`, PAL.bone);
+    playSfxVaried("hitFlesh", 0.1);
 
     if (this.health <= 0) {
       this.kill(dir);
@@ -193,6 +198,7 @@ export abstract class Enemy implements Damageable {
     this.poise = 0;
     this.resetSwing();
     fx.popText(this.centerX, this.body.y - 12, "broken", PAL.goldPale);
+    playSfx("stagger");
   }
 
   kill(dir: number): void {
@@ -203,6 +209,7 @@ export abstract class Enemy implements Damageable {
     this.body.vy = -2.2;
     fx.blood(this.centerX, this.centerY, dir, 18);
     fx.souls(this.centerX, this.centerY, PAL.fervourPale, 10);
+    playSfx(this.deathSfx);
   }
 
   render(ctx: CanvasRenderingContext2D, camX: number, camY: number): void {

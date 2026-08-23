@@ -11,7 +11,10 @@ export type Action =
   | "flask"
   | "map"
   | "pause"
-  | "confirm";
+  | "confirm"
+  | "mute"
+  | "volumeDown"
+  | "volumeUp";
 
 const KEY_BINDINGS: Record<string, Action> = {
   ArrowLeft: "left",
@@ -36,6 +39,9 @@ const KEY_BINDINGS: Record<string, Action> = {
   Tab: "map",
   Escape: "pause",
   Enter: "confirm",
+  KeyM: "mute",
+  Minus: "volumeDown",
+  Equal: "volumeUp",
 };
 
 /** Standard-gamepad button index -> action. */

@@ -42,7 +42,12 @@ function check(name, condition, detail = "") {
 
 // The image ships a pinned Chromium; point at it rather than downloading one.
 const CHROME = process.env.CHROME_PATH ?? "/opt/pw-browsers/chromium-1194/chrome-linux/chrome";
-const browser = await chromium.launch(existsSync(CHROME) ? { executablePath: CHROME } : {});
+// Headless Chromium withholds audio until a gesture; the flag makes the audio
+// assertions below deterministic rather than dependent on gesture plumbing.
+const launchArgs = { args: ["--autoplay-policy=no-user-gesture-required"] };
+const browser = await chromium.launch(
+  existsSync(CHROME) ? { executablePath: CHROME, ...launchArgs } : launchArgs,
+);
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
 
 const consoleErrors = [];
@@ -178,6 +183,72 @@ await page.waitForTimeout(600);
 s = await state();
 check("rising returns you to the altar room", s.scene === "playing" && s.room === "cell", `${s.scene}/${s.room}`);
 check("respawn restores health", s.health === s.maxHealth);
+
+
+console.log("\naudio");
+// Measure the master bus: "no errors thrown" is not evidence that a synthesised
+// soundtrack actually makes a sound.
+const measureOutput = async (ms) =>
+  page.evaluate(async (duration) => {
+    const { audio } = globalThis.penitence.debug;
+    const analyser = (globalThis.__analyser ??= audio.attachAnalyser());
+    if (!analyser) return null;
+    const buf = new Float32Array(analyser.fftSize);
+    let peak = 0;
+    const started = performance.now();
+    while (performance.now() - started < duration) {
+      analyser.getFloatTimeDomainData(buf);
+      for (let i = 0; i < buf.length; i++) peak = Math.max(peak, Math.abs(buf[i]));
+      await new Promise((r) => setTimeout(r, 16));
+    }
+    return peak;
+  }, ms);
+
+const audioState = await page.evaluate(() => {
+  const { audio } = globalThis.penitence.debug;
+  return { state: audio.context()?.state ?? "none", muted: audio.muted };
+});
+check("the audio context is running", audioState.state === "running", `state ${audioState.state}`);
+
+// Wait for the crossfade to finish, not merely for the state to change --
+// measuring mid-fade reads as silence.
+await page
+  .waitForFunction(
+    () => {
+      const { music } = globalThis.penitence.debug;
+      return music.current !== "silence" && music.intensity > 0.85;
+    },
+    null,
+    { timeout: 12000 },
+  )
+  .catch(() => undefined);
+const musicState = await page.evaluate(() => globalThis.penitence.debug.music.current);
+check("the score starts playing", musicState !== "silence", `music is "${musicState}"`);
+
+await page.waitForTimeout(1200);
+const playingPeak = await measureOutput(2600);
+check("the game produces sound", playingPeak !== null && playingPeak > 0.02, `peak ${playingPeak?.toFixed(4)}`);
+
+// Every sound in the library must be playable without throwing.
+const sfxErrors = await page.evaluate(() => {
+  const { playSfx, sfxNames } = globalThis.penitence.debug;
+  const failed = [];
+  for (const name of sfxNames) {
+    try {
+      playSfx(name, { throttle: 0 });
+    } catch (e) {
+      failed.push(`${name}: ${e}`);
+    }
+  }
+  return failed;
+});
+check("every sound in the library plays", sfxErrors.length === 0, sfxErrors.slice(0, 2).join(" | "));
+
+await page.evaluate(() => globalThis.penitence.debug.audio.setMuted(true));
+await page.waitForTimeout(400);
+const mutedPeak = await measureOutput(1200);
+check("muting silences the output", mutedPeak !== null && mutedPeak < 0.005, `peak ${mutedPeak?.toFixed(4)}`);
+await page.evaluate(() => globalThis.penitence.debug.audio.setMuted(false));
 
 console.log("\nprogression gate");
 // The route to the reliquary must be impossible without the double jump and

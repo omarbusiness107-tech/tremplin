@@ -1,10 +1,13 @@
 import { input } from "../core/input";
 import { Loop } from "../core/loop";
+import { audio } from "../engine/audio";
 import { clear, createScreen, VIEW_H, VIEW_W } from "../engine/canvas";
-import { drawTextShadow } from "../engine/font";
+import { drawText, drawTextShadow } from "../engine/font";
 import { fx } from "../engine/fx";
 import { PAL } from "../content/palette";
+import { playSfx, SFX } from "../content/sfx";
 import { BOSS_NAME } from "./enemies/boss";
+import { music } from "./music";
 import { drawHud } from "./ui/hud";
 import { drawMapScreen } from "./ui/mapscreen";
 import { drawDeath, drawPause, drawTitle, drawVictory } from "./ui/screens";
@@ -24,11 +27,17 @@ export class Game {
   private hasSave: boolean;
   private resetHeld = 0;
   private resetKeyDown = false;
+  /** Frames left showing the volume readout after a change. */
+  private audioHud = 0;
 
   constructor(parent: HTMLElement) {
     const screen = createScreen(parent);
     this.ctx = screen.ctx;
     input.attach(window);
+    // Browsers hold audio until a gesture, so unlock on the first real input.
+    const unlock = (): void => audio.unlock();
+    window.addEventListener("keydown", unlock);
+    window.addEventListener("pointerdown", unlock);
     // The title screen offers a reset, which is not worth a whole action binding.
     window.addEventListener("keydown", (e) => {
       if (e.code === "KeyR") this.resetKeyDown = true;
@@ -48,13 +57,24 @@ export class Game {
   }
 
   /** Exposed for smoke tests and for poking at state from the console. */
-  get debug(): { scene: Scene; world: World } {
-    return { scene: this.scene, world: this.world };
+  get debug(): {
+    scene: Scene;
+    world: World;
+    audio: typeof audio;
+    music: typeof music;
+    playSfx: typeof playSfx;
+    sfxNames: string[];
+  } {
+    return { scene: this.scene, world: this.world, audio, music, playSfx, sfxNames: Object.keys(SFX) };
   }
 
   private update(): void {
     input.beginFrame();
     this.time++;
+    this.updateAudioControls();
+    // The score is scheduled against the audio clock, so it must tick in every
+    // scene -- including while paused or reading the map.
+    music.update();
 
     switch (this.scene) {
       case "title":
@@ -64,15 +84,22 @@ export class Game {
         this.updatePlaying();
         break;
       case "paused":
-        if (input.consume("pause")) this.scene = "playing";
+        if (input.consume("pause")) {
+          this.scene = "playing";
+          playSfx("uiClose");
+        }
         break;
       case "map":
         fx.update();
-        if (input.consume("map") || input.consume("pause")) this.scene = "playing";
+        if (input.consume("map") || input.consume("pause")) {
+          this.scene = "playing";
+          playSfx("uiClose");
+        }
         break;
       case "dead":
         this.world.update();
         if (this.world.deathPromptReady && (input.consume("confirm") || input.consume("jump"))) {
+          playSfx("uiConfirm");
           this.world.respawn();
           this.scene = "playing";
         }
@@ -80,6 +107,7 @@ export class Game {
       case "victory":
         this.world.update();
         if (input.consume("pause") || input.consume("confirm")) {
+          playSfx("uiConfirm");
           this.world = new World();
           this.scene = "title";
         }
@@ -87,8 +115,26 @@ export class Game {
     }
   }
 
+  /** Mute and volume work in any scene. */
+  private updateAudioControls(): void {
+    if (this.audioHud > 0) this.audioHud--;
+    if (input.consume("mute")) {
+      audio.toggleMute();
+      this.audioHud = 110;
+      if (!audio.muted) playSfx("uiConfirm");
+    }
+    const step = input.consume("volumeUp") ? 0.1 : input.consume("volumeDown") ? -0.1 : 0;
+    if (step !== 0) {
+      audio.setVolume(audio.volume + step);
+      if (audio.muted) audio.setMuted(false);
+      this.audioHud = 110;
+      playSfx("uiOpen");
+    }
+  }
+
   private updateTitle(): void {
     fx.update();
+    music.set("title");
     if (this.resetKeyDown) {
       this.resetHeld++;
       if (this.resetHeld >= RESET_HOLD_FRAMES) {
@@ -104,6 +150,7 @@ export class Game {
     if (input.consume("confirm") || input.consume("jump")) {
       // Drop any buffered press so the pilgrim does not jump on the first frame.
       input.flush("jump");
+      playSfx("uiConfirm");
       this.scene = "playing";
     }
   }
@@ -111,10 +158,12 @@ export class Game {
   private updatePlaying(): void {
     if (input.consume("pause")) {
       this.scene = "paused";
+      playSfx("uiOpen");
       return;
     }
     if (input.consume("map")) {
       this.scene = "map";
+      playSfx("uiOpen");
       return;
     }
 
@@ -157,6 +206,27 @@ export class Game {
       case "playing":
         break;
     }
+
+    if (this.audioHud > 0) this.drawAudioHud();
+  }
+
+  private drawAudioHud(): void {
+    const w = 74;
+    const x = VIEW_W - w - 8;
+    const y = VIEW_H - 16;
+    const label = audio.muted ? "muted" : `sound ${Math.round(audio.volume * 100)}%`;
+
+    this.ctx.globalAlpha = Math.min(1, this.audioHud / 30);
+    this.ctx.fillStyle = "rgba(7,5,10,0.8)";
+    this.ctx.fillRect(x - 4, y - 4, w + 8, 15);
+    drawText(this.ctx, label, x, y - 1, audio.muted ? PAL.uiDim : PAL.ui, 1, "left");
+    this.ctx.fillStyle = PAL.stoneDark;
+    this.ctx.fillRect(x, y + 7, w, 2);
+    if (!audio.muted) {
+      this.ctx.fillStyle = PAL.gold;
+      this.ctx.fillRect(x, y + 7, Math.round(w * audio.volume), 2);
+    }
+    this.ctx.globalAlpha = 1;
   }
 
   private drawResetMeter(): void {

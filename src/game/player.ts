@@ -5,6 +5,7 @@ import { fx } from "../engine/fx";
 import { bodyRect, floorAhead, makeBody, moveBody, type Body } from "../engine/physics";
 import { Tilemap } from "../engine/tilemap";
 import { PAL } from "../content/palette";
+import { playSfx, playSfxVaried } from "../content/sfx";
 import {
   attackLength,
   HitResult,
@@ -263,11 +264,13 @@ export class Player implements Damageable {
       this.body.vy = MOVE.jumpVel;
       this.coyote = 0;
       fx.dust(this.centerX, this.body.y + this.body.h, 0, 5);
+      playSfxVaried("jump");
     } else {
       this.body.vy = MOVE.doubleJumpVel;
       this.airJumpsLeft--;
       // The second jump is the traversal unlock, so it gets its own flourish.
       fx.souls(this.centerX, this.body.y + this.body.h - 4, PAL.goldPale, 8);
+      playSfx("doubleJump");
     }
     this.setState("jump");
   }
@@ -289,6 +292,7 @@ export class Player implements Damageable {
     this.setState("roll");
     this.body.vx = this.facing * MOVE.rollSpeed;
     fx.dust(this.centerX, this.body.y + this.body.h, -this.facing, 7);
+    playSfxVaried("roll");
     return true;
   }
 
@@ -339,6 +343,7 @@ export class Player implements Damageable {
     if (this.attackIsRiposte) this.riposte = 0;
     this.setState("attack");
     if (input.moveX !== 0) this.facing = input.moveX;
+    playSfxVaried(def.sfx, 0.07);
   }
 
   private updateAttack(resolver: HitResolver): void {
@@ -417,6 +422,7 @@ export class Player implements Damageable {
     if (this.attackIsRiposte) {
       fx.flash(PAL.goldPale, 6);
       fx.popText(this.centerX, this.body.y - 6, "riposte", PAL.gold);
+      playSfx("riposte");
       this.attackIsRiposte = false;
     }
   }
@@ -461,6 +467,7 @@ export class Player implements Damageable {
       this.health = clamp(this.health + this.flaskHeal, 0, this.maxHealth);
       fx.souls(this.centerX, this.centerY, PAL.bloodBright, 14);
       fx.popText(this.centerX, this.body.y - 8, `+${this.flaskHeal}`, PAL.bloodBright);
+      playSfx("flask");
     }
     if (this.stateFrame >= MOVE.healFrames) this.setState("idle");
   }
@@ -490,6 +497,7 @@ export class Player implements Damageable {
     fx.hitstop(hit.hitstop + 4);
     fx.blood(this.centerX, this.centerY, dir, 12);
     fx.flash(PAL.blood, 6);
+    playSfx("playerHurt");
 
     if (this.health <= 0) {
       this.health = 0;
@@ -510,6 +518,7 @@ export class Player implements Damageable {
     fx.sparks(this.centerX + this.facing * 12, this.centerY - 2, 20);
     fx.flash(PAL.goldPale, 5);
     fx.popText(this.centerX, this.body.y - 4, "parry", PAL.goldPale);
+    playSfx("parry");
     this.events.onParrySuccess();
   }
 
@@ -521,6 +530,7 @@ export class Player implements Damageable {
     fx.blood(this.centerX, this.centerY, 0, 14);
     fx.flash(PAL.blood, 8);
     fx.hitstop(8);
+    playSfx("playerHurt");
     if (this.health <= 0) {
       this.health = 0;
       this.die();
@@ -542,12 +552,14 @@ export class Player implements Damageable {
     fx.hitstop(18);
     fx.flash(PAL.blood, 14);
     fx.souls(this.centerX, this.centerY, PAL.guiltPale, 22);
+    playSfx("playerDeath");
     this.events.onDeath();
   }
 
   private postMove(map: Tilemap): void {
     if (this.body.grounded && !this.wasGrounded && this.body.vy >= 0) {
       fx.dust(this.centerX, this.body.y + this.body.h, 0, 4);
+      playSfxVaried("land", 0.08, 0.8);
     }
     this.wasGrounded = this.body.grounded;
     if (!input.down("down")) this.body.dropThrough = false;

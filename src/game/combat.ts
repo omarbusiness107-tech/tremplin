@@ -1,4 +1,5 @@
 import type { Rect } from "../core/math";
+import type { SfxName } from "../content/sfx";
 import { overlaps } from "../core/math";
 
 export const enum Team {
@@ -130,6 +131,8 @@ export interface AttackDef {
   cancelFrom: number;
   /** Fervour granted when this attack connects. */
   fervour: number;
+  /** Sound played as the swing starts. */
+  sfx: SfxName;
 }
 
 export function attackLength(def: AttackDef): number {

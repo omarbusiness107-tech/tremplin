@@ -1,6 +1,7 @@
 import { approach } from "../../core/math";
 import { floorAhead, wallAhead } from "../../engine/physics";
 import { PAL } from "../../content/palette";
+import { playSfxVaried } from "../../content/sfx";
 import { Enemy, type EnemyContext } from "../enemy";
 import { Projectile } from "../projectile";
 
@@ -73,6 +74,7 @@ export class Thurifer extends Enemy {
 
   private throwCenser(ctx: EnemyContext): void {
     const { player } = ctx;
+    playSfxVaried("throwCenser", 0.1);
     const ox = this.centerX + this.facing * 8;
     const oy = this.centerY - 4;
     const dx = player.centerX - ox;

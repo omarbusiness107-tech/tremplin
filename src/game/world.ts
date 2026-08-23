@@ -8,6 +8,8 @@ import { fx } from "../engine/fx";
 import { TILE } from "../engine/tilemap";
 import { PAL } from "../content/palette";
 import { findRoom, START_ROOM, type DoorDef } from "../content/rooms";
+import { playSfx } from "../content/sfx";
+import { music } from "./music";
 import { HitResolver, type Damageable } from "./combat";
 import type { Boss } from "./enemies/boss";
 import { Player } from "./player";
@@ -153,8 +155,13 @@ export class World {
     this.camera.follow(this.player.centerX, this.player.centerY, this.player.facing, this.player.grounded);
     this.camera.update();
 
+    // Cheap to call every frame: the director ignores a request for the state
+    // it is already in.
+    music.setForRoom(this.room.mood, this.room.bossAwake);
+
     if (this.progression.data.bossDefeated && this.room.isBossRoom && !this.room.boss) {
       this.state = "victory";
+      music.set("victory", true);
     }
   }
 
@@ -219,6 +226,7 @@ export class World {
     fx.souls(item.x, item.y, PAL.goldPale, 18);
     fx.flash(PAL.goldPale, 8);
     fx.hitstop(6);
+    playSfx("pickup");
     this.progression.save();
   }
 
@@ -228,6 +236,7 @@ export class World {
     this.player.tears = this.progression.data.tears;
     fx.souls(this.player.centerX, this.player.centerY, PAL.guiltPale, 26);
     fx.flash(PAL.guiltPale, 10);
+    playSfx("guilt");
     this.say(recovered > 0 ? `guilt absolved -- ${recovered} tears returned` : "guilt absolved");
     this.progression.save();
   }
@@ -246,6 +255,7 @@ export class World {
 
     fx.souls(this.player.centerX, this.player.centerY, PAL.goldPale, 24);
     fx.flash(PAL.goldPale, 10);
+    playSfx("altar");
     this.say("you kneel. the hollow ones return.");
   }
 
@@ -253,8 +263,10 @@ export class World {
     if (door.requires && !this.progression.data.abilities[door.requires]) {
       const need = door.requires === "doubleJump" ? "the second breath" : "the seal breaker";
       this.say(`sealed -- you lack ${need}`);
+      playSfx("sealed", { throttle: 0.6 });
       return;
     }
+    playSfx("door");
     this.transition = { phase: "out", frames: FADE_FRAMES, target: door.to };
     this.player.locked = true;
   }
@@ -285,6 +297,8 @@ export class World {
     this.state = "dying";
     this.deathFrames = 0;
     this.camera.addShake(6);
+    // Let the death toll ring into an empty room.
+    music.hush();
     this.progression.recordDeath(this.room.id, this.player.centerX, this.player.centerY, this.player.tears);
     this.progression.save();
   }

@@ -3,6 +3,7 @@ import { fx } from "../../engine/fx";
 import { wallAhead } from "../../engine/physics";
 import { rng } from "../../core/rng";
 import { PAL } from "../../content/palette";
+import { playSfx } from "../../content/sfx";
 import { HitResult, type Hit } from "../combat";
 import { Enemy, type EnemyContext } from "../enemy";
 import { Projectile } from "../projectile";
@@ -38,6 +39,7 @@ export class Boss extends Enemy {
   constructor(x: number, feetY: number, private readonly onDefeated: () => void) {
     super(x, feetY, SPEC);
     this.facing = -1;
+    this.deathSfx = "bossDeath";
   }
 
   get healthFraction(): number {
@@ -118,6 +120,7 @@ export class Boss extends Enemy {
         if (this.timer === 1) {
           fx.flash(PAL.blood, 22);
           fx.hitstop(24);
+          playSfx("bossPhase");
           fx.popText(this.centerX, this.body.y - 14, "the wound opens", PAL.bloodBright);
         }
         if (this.timer % 6 === 0) fx.souls(this.centerX, this.centerY, PAL.bloodBright, 6);
@@ -181,6 +184,7 @@ export class Boss extends Enemy {
         this.timer = SLAM.windup + 6;
         this.body.vx = 0;
         fx.hitstop(10);
+        playSfx("bossSlam");
         fx.dust(this.centerX, this.body.y + this.body.h, 0, 18);
         this.spawnShockwaves(ctx);
       }
@@ -212,6 +216,7 @@ export class Boss extends Enemy {
   private emitToll(ctx: EnemyContext): void {
     fx.flash(PAL.guiltPale, 10);
     fx.sparks(this.centerX, this.centerY, 24);
+    playSfx("bossToll");
     const count = 12;
     for (let i = 0; i < count; i++) {
       const a = (i / count) * Math.PI * 2;
@@ -236,6 +241,7 @@ export class Boss extends Enemy {
     if (this.timer === CHARGE.windup) {
       this.dashFrames = 0;
       this.resetSwing();
+      playSfx("bossCharge");
     }
     if (this.dashFrames < CHARGE.maxDash) {
       this.dashFrames++;
