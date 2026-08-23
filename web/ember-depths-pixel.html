@@ -92,6 +92,17 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .boss-fill{display:block;height:100%;width:100%;background:linear-gradient(90deg,#E0565F,#F09A6A);
   transition:width .18s ease}
 
+/* Footing: what a bash or a heavy swing is paid for with. */
+.focus{display:flex;gap:3px;justify-content:flex-end;margin-top:2px}
+.focus i{width:7px;height:7px;border-radius:50%;display:block;
+  background:rgba(143,216,255,.18);box-shadow:inset 0 0 0 1px rgba(143,216,255,.30)}
+.focus i.lit{background:#8FD8FF;box-shadow:0 0 5px rgba(143,216,255,.75)}
+/* The combat row only appears when there is something in front of you. */
+.act.fight{border-color:rgba(255,162,74,.45);background:rgba(255,162,74,.10)}
+.act.fight:disabled{opacity:.32}
+.act.guard{border-color:rgba(143,184,230,.5);background:rgba(143,184,230,.12)}
+#prompt.danger{background:rgba(190,52,52,.22);color:#FFC3C3;
+  box-shadow:inset 0 1px 0 rgba(255,120,120,.25)}
 #prompt{flex-shrink:0;padding:5px 12px;background:var(--ember-glow);
   border-top:1px solid var(--ember-lo);font-size:11px;color:var(--ember);display:none}
 #prompt.on{display:block}
@@ -221,6 +232,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
       <div class="stat-right">
         <div>LVL <b id="lvlNum">1</b></div>
         <div>ATK <b id="atkNum">5</b> · DEF <b id="defNum">1</b></div>
+        <div class="focus" id="focusPips" aria-label="Footing"></div>
       </div>
       <button id="muteBtn" class="mute" aria-label="Mute sound" title="Sound">♪</button>
     </div>
@@ -278,6 +290,23 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   <h2>Bestiary</h2><p class="sub">What lives down there, and what this is</p>
   <div class="bestiary" id="bestiary"></div>
   <div class="about" style="margin-top:16px">
+    <h3 style="margin:0 0 6px;font-size:13px;letter-spacing:.08em;
+      text-transform:uppercase;color:var(--ink)">The exchange</h3>
+    <p>Anything bigger than a rat draws back before it swings, and the tiles it
+    is about to cover turn red for one turn. That turn is yours. <b>Step out</b>
+    of them and the blow hits nothing. <b>Guard</b> (<kbd>g</kbd>) and most of it
+    goes into your guard. <b>Bash</b> (<kbd>b</kbd>) and the swing comes apart
+    before it lands.</p>
+    <p>Guarding a blow, and striking something that is already drawing back,
+    earn <b>footing</b> — the dots beside your level. Footing pays for a bash,
+    or for a <b>heavy</b> swing (<kbd>H</kbd>) that lands for double and leaves
+    you wide open until your next turn.</p>
+    <p>Hit anything enough and it loses its footing instead: a reeling creature
+    drops whatever it was winding up and misses two turns. Strike something that
+    has not seen you and you do triple damage. Let two of them get either side
+    of you and they all hit harder.</p>
+    <h3 style="margin:14px 0 6px;font-size:13px;letter-spacing:.08em;
+      text-transform:uppercase;color:var(--ink)">About</h3>
     <p>Every sprite here is drawn in code, pixel by pixel — there are no image
     files. The rules come from a terminal roguelike written in Python: the same
     room generation, the same field of view, the same combat arithmetic and
@@ -1275,17 +1304,41 @@ function lineOfSight(blocks, x1, y1, x2, y2, radius){
 const HUNTER = "hunter", SKITTISH = "skittish", SLOW = "slow", STALKER = "stalker";
 const FLEE_THRESHOLD = 0.35, DEPTH_PER_ATTACK = 2;
 
+/* ============================ the exchange ============================
+   A fight is a read, not a race. Anything bigger than a rat winds up before it
+   swings, and the wind-up is the player's turn to answer: step out of the tiles
+   it is about to cover, set a guard, or hit it hard enough to break the blow.
+
+   Each shape teaches a different answer, so knowing what you are facing is
+   worth more than knowing your own numbers:
+     thrust — one tile ahead;      step anywhere
+     arc    — three tiles ahead;   step back, not sideways
+     reach  — two tiles in a line; step aside, not back                       */
+const THRUST = "thrust", ARC = "arc", REACH = "reach";
+const GUARD_LETS_THROUGH = 0.35; // what a set guard does not stop
+const EXPOSED_TAKES = 1.5;       // and what an over-committed swing costs you
+const FOCUS_CAP = 3, BASH_COST = 1, HEAVY_COST = 2;
+const BACKSTAB_MULTIPLIER = 3;   // for something that has not seen you coming
+const FLANK_BONUS = 1;           // per attacker beyond the first, to each of them
+const STAGGER_TURNS = 2;
+const HIT_STAGGER = 1, BASH_STAGGER = 3, HEAVY_STAGGER = 2;
+const BASH_DAMAGE = 0.5, HEAVY_DAMAGE = 2;
+
 const SPECIES = [
   {name:"Rat",    char:"r", color:"#96917A", hp:4,  attack:2,  defense:0, sight:6,
-   behaviour:SKITTISH, minFloor:1, maxFloor:5,    weight:10},
+   behaviour:SKITTISH, minFloor:1, maxFloor:5,    weight:10, poise:1},
   {name:"Goblin", char:"g", color:"#6EBE5A", hp:8,  attack:3,  defense:0, sight:8,
-   behaviour:HUNTER,   minFloor:1, maxFloor:8,    weight:8},
+   behaviour:HUNTER,   minFloor:1, maxFloor:8,    weight:8,  poise:2,
+   heavy:{shape:THRUST, chance:0.25, power:1.8, tell:"crouches to spring"}},
   {name:"Orc",    char:"o", color:"#DC6E50", hp:12, attack:5,  defense:1, sight:8,
-   behaviour:HUNTER,   minFloor:2, maxFloor:null, weight:8},
+   behaviour:HUNTER,   minFloor:2, maxFloor:null, weight:8,  poise:3,
+   heavy:{shape:THRUST, chance:0.30, power:2.0, tell:"draws its axe back"}},
   {name:"Ogre",   char:"O", color:"#C8508C", hp:20, attack:10, defense:2, sight:8,
-   behaviour:SLOW,     minFloor:4, maxFloor:null, weight:6},
+   behaviour:SLOW,     minFloor:4, maxFloor:null, weight:6,  poise:5,
+   heavy:{shape:ARC,    chance:0.50, power:2.2, tell:"hoists its club overhead"}},
   {name:"Wraith", char:"W", color:"#A08CEB", hp:18, attack:7,  defense:3, sight:11,
-   behaviour:STALKER,  minFloor:6, maxFloor:null, weight:6}
+   behaviour:STALKER,  minFloor:6, maxFloor:null, weight:6,  poise:4,
+   heavy:{shape:REACH,  chance:0.40, power:2.0, tell:"gathers the cold about it"}}
 ];
 const speciesFor = floor => SPECIES.filter(s =>
   s.minFloor <= floor && (s.maxFloor === null || floor <= s.maxFloor));
@@ -1299,7 +1352,9 @@ function spawnMonster(species, x, y, floor){
     hp, maxHp: hp,
     attack: species.attack + Math.floor(depth / 3) + Math.floor((floor - 1) / DEPTH_PER_ATTACK),
     defense: species.defense, sight: species.sight, behaviour: species.behaviour,
-    lastSeen: null, resting: false
+    lastSeen: null, resting: false,
+    heavy: species.heavy || null, poise: species.poise || 2,
+    stagger: 0, stunned: 0, windup: null, aware: false
   };
 }
 const isHurt = m => m.hp <= m.maxHp * FLEE_THRESHOLD;
@@ -1317,7 +1372,8 @@ const xpForLevel = level => XP_PER_LEVEL * level;
 
 function makePlayer(x, y){
   return {x, y, char:"@", name:"you", hp:30, maxHp:30, attack:5, defense:1,
-          baseAttack:5, weapon:null, level:1, xp:0};
+          baseAttack:5, weapon:null, level:1, xp:0,
+          focus:0, guarding:false, exposed:false};
 }
 function refreshAttack(p){ p.attack = p.baseAttack + (p.weapon ? p.weapon.power : 0); }
 function gainXp(p, amount){
@@ -1752,19 +1808,24 @@ function placePuzzle(game){
 const BOSSES = [
   {name: "Rat King",         sprite: "RatKing",     color: "#D8B45A",
    hp: 18, attack: 4,  defense: 0, sight: 9,  behaviour: HUNTER,
-   minFloor: 1, maxFloor: 2},
+   minFloor: 1, maxFloor: 2, poise: 3,
+   heavy: {shape: ARC,    chance: 0.30, power: 1.8, tell: "rears up, teeth bared"}},
   {name: "Goblin Chieftain", sprite: "GoblinChief", color: "#8FD96A",
    hp: 28, attack: 5,  defense: 1, sight: 9,  behaviour: HUNTER,
-   minFloor: 2, maxFloor: 3},
+   minFloor: 2, maxFloor: 3, poise: 4,
+   heavy: {shape: THRUST, chance: 0.40, power: 2.2, tell: "levels its spear at you"}},
   {name: "Orc Warlord",      sprite: "OrcWarlord",  color: "#F0846A",
    hp: 40, attack: 7,  defense: 2, sight: 9,  behaviour: HUNTER,
-   minFloor: 3, maxFloor: 5},
+   minFloor: 3, maxFloor: 5, poise: 6,
+   heavy: {shape: ARC,    chance: 0.40, power: 2.2, tell: "winds up a great cleave"}},
   {name: "Ogre Tyrant",      sprite: "OgreTyrant",  color: "#E27CB4",
    hp: 60, attack: 12, defense: 3, sight: 9,  behaviour: SLOW,
-   minFloor: 5, maxFloor: 7},
+   minFloor: 5, maxFloor: 7, poise: 8,
+   heavy: {shape: ARC,    chance: 0.55, power: 2.4, tell: "raises its maul to the ceiling"}},
   {name: "Wraith Lord",      sprite: "WraithLord",  color: "#C4B0FF",
    hp: 52, attack: 10, defense: 4, sight: 12, behaviour: STALKER,
-   minFloor: 6, maxFloor: null}
+   minFloor: 6, maxFloor: null, poise: 7,
+   heavy: {shape: REACH,  chance: 0.50, power: 2.2, tell: "draws the dark into a spear of frost"}}
 ];
 function bossFor(floor, rng){
   const eligible = BOSSES.filter(b =>
@@ -1778,7 +1839,9 @@ function bossFor(floor, rng){
     hp: chosen.hp + depth * 2, maxHp: chosen.hp + depth * 2,
     attack: chosen.attack + Math.floor(depth / 2),
     defense: chosen.defense, sight: chosen.sight, behaviour: chosen.behaviour,
-    lastSeen: null, resting: false, boss: true
+    lastSeen: null, resting: false, boss: true,
+    heavy: chosen.heavy || null, poise: chosen.poise || 5,
+    stagger: 0, stunned: 0, windup: null, aware: false
   };
 }
 
@@ -2014,6 +2077,11 @@ function updateFov(game){
   const blocks = (x, y) =>
     game.map.blocksSight(x, y) || (gate !== null && key(x, y) === gate);
   game.visible = computeFov(blocks, game.player.x, game.player.y, FOV_RADIUS);
+  /* An opaque gate is not enough on its own: the alcove behind it can still be
+     seen diagonally past the corner. Keep the vault itself out of sight until
+     the gate lifts, so what is inside stays a reward. */
+  if (game.puzzle && !game.puzzle.solved)
+    game.visible.delete(key(game.puzzle.vault[0], game.puzzle.vault[1]));
   for (const tile of game.visible) game.explored.add(tile);
 }
 const visibleMonsters = game =>
@@ -2218,12 +2286,79 @@ function inPuzzleRoom(game){
          game.player.y >= r.y - 1 && game.player.y < r.y + r.h + 1;
 }
 
-function playerAttacks(game, target){
-  const damage = damageFor(game.player, target);
-  log(game, damage ? `You hit the ${target.name} for ${damage}.`
-                   : `You hit the ${target.name}, but it shrugs it off.`, "#F0D07A");
+/* ---------- the player's half of the exchange ---------- */
+function gainFocus(game, amount){
+  const before = game.player.focus;
+  game.player.focus = Math.min(FOCUS_CAP, game.player.focus + amount);
+  return game.player.focus > before;
+}
+const adjacentTarget = game =>
+  game.monsters.find(m => m.hp > 0 && m.windup && isAdjacent(m, game.player)) ||
+  game.monsters.find(m => m.hp > 0 && isAdjacent(m, game.player)) || null;
+
+function playerAttacks(game, target, options){
+  options = options || {};
+  const surprise = !target.aware;              // it never saw you coming
+  const punish = !!target.windup;              // caught mid-wind-up
+  let damage = Math.round(damageFor(game.player, target) * (options.power || 1));
+  if (surprise) damage *= BACKSTAB_MULTIPLIER;
+  target.aware = true;
+
+  const verb = options.verb || "hit";
+  const where = surprise ? " from behind" : "";
+  log(game, damage ? `You ${verb} the ${target.name}${where} for ${damage}.`
+                   : `You ${verb} the ${target.name}, but it shrugs it off.`,
+      surprise ? "#8FD8FF" : "#F0D07A");
   damageActor(target, damage);
-  if (target.hp <= 0) monsterDied(game, target);
+  if (target.hp <= 0){ monsterDied(game, target); return; }
+
+  // A shield bash spoils the swing whether or not it puts the thing down.
+  if (options.breaksWindup && target.windup){
+    target.windup = null;
+    log(game, `The ${target.name}'s swing comes apart.`, "#8FD8FF");
+  }
+  staggerMonster(game, target, options.stagger || HIT_STAGGER);
+  /* Footing is earned by reading the fight, not by trading blows — but a bash
+     already answers the tell, so it does not also pay for itself. */
+  if (punish && !options.breaksWindup) gainFocus(game, 1);
+}
+/* Set against the next blow: most of it goes into the guard, and holding one
+   is where the footing for a bash or a heavy swing comes from. */
+function guardUp(game){
+  if (game.gameOver) return false;
+  game.player.guarding = true;
+  gainFocus(game, 1);
+  log(game, "You set your guard.", "#8FB8E6");
+  endTurn(game);
+  return true;
+}
+function bashAttack(game, target){
+  if (game.gameOver) return false;
+  target = target || adjacentTarget(game);
+  if (!target){ log(game, "Nothing is in reach.", "var(--ink-dim)"); return false; }
+  if (game.player.focus < BASH_COST){
+    log(game, "You have no footing to spare.", "var(--ink-dim)"); return false;
+  }
+  game.player.focus -= BASH_COST;
+  playerAttacks(game, target, {power: BASH_DAMAGE, stagger: BASH_STAGGER,
+                               verb: "bash", breaksWindup: true});
+  endTurn(game);
+  return true;
+}
+/* Everything behind one swing. It lands hard and leaves you wide open. */
+function heavyAttack(game, target){
+  if (game.gameOver) return false;
+  target = target || adjacentTarget(game);
+  if (!target){ log(game, "Nothing is in reach.", "var(--ink-dim)"); return false; }
+  if (game.player.focus < HEAVY_COST){
+    log(game, "You have no footing to spare.", "var(--ink-dim)"); return false;
+  }
+  game.player.focus -= HEAVY_COST;
+  playerAttacks(game, target, {power: HEAVY_DAMAGE, stagger: HEAVY_STAGGER,
+                               verb: "bring your weapon down on"});
+  game.player.exposed = true;
+  endTurn(game);
+  return true;
 }
 function hurtMonster(game, monster, amount){
   const dealt = damageActor(monster, amount);
@@ -2366,6 +2501,9 @@ function readScroll(game, item){
 function endTurn(game){
   game.turns += 1;
   monstersAct(game);
+  // A guard covers the blows that answer it, and no longer.
+  game.player.guarding = false;
+  game.player.exposed = false;
   updateFov(game);
   if (game.player.hp <= 0 && !game.gameOver){
     game.gameOver = true;
@@ -2376,7 +2514,53 @@ function monstersAct(game){
   for (const monster of game.monsters.slice())
     if (monster.hp > 0 && game.player.hp > 0) takeMonsterTurn(game, monster);
 }
+/* The tiles a wind-up is about to cover, given where it is swinging from.
+   Everything the player needs in order to read it is in this shape. */
+function windupTiles(shape, x, y, dx, dy){
+  if (shape === REACH) return [[x + dx, y + dy], [x + dx * 2, y + dy * 2]];
+  if (shape === ARC)
+    return [[x + dx, y + dy],
+            [x + dx + dy, y + dy + dx],       // the two tiles the swing sweeps
+            [x + dx - dy, y + dy - dx]];
+  return [[x + dx, y + dy]];
+}
+const inWindup = (monster, x, y) =>
+  !!monster.windup && monster.windup.tiles.some(([tx, ty]) => tx === x && ty === y);
+/* Anywhere the player is about to be hit, for the turn they get to answer it. */
+function threatenedTiles(game){
+  const threatened = new Map();
+  for (const monster of game.monsters){
+    if (monster.hp <= 0 || !monster.windup) continue;
+    for (const [x, y] of monster.windup.tiles) threatened.set(key(x, y), monster);
+  }
+  return threatened;
+}
+/* Cornered: every way out is a wall, an occupant, or another blow landing. */
+function canStepClear(game){
+  const threatened = threatenedTiles(game);
+  for (const [dx, dy] of Object.values(DIRECTIONS)){
+    const x = game.player.x + dx, y = game.player.y + dy;
+    if (!game.map.walkable(x, y) || propBlocks(game, x, y)) continue;
+    if (monsterAt(game, x, y)) continue;
+    if (!threatened.has(key(x, y))) return true;
+  }
+  return false;
+}
+function staggerMonster(game, monster, amount){
+  monster.stagger += amount;
+  if (monster.stagger < monster.poise) return false;
+  monster.stagger = 0;
+  monster.stunned = STAGGER_TURNS;
+  const broke = !!monster.windup;
+  monster.windup = null;
+  log(game, broke ? `The ${monster.name} reels — the blow goes wide!`
+                  : `The ${monster.name} reels, off balance.`, "#8FD8FF");
+  return true;
+}
 function takeMonsterTurn(game, monster){
+  if (monster.stunned > 0){ monster.stunned -= 1; return; }
+  // A wind-up landed or missed this turn; either way it is spent.
+  if (monster.windup){ releaseWindup(game, monster); return; }
   if (monster.behaviour === SLOW){
     monster.resting = !monster.resting;
     if (monster.resting) return;              // heavy things act every other turn
@@ -2385,14 +2569,17 @@ function takeMonsterTurn(game, monster){
                              (game.puzzle && !game.puzzle.solved &&
                               x === game.puzzle.gate[0] && y === game.puzzle.gate[1]),
                            monster.x, monster.y, game.player.x, game.player.y, monster.sight);
-  if (sees) monster.lastSeen = [game.player.x, game.player.y];
+  if (sees){ monster.lastSeen = [game.player.x, game.player.y]; monster.aware = true; }
 
   const fleeing = monster.behaviour === SKITTISH && isHurt(monster);
   if (fleeing && (sees || isAdjacent(monster, game.player))){
     stepAway(game, monster);
     return;
   }
-  if (isAdjacent(monster, game.player)){ monsterAttacks(game, monster); return; }
+  if (isAdjacent(monster, game.player)){
+    if (!beginWindup(game, monster)) monsterAttacks(game, monster);
+    return;
+  }
   if (sees){ stepToward(game, monster, game.player.x, game.player.y); return; }
   if (monster.behaviour === STALKER && monster.lastSeen){
     if (monster.x === monster.lastSeen[0] && monster.y === monster.lastSeen[1]){
@@ -2415,15 +2602,53 @@ function stepAway(game, monster){
   const awayX = monster.x - game.player.x, awayY = monster.y - game.player.y;
   stepToward(game, monster, monster.x + Math.sign(awayX), monster.y + Math.sign(awayY));
 }
-function monsterAttacks(game, monster){
-  const damage = damageFor(monster, game.player);
+/* Draw back for a heavy blow instead of swinging now. Wounded things commit to
+   it more readily, which is what makes the last third of a fight the dangerous
+   part rather than a formality. */
+function beginWindup(game, monster){
+  const heavy = monster.heavy;
+  if (!heavy || monster.windup) return false;
+  const desperate = monster.hp <= monster.maxHp * 0.4 ? 0.15 : 0;
+  if (game.rng.random() >= heavy.chance + desperate) return false;
+  const dx = Math.sign(game.player.x - monster.x), dy = Math.sign(game.player.y - monster.y);
+  monster.windup = {shape: heavy.shape, power: heavy.power, dx, dy,
+                    tiles: windupTiles(heavy.shape, monster.x, monster.y, dx, dy)};
+  if (game.visible.has(key(monster.x, monster.y)))
+    log(game, `The ${monster.name} ${heavy.tell}.`, "#FFA24A");
+  return true;
+}
+/* And the turn after: it lands on whatever is standing in the tiles it covers. */
+function releaseWindup(game, monster){
+  const windup = monster.windup;
+  monster.windup = null;
   const seen = game.visible.has(key(monster.x, monster.y));
+  if (!inWindup({windup}, game.player.x, game.player.y)){
+    if (seen) log(game, `The ${monster.name} swings, and hits nothing.`, "var(--moss)");
+    return;
+  }
+  monsterAttacks(game, monster, windup.power, seen);
+}
+/* Being surrounded is its own damage: everything adjacent presses the advantage. */
+const flankersOn = game => Math.max(0, game.monsters.filter(m =>
+  m.hp > 0 && isAdjacent(m, game.player)).length - 1);
+
+function monsterAttacks(game, monster, power, seenAlready){
+  const heavy = power > 1;
+  let damage = damageFor(monster, game.player);
+  if (heavy) damage = Math.round(damage * power);
+  damage += FLANK_BONUS * flankersOn(game);
+  if (game.player.exposed) damage = Math.round(damage * EXPOSED_TAKES);
+  else if (game.player.guarding) damage = Math.round(damage * GUARD_LETS_THROUGH);
+  const seen = seenAlready !== undefined ? seenAlready : game.visible.has(key(monster.x, monster.y));
   hurtPlayer(game, damage, withArticle(monster.name));
+  const how = heavy ? " with everything it has" : "";
   if (damage)
-    log(game, seen ? `The ${monster.name} hits you for ${damage}.`
-                   : `Something hits you for ${damage}.`, "var(--blood)");
+    log(game, seen ? `The ${monster.name} hits you${how} for ${damage}.`
+                   : `Something hits you for ${damage}.`,
+        heavy ? "#FF6A6A" : "var(--blood)");
   else if (seen)
     log(game, `The ${monster.name} attacks, but your armour holds.`, "var(--ink-dim)");
+  if (game.player.guarding && !game.player.exposed) game.guardsHeld = (game.guardsHeld || 0) + 1;
 }
 
 /* ---------- the run, once it is over ---------- */
@@ -2675,6 +2900,25 @@ const Sound = (() => {
                               type: "square", gain: 0.11});
                         noise({when: (when || 0) + 0.05, dur: 0.40, gain: 0.14,
                                filter: "bandpass", from: 300, to: 170, q: 0.7}); },
+    /* Something drawing breath before it swings: a rising, ugly scrape. */
+    tell: when => { tone({when, freq: 110, to: 190, dur: 0.34, type: "sawtooth", gain: 0.10});
+                    noise({when, dur: 0.30, gain: 0.09, filter: "bandpass",
+                           from: 300, to: 900, q: 2}); },
+    guard: when => { noise({when, dur: 0.13, gain: 0.16, filter: "bandpass",
+                            from: 1800, to: 900, q: 4});
+                     tone({when, freq: 320, to: 240, dur: 0.14, type: "square", gain: 0.09}); },
+    bash: when => { noise({when, dur: 0.16, gain: 0.20, filter: "lowpass",
+                           from: 900, to: 240});
+                    tone({when, freq: 200, to: 120, dur: 0.18, type: "square", gain: 0.14}); },
+    heavy: when => { noise({when, dur: 0.26, gain: 0.24, filter: "bandpass",
+                            from: 500, to: 1900, q: 1.2});
+                     tone({when: (when || 0) + 0.10, freq: 130, to: 60, dur: 0.30,
+                           type: "triangle", gain: 0.20}); },
+    crush: when => { noise({when, dur: 0.44, gain: 0.30, from: 1800, to: 90});
+                     tone({when, freq: 90, to: 40, dur: 0.46, type: "sine", gain: 0.24}); },
+    reel: when => [740, 560, 420].forEach((f, i) =>
+                    tone({when: (when || 0) + i * 0.05, freq: f, dur: 0.20,
+                          type: "triangle", gain: 0.10})),
     /* The vault: a slab lifting, then the chord that says it was worth it. */
     vault: when => { noise({when, dur: 0.70, gain: 0.20, filter: "bandpass",
                             from: 260, to: 620, q: 0.9});
@@ -2772,6 +3016,14 @@ const bobOffset = entity => {
   const phase = ((entity.x * 7 + entity.y * 13) % 10) / 10;
   return Math.sin(clock / 420 + phase * Math.PI * 2) > 0.4 ? -1 : 0;
 };
+/* Enough of the exchange to tell what changed over a turn. */
+function fightState(game){
+  return {
+    windups: game.monsters.filter(m => m.hp > 0 && m.windup).length,
+    reeling: game.monsters.filter(m => m.hp > 0 && m.stunned > 0).length,
+    focus: game.player.focus, held: game.guardsHeld || 0, hp: game.player.hp
+  };
+}
 /* Enough of the puzzle to tell what changed over a turn, and nothing more. */
 function puzzleState(game){
   const puzzle = game.puzzle;
@@ -2788,6 +3040,7 @@ function snapshot(){
   seen.chestsBefore = game.chestsOpened || 0;
   seen.bossesBefore = game.bossesFelled || 0;
   seen.puzzleBefore = puzzleState(game);
+  seen.fightBefore = fightState(game);
   seen.set(game.player, {x: game.player.x, y: game.player.y, hp: game.player.hp,
                          level: game.player.level});
   for (const monster of game.monsters)
@@ -2831,16 +3084,35 @@ function playDiff(before, delay){
       fell = true;
     }
   }
+  const fought = playFightDiff(before.fightBefore, seconds, wounded);
   const puzzled = playPuzzleDiff(before.puzzleBefore, seconds);
   if ((game.chestsOpened || 0) > before.chestsBefore) Sound.play("chest", seconds);
   else if (!puzzled && game.props.size < before.propsBefore) Sound.play("smash", seconds);
   if ((game.bossesFelled || 0) > before.bossesBefore) Sound.play("bossFalls", seconds + 0.2);
   if (stepped) Sound.play("step", seconds);
   if (struck){ Sound.play("swing", seconds); Sound.play("hit", seconds + 0.05); }
-  if (wounded) Sound.play("hurt", seconds);
+  if (wounded && !fought.crushed) Sound.play("hurt", seconds);
   if (fell) Sound.play("die", seconds + 0.06);
   if (game.itemsFound > (before.foundBefore ?? game.itemsFound)) Sound.play("pickup", seconds);
   if (game.player.level > (before.get(game.player) || {}).level) celebrate();
+}
+/* Sound and shake for the exchange. A blow that lands through a guard, and one
+   that lands on someone standing flat-footed, should not sound the same. */
+const HEAVY_BLOW_SHARE = 0.22;   // of max HP, above which a hit reads as heavy
+function playFightDiff(was, seconds, wounded){
+  const result = {crushed: false};
+  if (!was) return result;
+  const now = fightState(game);
+  if (now.windups > was.windups) Sound.play("tell", seconds);
+  if (now.reeling > was.reeling) Sound.play("reel", seconds + 0.05);
+  if ((now.held || 0) > (was.held || 0)) Sound.play("guard", seconds);
+  const took = was.hp - now.hp;
+  if (wounded && took >= game.player.maxHp * HEAVY_BLOW_SHARE){
+    Sound.play("crush", seconds);
+    if (!reduceMotion) anim.shake = Math.max(anim.shake, 7);
+    result.crushed = true;
+  }
+  return result;
 }
 /* Sound for what the room did this turn. Returns whether it made any, so the
    gate lifting is never mistaken for furniture being smashed. */
@@ -3039,6 +3311,28 @@ function drawSprite(sprite, px, py, flash){
   ctx.fillRect(px, py, TILE, TILE);
   ctx.restore();
 }
+/* A blow being drawn back, marked over the thing drawing it. */
+function drawTell(px, py){
+  const lift = reduceMotion ? 0 : Math.round(Math.sin(clock / 130) * 1.2);
+  const x = px + TILE / 2, y = py - 5 + lift;
+  ctx.fillStyle = "rgba(10,8,10,.72)";
+  ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "#FF7A5A"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = "#FFD08A";
+  ctx.fillRect(x - 1, y - 4, 2, 5);
+  ctx.fillRect(x - 1, y + 2, 2, 2);
+}
+/* And a thing that has lost its footing. */
+function drawReeling(px, py){
+  const spin = clock / 180;
+  ctx.fillStyle = "rgba(143,216,255,.9)";
+  for (let i = 0; i < 3; i++){
+    const a = spin + i * (Math.PI * 2 / 3);
+    ctx.fillRect(Math.round(px + TILE / 2 + Math.cos(a) * 6) - 1,
+                 Math.round(py - 3 + Math.sin(a) * 2.5) - 1, 2, 2);
+  }
+}
 /* Most props draw as themselves; the lattice runes light as they are trodden. */
 function spriteForProp(game, prop, x, y){
   const def = PROP_KINDS[prop.kind];
@@ -3121,16 +3415,39 @@ function drawFrame(){
     }
   }
 
+  /* The tiles a wind-up is about to cover. This is the whole read: it is drawn
+     before the actors so nothing hides it, and it pulses so it cannot be taken
+     for scenery. */
+  const threatened = threatenedTiles(game);
+  if (threatened.size){
+    const beat = reduceMotion ? 0.5 : 0.36 + Math.sin(clock / 110) * 0.20;
+    for (const [at] of threatened){
+      const [tx, ty] = at.split(",").map(Number);
+      if (!game.visible.has(at)) continue;
+      const px = (tx - ox) * TILE, py = (ty - oy) * TILE;
+      ctx.fillStyle = `rgba(214,62,62,${beat * 0.42})`;
+      ctx.fillRect(px, py, TILE, TILE);
+      ctx.strokeStyle = `rgba(255,120,110,${beat})`;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(px + 1, py + 1, TILE - 2, TILE - 2);
+    }
+  }
+
   // Actors ride above the tile pass so a lunge can cross a tile edge.
   for (const monster of game.monsters){
     if (monster.hp <= 0 || !game.visible.has(key(monster.x, monster.y))) continue;
     const [ex, ey] = drawnAt(monster);
     const px = (ex - ox) * TILE, py = (ey - oy) * TILE + bobOffset(monster);
     drawShadow(px, (ey - oy) * TILE);
+    // Something drawing back leans into the blow; something reeling sags.
+    const lean = monster.windup && !reduceMotion
+      ? -Math.round(Math.abs(Math.sin(clock / 90)) * 2) : 0;
     drawSprite(SPRITES[monster.sprite || monster.name] || SPRITES.Goblin,
-               px, py, anim.flashes.get(monster));
+               px, py + lean, anim.flashes.get(monster));
     const {dark} = lighting(monster.x - game.player.x, monster.y - game.player.y, true);
     if (dark > 0){ ctx.fillStyle = `rgba(7,8,12,${dark})`; ctx.fillRect(px, py, TILE, TILE); }
+    if (monster.windup) drawTell(px, py + lean);
+    else if (monster.stunned > 0) drawReeling(px, py);
   }
   if (game.player.hp > 0){
     const [ex, ey] = drawnAt(game.player);
@@ -3304,6 +3621,18 @@ function act(perform, options){
   return outcome;
 }
 
+/* The player's three answers to a tell. Each makes its own noise where it is
+   asked for; what the blow does about it is left to the turn diff. */
+function doGuard(){
+  if (act(() => guardUp(game)) !== false) Sound.play("guard", 0);
+}
+function doBash(){
+  if (act(() => bashAttack(game), {thud: "immovable"}) !== false) Sound.play("bash", 0);
+}
+function doHeavy(){
+  if (act(() => heavyAttack(game), {thud: "immovable"}) !== false) Sound.play("heavy", 0);
+}
+
 /* ---------- panels ---------- */
 function drawBossBar(){
   const bar = el("bossBar");
@@ -3328,6 +3657,14 @@ function drawStatus(){
   const need = xpForLevel(p.level);
   el("xpFill").style.width = ((p.xp / need) * 100) + "%";
   el("xpNum").textContent = `${p.xp}/${need}`;
+  const pips = el("focusPips");
+  pips.innerHTML = "";
+  for (let i = 0; i < FOCUS_CAP; i++){
+    const pip = document.createElement("i");
+    if (i < p.focus) pip.className = "lit";
+    pips.appendChild(pip);
+  }
+  pips.title = `Footing ${p.focus}/${FOCUS_CAP}`;
 }
 function drawLog(){
   logEl.innerHTML = "";
@@ -3355,6 +3692,19 @@ function drawActions(){
     add("Cancel", "esc", cancelAim);
     return;
   }
+  /* Guard, bash and heavy only show with something in reach: out of a fight
+     they would be four dead buttons, and in one they are the whole game. */
+  const target = adjacentTarget(game);
+  if (target){
+    const fight = document.createElement("div");
+    fight.className = "act-row";
+    box.appendChild(fight);
+    add("Guard", "g", doGuard, "guard", fight);
+    const bash = add("Bash", "b", doBash, "fight", fight);
+    if (game.player.focus < BASH_COST) bash.disabled = true;
+    const heavy = add("Heavy", "H", doHeavy, "fight", fight);
+    if (game.player.focus < HEAVY_COST) heavy.disabled = true;
+  }
   const pair = document.createElement("div");
   pair.className = "act-row";
   box.appendChild(pair);
@@ -3378,15 +3728,37 @@ function puzzleHint(game){
   const lit = puzzle.lit.filter(Boolean).length;
   return `${lit}/${puzzle.lit.length} runes lit — treading one flips it and its neighbours.`;
 }
+/* What is about to happen to you, and what you can do about it. This is the
+   only place the reaction is spelled out, and it only appears when one is due. */
+function dangerHint(game){
+  const threatened = threatenedTiles(game);
+  if (!threatened.size) return "";
+  const onYou = threatened.get(key(game.player.x, game.player.y));
+  const swingers = [...new Set(threatened.values())];
+  if (!onYou){
+    const near = swingers.map(m => m.name).join(" and ");
+    return `${swingers.length > 1 ? "They swing" : `The ${near} swings`} wide of you.`;
+  }
+  if (!canStepClear(game))
+    return `The ${onYou.name} is about to land and you are cornered. Guard, or bash it.`;
+  const shape = onYou.windup.shape;
+  const advice = shape === ARC ? "Step back — the swing sweeps sideways"
+               : shape === REACH ? "Step aside — it reaches down the line"
+               : "Step clear";
+  return `The ${onYou.name} is about to land. ${advice}, guard, or bash it.`;
+}
 function redraw(){
   drawStatus(); drawBossBar(); drawLog(); drawActions();
-  const hint = aiming ? "" : puzzleHint(game);
-  promptEl.classList.toggle("on", !!aiming || !!hint);
+  const danger = aiming ? "" : dangerHint(game);
+  const hint = aiming || danger ? "" : puzzleHint(game);
+  promptEl.classList.toggle("on", !!aiming || !!hint || !!danger);
+  promptEl.classList.toggle("danger", !!danger);
   if (aiming){
     const ok = canTarget(game, aiming.cursor[0], aiming.cursor[1], aiming.item.range);
     promptEl.textContent = ok ? `Aiming ${aiming.item.name} — tap a tile, or use the pad`
                               : `No clear shot there — ${aiming.item.name}`;
-  } else if (hint) promptEl.textContent = hint;
+  } else if (danger) promptEl.textContent = danger;
+  else if (hint) promptEl.textContent = hint;
   if (game.gameOver && !el("overOverlay").classList.contains("on")) showGameOver();
 }
 
@@ -3708,6 +4080,10 @@ document.addEventListener("keydown", event => {
   if (event.key === "Enter" && aiming){ event.preventDefault(); confirmAim(); return; }
   if (event.key === "Tab" && aiming){ event.preventDefault(); nextTarget(); return; }
   if (event.key === "Escape" && aiming){ cancelAim(); return; }
+  if (event.key === "g" && !aiming){ event.preventDefault(); doGuard(); return; }
+  if (event.key === "b" && !aiming){ event.preventDefault(); doBash(); return; }
+  // lower-case h is vi-left; the heavy swing takes the shifted key, as save does
+  if (event.key === "H" && !aiming){ event.preventDefault(); doHeavy(); return; }
   if (event.key === "i"){ openPack(); return; }
   if (event.key === "m"){ openMap(); return; }
   if (event.key === ">"){ if (!aiming) takeStairs(); return; }
@@ -3778,7 +4154,14 @@ for (const species of SPECIES){
   const line = document.createElement("span");
   const note = {Rat:"runs once badly hurt", Goblin:"hunts on sight", Orc:"hunts on sight",
                 Ogre:"slow, but hits hard", Wraith:"follows after losing sight"}[species.name];
-  line.innerHTML = `<b style="color:var(--ink)">${species.name}</b> — ${note}`;
+  // What it does when it draws back is the thing worth knowing about it.
+  const swing = species.heavy && {
+    [THRUST]: "thrusts one tile — step anywhere",
+    [ARC]:    "sweeps three tiles — step back, not sideways",
+    [REACH]:  "reaches two tiles down the line — step aside, not back"
+  }[species.heavy.shape];
+  line.innerHTML = `<b style="color:var(--ink)">${species.name}</b> — ${note}` +
+    (swing ? `<br><span style="color:#FFA24A">${swing}</span>` : "");
   bestiary.append(line);
 }
 showTitle();
