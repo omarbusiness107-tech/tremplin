@@ -51,9 +51,9 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .lastrun{border:1px solid var(--edge);border-radius:3px;padding:14px 16px;background:var(--stone)}
 .lastrun h3{font-family:var(--display);font-size:16px;font-weight:600;color:var(--ember);
   margin-bottom:9px}
-.statlist{display:grid;grid-template-columns:1fr auto;gap:3px 12px;font-size:12px}
-.statlist dt{color:var(--ink-dim)}
-.statlist dd{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.statlist{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12px}
+.statlist dt{color:var(--ink-dim);white-space:nowrap}
+.statlist dd{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;min-width:0}
 .err{color:var(--blood);font-size:12px}
 
 /* status */
@@ -92,6 +92,19 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .boss-fill{display:block;height:100%;width:100%;background:linear-gradient(90deg,#E0565F,#F09A6A);
   transition:width .18s ease}
 
+/* What a level offers. Three cards, one of which you keep. */
+.perks{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.perk{display:flex;flex-direction:column;gap:3px;text-align:left;padding:11px 13px;
+  border:1px solid rgba(143,184,230,.28);border-radius:9px;cursor:pointer;
+  background:linear-gradient(180deg,rgba(143,184,230,.10),rgba(143,184,230,.03));
+  color:var(--ink-dim);font:inherit;transition:border-color .12s,background .12s}
+.perk:hover,.perk:focus-visible{border-color:rgba(245,214,138,.65);
+  background:linear-gradient(180deg,rgba(245,214,138,.14),rgba(245,214,138,.04));outline:none}
+.perk b{color:#F5D68A;font-size:14px;letter-spacing:.02em}
+.perk .again{font-size:10px;color:var(--ink-dim);letter-spacing:.10em;
+  text-transform:uppercase;margin-left:5px}
+.perk-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.perk-key{font-size:10px;color:var(--ink-faint);letter-spacing:.10em;flex-shrink:0}
 /* Footing: what a bash or a heavy swing is paid for with. */
 .focus{display:flex;gap:3px;justify-content:flex-end;margin-top:2px}
 .focus i{width:7px;height:7px;border-radius:50%;display:block;
@@ -154,6 +167,22 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .slot .name{flex:1;font-size:12.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap}
 .slot .note{font-size:10.5px;color:var(--ink-dim);white-space:nowrap}
+/* A weapon says what it does as well as what it adds, so the row grows a line. */
+.slot .stack{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.slot .stack .name{white-space:normal;overflow:visible}
+.slot .says{font-size:10px;color:#8FB8E6;line-height:1.35}
+.slot:active .says{color:#150E03}
+/* What you are, above what you carry. */
+.sheet-you{display:flex;flex-direction:column;gap:7px;margin-bottom:15px;
+  padding:10px 12px;border:1px solid var(--edge);border-radius:3px;background:var(--raised)}
+.sheet-you .row{display:flex;gap:9px;align-items:baseline;font-size:11.5px}
+.sheet-you .tag{color:var(--ink-faint);letter-spacing:.10em;text-transform:uppercase;
+  font-size:9.5px;width:58px;flex-shrink:0}
+.sheet-you .val{color:var(--ink)}
+.sheet-you .says{color:#8FB8E6;font-size:10px}
+.taken{display:flex;flex-wrap:wrap;gap:5px}
+.taken b{font-weight:normal;font-size:10.5px;color:#F5D68A;padding:2px 7px;border-radius:9px;
+  border:1px solid rgba(245,214,138,.30);background:rgba(245,214,138,.08)}
 .empty{color:var(--ink-dim);font-size:12px;padding:14px 0;text-align:center}
 .minimap{image-rendering:pixelated;width:100%;height:auto;display:block;
   background:#07080C;border:1px solid var(--edge);border-radius:2px}
@@ -257,8 +286,15 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 
 <div class="overlay" id="packOverlay"><div class="sheet">
   <h2>Pack</h2><p class="sub" id="packSub">Nothing carried</p>
+  <div class="sheet-you" id="packYou"></div>
   <div class="slots" id="packSlots"></div>
   <button class="btn" id="packClose" style="width:100%">Close</button>
+</div></div>
+
+<div class="overlay" id="perkOverlay"><div class="sheet">
+  <h2 id="perkTitle">Level 2</h2>
+  <p class="sub">Something to carry down with you</p>
+  <div class="perks" id="perkChoices"></div>
 </div></div>
 
 <div class="overlay" id="mapOverlay"><div class="sheet">
@@ -305,6 +341,17 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
     drops whatever it was winding up and misses two turns. Strike something that
     has not seen you and you do triple damage. Let two of them get either side
     of you and they all hit harder.</p>
+    <h3 style="margin:14px 0 6px;font-size:13px;letter-spacing:.08em;
+      text-transform:uppercase;color:var(--ink)">What you become</h3>
+    <p>Levelling does not hand you numbers. Each level offers three things and
+    takes one, so no two runs are the same character — one build turns every
+    blow back at whoever threw it, another opens throats from behind and never
+    stands still long enough to be hit.</p>
+    <p>Weapons are not a ladder either. The dagger barely dents anything facing
+    you but is murder from behind; the hammer breaks a creature's footing in two
+    hits and leaves you open twice as long after a heavy swing; the rune blade
+    hits hardest of all and leaves you no hand for a shield, so guarding earns
+    you nothing. What you pick up should depend on what you have become.</p>
     <h3 style="margin:14px 0 6px;font-size:13px;letter-spacing:.08em;
       text-transform:uppercase;color:var(--ink)">About</h3>
     <p>Every sprite here is drawn in code, pixel by pixel — there are no image
@@ -1324,6 +1371,25 @@ const STAGGER_TURNS = 2;
 const HIT_STAGGER = 1, BASH_STAGGER = 3, HEAVY_STAGGER = 2;
 const BASH_DAMAGE = 0.5, HEAVY_DAMAGE = 2;
 
+/* Where perks and weapons meet the rules. Every one of these is a plain read
+   over what the player holds, so nothing has to be applied, undone, or kept in
+   step — and a saved run comes back with the same numbers it left with. */
+const focusCap       = p => FOCUS_CAP + perkCount(p, "deepBreath") * 2;
+const guardLetsThrough = p => hasPerk(p, "ironGuard") ? 0.12 : GUARD_LETS_THROUGH;
+const guardEarnsFocus  = p => !weaponIs(p, "twohand");
+const guardFocusFor    = p => 1 + perkCount(p, "deepBreath");
+const backstabFor    = p => Math.max(hasPerk(p, "assassin") ? 5 : BACKSTAB_MULTIPLIER,
+                                     weaponIs(p, "backstab") ? 5 : 0);
+const flankBonusFor  = p => hasPerk(p, "unbowed") ? 0 : FLANK_BONUS;
+const exposureTurns  = p => hasPerk(p, "executioner") ? 0
+                          : weaponIs(p, "crusher") ? 2 : 1;
+const punishFocusFor = p => weaponIs(p, "honest") ? 2 : 1;
+const bashDamageFor  = p => hasPerk(p, "bruiser") ? 1 : BASH_DAMAGE;
+const bashStaggerFor = p => BASH_STAGGER + (hasPerk(p, "bruiser") ? 3 : 0);
+const hitStaggerFor  = p => HIT_STAGGER + (weaponIs(p, "crusher") ? 2 : 0);
+const sightRadiusFor = p => FOV_RADIUS + (hasPerk(p, "keenEye") ? 3 : 0);
+const descentHealFor = p => hasPerk(p, "secondWind") ? 1 : DESCENT_HEAL_FRACTION;
+
 const SPECIES = [
   {name:"Rat",    char:"r", color:"#96917A", hp:4,  attack:2,  defense:0, sight:6,
    behaviour:SKITTISH, minFloor:1, maxFloor:5,    weight:10, poise:1},
@@ -1367,16 +1433,83 @@ const xpValue = m => {
 const withArticle = name => ("aeiou".includes(name[0].toLowerCase()) ? "an " : "a ") + name;
 
 /* ============================ levelling ============================ */
-const XP_PER_LEVEL = 60, HP_PER_LEVEL = 5, LEVELS_PER_ATTACK = 2, LEVELS_PER_DEFENSE = 3;
+const XP_PER_LEVEL = 60, HP_PER_LEVEL = 5;
 const xpForLevel = level => XP_PER_LEVEL * level;
+const PERKS_OFFERED = 3;
+
+/* ============================ what you become ============================
+   Levelling used to be a fixed line — every character at level 8 had the same
+   numbers as every other. A level now offers three of these and takes one, so
+   two runs part company at the second level. Each one bends a rule the game
+   already has rather than adding a system of its own, which is what keeps them
+   comparable to each other and cheap to reason about.
+
+   Perks are held as plain ids and read where they matter, so a saved run
+   carries them without any of this having to be reconstructed. */
+const PERKS = [
+  {id:"edge",        name:"Whetted Edge",    note:"+2 attack",                      stacks:true},
+  /* Bulwark and Deep Reserves were the two that ran away with a run when they
+     stacked: damage is worked out by subtraction, so every point of defence
+     takes a bite out of every blow ever aimed at you, and more health means the
+     stairs mend more of you as well. Both are worth having once. */
+  {id:"bulwark",     name:"Bulwark",         note:"+3 defence"},
+  {id:"vigour",      name:"Deep Reserves",   note:"+18 maximum health"},
+  {id:"deepBreath",  name:"Deep Breath",     note:"bank two more points of footing, and guard for twice as much", stacks:true},
+  {id:"assassin",    name:"Assassin",        note:"strikes from behind hit five times as hard, and stagger"},
+  {id:"executioner", name:"Executioner",     note:"a heavy swing no longer leaves you open"},
+  {id:"momentum",    name:"Momentum",        note:"felling something restores a point of footing"},
+  {id:"ironGuard",   name:"Iron Guard",      note:"a set guard stops almost the whole blow"},
+  {id:"riposte",     name:"Riposte",         note:"a blow your guard stops is thrown back at it"},
+  {id:"reader",      name:"Reader of Blows", note:"two footing whenever something draws back at you"},
+  {id:"bruiser",     name:"Bruiser",         note:"a bash lands in full, and staggers far harder"},
+  {id:"unbowed",     name:"Unbowed",         note:"being surrounded no longer sharpens their blows"},
+  {id:"keenEye",     name:"Keen Eye",        note:"you see three tiles further"},
+  {id:"secondWind",  name:"Second Wind",     note:"the stairs down mend you completely"}
+];
+const perkById = id => PERKS.find(p => p.id === id) || null;
+const perkCount = (p, id) => p.perks.filter(x => x === id).length;
+const hasPerk = (p, id) => p.perks.indexOf(id) >= 0;
+
+/* Three to choose between, never one you already hold unless it stacks. */
+function offerPerks(game){
+  const pool = PERKS.filter(perk => perk.stacks || !hasPerk(game.player, perk.id));
+  const offered = [];
+  const taken = new Set();
+  while (offered.length < PERKS_OFFERED && taken.size < pool.length){
+    const pick = pool[game.rng.below(pool.length)];
+    if (taken.has(pick.id)) continue;
+    taken.add(pick.id);
+    offered.push(pick.id);
+  }
+  return offered;
+}
+function choosePerk(game, index){
+  const pending = game.pendingPerks[0];
+  if (!pending || index < 0 || index >= pending.offer.length) return false;
+  const id = pending.offer[index];
+  game.pendingPerks.shift();
+  game.player.perks.push(id);
+  if (id === "vigour"){ game.player.maxHp += 18; game.player.hp += 18; }
+  refreshStats(game.player);
+  log(game, `You take ${perkById(id).name}.`, "#FFD98A");
+  return true;
+}
 
 function makePlayer(x, y){
   return {x, y, char:"@", name:"you", hp:30, maxHp:30, attack:5, defense:1,
-          baseAttack:5, weapon:null, level:1, xp:0,
-          focus:0, guarding:false, exposed:false};
+          baseAttack:5, baseDefense:1, weapon:null, level:1, xp:0,
+          focus:0, guarding:false, exposed:0, perks:[]};
 }
-function refreshAttack(p){ p.attack = p.baseAttack + (p.weapon ? p.weapon.power : 0); }
-function gainXp(p, amount){
+/* Attack and defence are worked out from what you carry and what you have
+   taken, never accumulated in place, so nothing can drift out of step. */
+function refreshStats(p){
+  p.attack = p.baseAttack + (p.weapon ? p.weapon.power : 0) + perkCount(p, "edge") * 2;
+  p.defense = p.baseDefense + perkCount(p, "bulwark") * 3;
+}
+const refreshAttack = refreshStats;   // the old name, for the callers that use it
+
+function gainXp(game, amount){
+  const p = game.player;
   if (amount <= 0) return 0;
   p.xp += amount;
   let gained = 0;
@@ -1386,10 +1519,9 @@ function gainXp(p, amount){
     gained += 1;
     p.maxHp += HP_PER_LEVEL;
     p.hp += HP_PER_LEVEL;
-    if (p.level % LEVELS_PER_ATTACK === 0) p.baseAttack += 1;
-    if (p.level % LEVELS_PER_DEFENSE === 0) p.defense += 1;
-    refreshAttack(p);
+    game.pendingPerks.push({level: p.level, offer: offerPerks(game)});
   }
+  if (gained) refreshStats(p);
   return gained;
 }
 const healActor = (a, amount) => {
@@ -1419,19 +1551,32 @@ const ITEMS = [
    power:10, range:7, blast:1, weight:7,  minFloor:1},
   {name:"Scroll of Fireball",     char:"?", color:SCROLL_COLOR, kind:"scroll",
    power:9,  range:9, blast:2, weight:6,  minFloor:2},
+  /* Weapons used to be four rungs of a ladder, where the bigger number was
+     always the right answer. Each now carries something of its own and gives
+     something up, so what you are holding changes how you fight rather than
+     only how hard you hit — and the heaviest is not simply the best. */
   {name:"Dagger",      char:"/", color:WEAPON_COLOR, kind:"weapon",
-   power:2,  range:0, blast:0, weight:8, minFloor:1},
+   power:2,  range:0, blast:0, weight:8, minFloor:1,
+   trait:"backstab", says:"strikes from behind hit five times as hard"},
   {name:"Short Sword", char:"/", color:WEAPON_COLOR, kind:"weapon",
-   power:4,  range:0, blast:0, weight:7, minFloor:2},
+   power:4,  range:0, blast:0, weight:7, minFloor:2,
+   trait:"honest",   says:"punishing a wind-up earns twice the footing"},
+  {name:"Spear",       char:"/", color:WEAPON_COLOR, kind:"weapon",
+   power:5,  range:0, blast:0, weight:6, minFloor:2,
+   trait:"skewer",   says:"runs through whatever stands behind your target"},
   {name:"War Hammer",  char:"/", color:WEAPON_COLOR, kind:"weapon",
-   power:7,  range:0, blast:0, weight:6, minFloor:3},
+   power:7,  range:0, blast:0, weight:6, minFloor:3,
+   trait:"crusher",  says:"staggers hard, but a heavy swing leaves you open twice as long"},
   {name:"Rune Blade",  char:"/", color:WEAPON_COLOR, kind:"weapon",
-   power:10, range:0, blast:0, weight:5, minFloor:5}
+   power:10, range:0, blast:0, weight:5, minFloor:5,
+   trait:"twohand",  says:"no hand for a shield: guarding earns no footing"}
 ];
+const weaponIs = (p, trait) => !!p.weapon && p.weapon.trait === trait;
 const itemsFor = floor => ITEMS.filter(i => i.minFloor <= floor);
 const spawnItem = template => ({
   name: template.name, char: template.char, color: template.color, kind: template.kind,
-  power: template.power, range: template.range, blast: template.blast
+  power: template.power, range: template.range, blast: template.blast,
+  trait: template.trait || null, says: template.says || null
 });
 const needsTarget = item => item.range > 0;
 function describeItem(item){
@@ -1867,7 +2012,8 @@ function newGame(seed){
     xpEarned: 0, bossesFelled: 0, chestsOpened: 0, puzzlesSolved: 0,
     gameOver: false, killedBy: null,
     map: null, player: makePlayer(0, 0), monsters: [], items: new Map(),
-    props: new Map(), puzzle: null, puzzlesSolved: 0, pack: [], stairs: null, messages: [],
+    props: new Map(), puzzle: null, puzzlesSolved: 0, pendingPerks: [],
+    pack: [], stairs: null, messages: [],
     visible: new Set(), explored: new Set()
   };
   generateFloor(game);
@@ -2076,7 +2222,8 @@ function updateFov(game){
     ? key(game.puzzle.gate[0], game.puzzle.gate[1]) : null;
   const blocks = (x, y) =>
     game.map.blocksSight(x, y) || (gate !== null && key(x, y) === gate);
-  game.visible = computeFov(blocks, game.player.x, game.player.y, FOV_RADIUS);
+  game.visible = computeFov(blocks, game.player.x, game.player.y,
+                            sightRadiusFor(game.player));
   /* An opaque gate is not enough on its own: the alcove behind it can still be
      seen diagonally past the corner. Keep the vault itself out of sight until
      the gate lifts, so what is inside stays a reward. */
@@ -2289,7 +2436,7 @@ function inPuzzleRoom(game){
 /* ---------- the player's half of the exchange ---------- */
 function gainFocus(game, amount){
   const before = game.player.focus;
-  game.player.focus = Math.min(FOCUS_CAP, game.player.focus + amount);
+  game.player.focus = Math.min(focusCap(game.player), game.player.focus + amount);
   return game.player.focus > before;
 }
 const adjacentTarget = game =>
@@ -2301,7 +2448,7 @@ function playerAttacks(game, target, options){
   const surprise = !target.aware;              // it never saw you coming
   const punish = !!target.windup;              // caught mid-wind-up
   let damage = Math.round(damageFor(game.player, target) * (options.power || 1));
-  if (surprise) damage *= BACKSTAB_MULTIPLIER;
+  if (surprise) damage *= backstabFor(game.player);
   target.aware = true;
 
   const verb = options.verb || "hit";
@@ -2317,18 +2464,36 @@ function playerAttacks(game, target, options){
     target.windup = null;
     log(game, `The ${target.name}'s swing comes apart.`, "#8FD8FF");
   }
-  staggerMonster(game, target, options.stagger || HIT_STAGGER);
+  let stagger = options.stagger || hitStaggerFor(game.player);
+  if (surprise && hasPerk(game.player, "assassin")) stagger += 3;
+  staggerMonster(game, target, stagger);
   /* Footing is earned by reading the fight, not by trading blows — but a bash
      already answers the tell, so it does not also pay for itself. */
-  if (punish && !options.breaksWindup) gainFocus(game, 1);
+  if (punish && !options.breaksWindup) gainFocus(game, punishFocusFor(game.player));
+  // A spear does not stop at the first thing it meets.
+  if (options.skewer !== false && weaponIs(game.player, "skewer")) skewerBehind(game, target);
+}
+/* Whatever stands directly beyond the target, in line with the thrust. */
+function skewerBehind(game, target){
+  const dx = target.x - game.player.x, dy = target.y - game.player.y;
+  const behind = monsterAt(game, target.x + dx, target.y + dy);
+  if (!behind || behind === target) return;
+  const damage = Math.round(damageFor(game.player, behind) / 2);
+  log(game, `The spear runs on into the ${behind.name} for ${damage}.`, "#F0D07A");
+  behind.aware = true;
+  damageActor(behind, damage);
+  if (behind.hp <= 0) monsterDied(game, behind);
+  else staggerMonster(game, behind, 1);
 }
 /* Set against the next blow: most of it goes into the guard, and holding one
    is where the footing for a bash or a heavy swing comes from. */
 function guardUp(game){
   if (game.gameOver) return false;
   game.player.guarding = true;
-  gainFocus(game, 1);
-  log(game, "You set your guard.", "#8FB8E6");
+  if (guardEarnsFocus(game.player)) gainFocus(game, guardFocusFor(game.player));
+  log(game, guardEarnsFocus(game.player)
+        ? "You set your guard."
+        : "You brace behind the blade — no hand free to steady you.", "#8FB8E6");
   endTurn(game);
   return true;
 }
@@ -2340,8 +2505,9 @@ function bashAttack(game, target){
     log(game, "You have no footing to spare.", "var(--ink-dim)"); return false;
   }
   game.player.focus -= BASH_COST;
-  playerAttacks(game, target, {power: BASH_DAMAGE, stagger: BASH_STAGGER,
-                               verb: "bash", breaksWindup: true});
+  playerAttacks(game, target, {power: bashDamageFor(game.player),
+                               stagger: bashStaggerFor(game.player),
+                               verb: "bash", breaksWindup: true, skewer: false});
   endTurn(game);
   return true;
 }
@@ -2356,7 +2522,7 @@ function heavyAttack(game, target){
   game.player.focus -= HEAVY_COST;
   playerAttacks(game, target, {power: HEAVY_DAMAGE, stagger: HEAVY_STAGGER,
                                verb: "bring your weapon down on"});
-  game.player.exposed = true;
+  game.player.exposed = exposureTurns(game.player);
   endTurn(game);
   return true;
 }
@@ -2367,6 +2533,7 @@ function hurtMonster(game, monster, amount){
 }
 function monsterDied(game, monster){
   game.kills += 1;
+  if (hasPerk(game.player, "momentum")) gainFocus(game, 1);
   const index = game.monsters.indexOf(monster);
   if (index >= 0) game.monsters.splice(index, 1);
   if (monster.boss){
@@ -2385,10 +2552,9 @@ function monsterDied(game, monster){
   }
   const earned = xpValue(monster);
   game.xpEarned += earned;
-  const levels = gainXp(game.player, earned);
+  const levels = gainXp(game, earned);
   for (let i = 0; i < levels; i++)
-    log(game, `You reach level ${game.player.level}! Max HP ${game.player.maxHp}, `
-            + `attack ${game.player.attack}.`, "#FFD98A");
+    log(game, `You reach level ${game.player.level - levels + i + 1}.`, "#FFD98A");
 }
 function hurtPlayer(game, amount, source){
   const dealt = damageActor(game.player, amount);
@@ -2402,7 +2568,8 @@ function descend(game){
   generateFloor(game);
   game.turns += 1;
   log(game, `You descend to floor ${game.floor}.`, "#8FB8E6");
-  const rested = healActor(game.player, Math.round(game.player.maxHp * DESCENT_HEAL_FRACTION));
+  const rested = healActor(game.player,
+                           Math.round(game.player.maxHp * descentHealFor(game.player)));
   if (rested) log(game, `You rest on the way down and recover ${rested} HP.`, "var(--moss)");
   return true;
 }
@@ -2501,9 +2668,10 @@ function readScroll(game, item){
 function endTurn(game){
   game.turns += 1;
   monstersAct(game);
-  // A guard covers the blows that answer it, and no longer.
+  // A guard covers the blows that answer it, and no longer; being open after
+  // a heavy swing can outlast a single exchange, depending on what you swung.
   game.player.guarding = false;
-  game.player.exposed = false;
+  if (game.player.exposed > 0) game.player.exposed -= 1;
   updateFov(game);
   if (game.player.hp <= 0 && !game.gameOver){
     game.gameOver = true;
@@ -2615,6 +2783,7 @@ function beginWindup(game, monster){
                     tiles: windupTiles(heavy.shape, monster.x, monster.y, dx, dy)};
   if (game.visible.has(key(monster.x, monster.y)))
     log(game, `The ${monster.name} ${heavy.tell}.`, "#FFA24A");
+  if (hasPerk(game.player, "reader")) gainFocus(game, 2);
   return true;
 }
 /* And the turn after: it lands on whatever is standing in the tiles it covers. */
@@ -2636,9 +2805,9 @@ function monsterAttacks(game, monster, power, seenAlready){
   const heavy = power > 1;
   let damage = damageFor(monster, game.player);
   if (heavy) damage = Math.round(damage * power);
-  damage += FLANK_BONUS * flankersOn(game);
+  damage += flankBonusFor(game.player) * flankersOn(game);
   if (game.player.exposed) damage = Math.round(damage * EXPOSED_TAKES);
-  else if (game.player.guarding) damage = Math.round(damage * GUARD_LETS_THROUGH);
+  else if (game.player.guarding) damage = Math.round(damage * guardLetsThrough(game.player));
   const seen = seenAlready !== undefined ? seenAlready : game.visible.has(key(monster.x, monster.y));
   hurtPlayer(game, damage, withArticle(monster.name));
   const how = heavy ? " with everything it has" : "";
@@ -2648,10 +2817,28 @@ function monsterAttacks(game, monster, power, seenAlready){
         heavy ? "#FF6A6A" : "var(--blood)");
   else if (seen)
     log(game, `The ${monster.name} attacks, but your armour holds.`, "var(--ink-dim)");
-  if (game.player.guarding && !game.player.exposed) game.guardsHeld = (game.guardsHeld || 0) + 1;
+  if (game.player.guarding && !game.player.exposed){
+    game.guardsHeld = (game.guardsHeld || 0) + 1;
+    if (hasPerk(game.player, "riposte") && monster.hp > 0){
+      const thrown = Math.max(1, damageFor(game.player, monster));
+      log(game, `You turn it back on the ${monster.name} for ${thrown}.`, "#8FD8FF");
+      monster.aware = true;
+      damageActor(monster, thrown);
+      if (monster.hp <= 0) monsterDied(game, monster);
+      else staggerMonster(game, monster, 1);
+    }
+  }
 }
 
 /* ---------- the run, once it is over ---------- */
+/* "Whetted Edge, Whetted Edge" reads like a mistake; count it instead. */
+function describePerks(p){
+  if (!p.perks.length) return "nothing";
+  const counted = new Map();
+  for (const id of p.perks) counted.set(id, (counted.get(id) || 0) + 1);
+  return [...counted].map(([id, n]) =>
+    perkById(id).name + (n > 1 ? ` \u00d7${n}` : "")).join(", ");
+}
 function runSummary(game){
   return [
     ["Floors cleared", String(game.floor - 1)],
@@ -2666,6 +2853,7 @@ function runSummary(game){
     ["Items found",    String(game.itemsFound)],
     ["Final attack",   String(game.player.attack)],
     ["Wielding",       game.player.weapon ? game.player.weapon.name : "bare hands"],
+    ["What you took",  describePerks(game.player)],
     ["Killed by",      game.killedBy || "unknown"],
     ["Seed",           String(game.seed)]
   ];
@@ -2684,6 +2872,7 @@ function saveGame(game){
       bossesFelled: game.bossesFelled || 0, chestsOpened: game.chestsOpened || 0,
       props: [...game.props].map(([at, prop]) => [at, prop]),
       puzzle: game.puzzle, puzzlesSolved: game.puzzlesSolved || 0,
+      pendingPerks: game.pendingPerks || [],
       gameOver: game.gameOver, killedBy: game.killedBy,
       rows: game.map.rows(),
       rooms: game.map.rooms.map(r => [r.x, r.y, r.w, r.h]),
@@ -2716,6 +2905,7 @@ function loadGame(){
       bossesFelled: data.bossesFelled || 0, chestsOpened: data.chestsOpened || 0,
       props: new Map(data.props || []),
       puzzle: data.puzzle || null, puzzlesSolved: data.puzzlesSolved || 0,
+      pendingPerks: data.pendingPerks || [],
       gameOver: data.gameOver, killedBy: data.killedBy, map,
       player: data.player, monsters: data.monsters,
       items: new Map(data.items), pack: data.pack, stairs: data.stairs,
@@ -3291,7 +3481,7 @@ function drawnAt(entity){
 const tileHash = (x, y) => ((x * 73856093) ^ (y * 19349663)) >>> 0;
 function lighting(dx, dy, lit){
   if (!lit) return {dark: 0.60, warm: 0};
-  const ratio = Math.min(1, Math.sqrt(dx * dx + dy * dy) / FOV_RADIUS);
+  const ratio = Math.min(1, Math.sqrt(dx * dx + dy * dy) / sightRadiusFor(game.player));
   return {dark: ratio * 0.46, warm: 0.14 * (1 - ratio)};
 }
 function drawShadow(px, py){
@@ -3468,7 +3658,7 @@ function drawFrame(){
     : 1 + Math.sin(clock / 260) * 0.035 + Math.sin(clock / 90) * 0.015;
   const [hxT, hyT] = drawnAt(game.player);
   const hx = (hxT - ox) * TILE + TILE / 2, hy = (hyT - oy) * TILE + TILE / 2;
-  const reach = FOV_RADIUS * TILE * 0.82 * flicker;
+  const reach = sightRadiusFor(game.player) * TILE * 0.82 * flicker;
   const glow = ctx.createRadialGradient(hx, hy, TILE * 0.5, hx, hy, reach);
   glow.addColorStop(0, "rgba(255,190,110,.20)");
   glow.addColorStop(0.45, "rgba(216,154,70,.08)");
@@ -3621,6 +3811,36 @@ function act(perform, options){
   return outcome;
 }
 
+/* A level stops the run and asks a question. There is no way past it but to
+   answer, which is the point: it is the one place a run is steered. */
+function drawPerks(){
+  const pending = game.pendingPerks[0];
+  if (!pending) return;
+  el("perkTitle").textContent = `Level ${pending.level}`;
+  const box = el("perkChoices");
+  box.innerHTML = "";
+  pending.offer.forEach((id, index) => {
+    const perk = perkById(id);
+    const card = document.createElement("button");
+    card.className = "perk";
+    const held = perkCount(game.player, id);
+    card.innerHTML =
+      `<span class="perk-head"><b>${perk.name}` +
+      `${held ? '<span class="again">again</span>' : ""}</b>` +
+      `<span class="perk-key">${index + 1}</span></span><span>${perk.note}</span>`;
+    card.addEventListener("click", () => takePerk(index));
+    box.appendChild(card);
+  });
+  el("perkOverlay").classList.add("on");
+}
+function takePerk(index){
+  if (!game || !game.pendingPerks.length) return;
+  if (!choosePerk(game, index)) return;
+  Sound.play("levelUp", 0);
+  el("perkOverlay").classList.remove("on");
+  redraw();                       // another level may be waiting behind this one
+}
+
 /* The player's three answers to a tell. Each makes its own noise where it is
    asked for; what the blow does about it is left to the turn diff. */
 function doGuard(){
@@ -3659,12 +3879,12 @@ function drawStatus(){
   el("xpNum").textContent = `${p.xp}/${need}`;
   const pips = el("focusPips");
   pips.innerHTML = "";
-  for (let i = 0; i < FOCUS_CAP; i++){
+  for (let i = 0; i < focusCap(p); i++){
     const pip = document.createElement("i");
     if (i < p.focus) pip.className = "lit";
     pips.appendChild(pip);
   }
-  pips.title = `Footing ${p.focus}/${FOCUS_CAP}`;
+  pips.title = `Footing ${p.focus}/${focusCap(p)}`;
 }
 function drawLog(){
   logEl.innerHTML = "";
@@ -3760,6 +3980,8 @@ function redraw(){
   } else if (danger) promptEl.textContent = danger;
   else if (hint) promptEl.textContent = hint;
   if (game.gameOver && !el("overOverlay").classList.contains("on")) showGameOver();
+  else if (!game.gameOver && game.pendingPerks.length &&
+           !el("perkOverlay").classList.contains("on")) drawPerks();
 }
 
 /* ---------- aiming ---------- */
@@ -3914,8 +4136,51 @@ function spriteThumb(sprite){
   thumb.getContext("2d").drawImage(sprite, 0, 0);
   return thumb;
 }
+/* Who you have turned into: what is in your hand, and what you took on the
+   way down. Both matter to how a fight goes, so both belong on one screen. */
+function drawCharacter(){
+  const you = el("packYou");
+  const p = game.player;
+  you.innerHTML = "";
+  const row = (tag, value, says) => {
+    const line = document.createElement("div");
+    line.className = "row";
+    line.innerHTML = `<span class="tag">${tag}</span><span class="val">${value}</span>`;
+    you.appendChild(line);
+    if (says){
+      const under = document.createElement("div");
+      under.className = "row";
+      under.innerHTML = `<span class="tag"></span><span class="says">${says}</span>`;
+      you.appendChild(under);
+    }
+  };
+  row("Wielding", p.weapon ? `${p.weapon.name} <span class="says">+${p.weapon.power}</span>`
+                           : "bare hands",
+      p.weapon ? p.weapon.says : null);
+  row("Attack", `${p.attack} · defence ${p.defense} · footing ${p.focus}/${focusCap(p)}`);
+  const taken = document.createElement("div");
+  taken.className = "row";
+  const held = document.createElement("span");
+  held.className = "taken";
+  if (p.perks.length){
+    const counted = new Map();
+    for (const id of p.perks) counted.set(id, (counted.get(id) || 0) + 1);
+    for (const [id, n] of counted){
+      const chip = document.createElement("b");
+      chip.textContent = perkById(id).name + (n > 1 ? ` ×${n}` : "");
+      chip.title = perkById(id).note;
+      held.appendChild(chip);
+    }
+  } else {
+    held.innerHTML = '<span class="says">nothing yet — levelling will offer you something</span>';
+  }
+  taken.innerHTML = '<span class="tag">Taken</span>';
+  taken.appendChild(held);
+  you.appendChild(taken);
+}
 function openPack(){
   if (aiming) return;
+  drawCharacter();
   const slots = el("packSlots");
   slots.innerHTML = "";
   el("packSub").textContent = game.pack.length
@@ -3931,11 +4196,19 @@ function openPack(){
     button.className = "slot";
     const letter = document.createElement("span");
     letter.className = "letter"; letter.textContent = SLOT_LETTERS[index] || "·";
+    const stack = document.createElement("span");
+    stack.className = "stack";
     const name = document.createElement("span");
     name.className = "name"; name.textContent = item.name;
+    stack.appendChild(name);
+    if (item.says){
+      const says = document.createElement("span");
+      says.className = "says"; says.textContent = item.says;
+      stack.appendChild(says);
+    }
     const note = document.createElement("span");
     note.className = "note"; note.textContent = describeItem(item);
-    button.append(letter, spriteThumb(itemSprite(item)), name, note);
+    button.append(letter, spriteThumb(itemSprite(item)), stack, note);
     button.addEventListener("click", () => { closePack(); chooseItem(index); });
     slots.appendChild(button);
   });
@@ -4044,6 +4317,11 @@ function handleWait(){
 const KEY_DIRECTIONS = {ArrowUp:"up", ArrowDown:"down", ArrowLeft:"left", ArrowRight:"right",
   w:"up", s:"down", a:"left", d:"right", k:"up", j:"down", h:"left", l:"right"};
 document.addEventListener("keydown", event => {
+  if (el("perkOverlay").classList.contains("on")){
+    const slot = "123".indexOf(event.key);
+    if (slot >= 0){ event.preventDefault(); takePerk(slot); }
+    return;
+  }
   const packOpen = el("packOverlay").classList.contains("on");
   const overOpen = el("overOverlay").classList.contains("on");
   if (el("mapOverlay").classList.contains("on")){
