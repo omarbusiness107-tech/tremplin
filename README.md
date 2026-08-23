@@ -14,6 +14,7 @@ npm run dev      # play at the printed localhost URL
 npm run build    # typecheck + production build into dist/
 npm run bundle   # build, then inline everything into dist/penitence.html
 npm run smoke    # bundle, then drive the game in headless Chromium
+npm run artifact # build a single-file embeddable page (artifact/page.html shell)
 ```
 
 ## Controls
@@ -103,7 +104,9 @@ src/core/      loop, input, math, rng      — no game knowledge
 src/engine/    canvas, camera, tilemap, physics, fx, font, backdrop, draw
 src/game/      player, combat, enemies, rooms, world, progression, ui
 src/content/   rooms, palette              — data, not code
-tools/         inline.mjs (single-file build), smoke.mjs (headless play-test)
+artifact/      page.html — the designed shell the game is embedded in
+tools/         inline.mjs and artifact.mjs (single-file builds),
+               smoke.mjs and verify-artifact.mjs (headless checks)
 ```
 
 Gameplay runs on a fixed 1/60s timestep so that every frame-counted timing —

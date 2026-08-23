@@ -1,0 +1,314 @@
+<title>Penitence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap"
+/>
+
+<style>
+  /*
+    One committed visual world: this is a dark liturgical game, and a light
+    theme would fight it. Every colour is painted explicitly so the page holds
+    on either host ground. Values are lifted from the game's own palette.
+  */
+  :root {
+    --ground: #0a070d;
+    --ground-lift: #140e19;
+    --stone: #2b2130;
+    --stone-lit: #584764;
+    --bone: #e6dac4;
+    --bone-dim: #9d9078;
+    --blood: #8a1c2b;
+    --blood-bright: #c8362f;
+    --gold: #d9a441;
+    --gold-pale: #f0d18a;
+
+    --display: "Cinzel", "Trajan Pro", Georgia, serif;
+    --body: "EB Garamond", Georgia, "Times New Roman", serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+    --column: 1000px;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--bone);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.6;
+    margin: 0;
+    /* A single candle-glow behind the whole page, echoing the altars. */
+    background-image: radial-gradient(ellipse 80% 55% at 50% 22%, #1a1020 0%, var(--ground) 70%);
+  }
+
+  .frame {
+    max-width: var(--column);
+    margin: 0 auto;
+    padding: clamp(28px, 5vw, 64px) 20px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  /* -- lintel -------------------------------------------------------- */
+
+  .lintel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    margin: 0;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(38px, 8vw, 68px);
+    letter-spacing: 0.14em;
+    line-height: 1;
+    margin: 0;
+    text-wrap: balance;
+    color: var(--bone);
+    text-shadow: 0 0 26px rgba(138, 28, 43, 0.5);
+  }
+
+  /* A carved rule with a centred diamond, like an inscription on a lintel. */
+  .rule {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: min(340px, 80%);
+    color: var(--gold);
+  }
+  .rule::before,
+  .rule::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--gold), transparent);
+  }
+  .rule span {
+    width: 6px;
+    height: 6px;
+    background: var(--gold);
+    transform: rotate(45deg);
+  }
+
+  /* -- the game ------------------------------------------------------ */
+
+  .reliquary {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* The frame carries the border so #stage stays a clean content box for the
+     game to measure. */
+  .stage-frame {
+    /*
+      A definite width is essential: if the frame shrink-wrapped its contents it
+      would size itself from the canvas, which sizes itself from the frame.
+    */
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 960px;
+    margin-inline: auto;
+    overflow: hidden;
+    background: #000;
+    border: 1px solid var(--stone-lit);
+    box-shadow:
+      0 0 0 4px var(--ground-lift),
+      0 0 0 5px rgba(217, 164, 65, 0.34),
+      0 24px 70px rgba(0, 0, 0, 0.75);
+  }
+
+  .stage {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    min-width: 0;
+    aspect-ratio: 16 / 9;
+  }
+
+  #stage canvas {
+    display: block;
+    image-rendering: pixelated;
+    touch-action: none;
+  }
+  #stage canvas:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 3px;
+  }
+
+  .hint {
+    margin: 0;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--bone-dim);
+  }
+  .hint strong {
+    color: var(--gold-pale);
+    font-weight: 400;
+    animation: breathe 2.6s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hint strong { animation: none; }
+  }
+
+  /* -- rubric -------------------------------------------------------- */
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 13px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin: 0 0 18px;
+  }
+
+  .columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 40px;
+  }
+
+  dl {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  dt {
+    flex: none;
+    color: var(--bone);
+  }
+  /* Dot leaders tie each rite to its key, the way a service sheet would. */
+  .row .leader {
+    flex: 1;
+    border-bottom: 1px dotted var(--stone-lit);
+    transform: translateY(-4px);
+  }
+  dd {
+    flex: none;
+    margin: 0;
+  }
+
+  kbd {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--gold-pale);
+    background: var(--ground-lift);
+    border: 1px solid var(--stone);
+    border-bottom-color: #0a070d;
+    border-radius: 2px;
+    padding: 2px 6px;
+    white-space: nowrap;
+  }
+
+  .prose p {
+    margin: 0 0 14px;
+    max-width: 62ch;
+    color: var(--bone-dim);
+  }
+  .prose p:last-child { margin-bottom: 0; }
+  .prose em {
+    color: var(--bone);
+    font-style: italic;
+  }
+  .prose strong {
+    color: var(--blood-bright);
+    font-weight: 500;
+  }
+
+  .colophon {
+    border-top: 1px solid var(--stone);
+    padding-top: 18px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--bone-dim);
+    text-align: center;
+  }
+</style>
+
+<div class="frame">
+  <header class="lintel">
+    <p class="eyebrow">A pilgrimage of thorns</p>
+    <h1>Penitence</h1>
+    <div class="rule"><span></span></div>
+  </header>
+
+  <div class="reliquary">
+    <div class="stage-frame"><div id="stage" class="stage"></div></div>
+    <p class="hint">Click the window, then press <strong>Enter</strong> to begin.</p>
+  </div>
+
+  <div class="columns">
+    <section>
+      <h2>The Rite</h2>
+      <dl>
+        <div class="row"><dt>Move</dt><i class="leader"></i><dd><kbd>A</kbd> <kbd>D</kbd></dd></div>
+        <div class="row"><dt>Jump</dt><i class="leader"></i><dd><kbd>Space</kbd></dd></div>
+        <div class="row"><dt>Attack</dt><i class="leader"></i><dd><kbd>J</kbd></dd></div>
+        <div class="row"><dt>Heavy</dt><i class="leader"></i><dd><kbd>K</kbd></dd></div>
+        <div class="row"><dt>Parry</dt><i class="leader"></i><dd><kbd>L</kbd></dd></div>
+        <div class="row"><dt>Roll</dt><i class="leader"></i><dd><kbd>Shift</kbd></dd></div>
+        <div class="row"><dt>Drink</dt><i class="leader"></i><dd><kbd>Q</kbd></dd></div>
+        <div class="row"><dt>Pray at an altar</dt><i class="leader"></i><dd><kbd>W</kbd></dd></div>
+        <div class="row"><dt>Map</dt><i class="leader"></i><dd><kbd>Tab</kbd></dd></div>
+        <div class="row"><dt>Pause</dt><i class="leader"></i><dd><kbd>Esc</kbd></dd></div>
+      </dl>
+    </section>
+
+    <section class="prose">
+      <h2>What to know</h2>
+      <p>
+        <strong>Parry is the whole of it.</strong> Every enemy blow is telegraphed by a
+        red flare before it lands. Guard on that flare and you take no damage, break
+        the attacker open, and earn a <em>riposte</em> — your next strike does triple.
+      </p>
+      <p>
+        The Warden's shield turns aside ordinary cuts. Parry its swing, break the
+        guard with a heavy, or roll behind it.
+      </p>
+      <p>
+        Death leaves your <em>guilt</em> where you fell, along with your tears, and
+        binds part of your fervour until you walk back and reclaim it. Praying at an
+        altar restores you — and wakes every hollow thing in the room.
+      </p>
+      <p>
+        The way to the Abbot is sealed. The second breath is held in the drowned
+        cistern; the seal breaker waits above the gallery, and only a doubled jump
+        will carry you there.
+      </p>
+    </section>
+  </div>
+
+  <p class="colophon">Drawn entirely from primitives — no sprites, no engine. Progress is saved in this browser.</p>
+</div>
+
+<!--GAME_SCRIPT-->

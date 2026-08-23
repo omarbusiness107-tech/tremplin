@@ -21,17 +21,28 @@ export function createScreen(parent: HTMLElement): Screen {
   ctx.imageSmoothingEnabled = false;
 
   const resize = (): void => {
-    // Integer scale keeps pixels square; fall back to fractional on tiny
-    // viewports so the game is never cropped.
-    const sx = window.innerWidth / VIEW_W;
-    const sy = window.innerHeight / VIEW_H;
-    const fit = Math.min(sx, sy);
-    const scale = fit >= 1 ? Math.floor(fit) : fit;
-    canvas.style.width = `${Math.round(VIEW_W * scale)}px`;
-    canvas.style.height = `${Math.round(VIEW_H * scale)}px`;
+    // Size to the host element's content box when it has one, so the game can
+    // be embedded in a page with chrome around it; fall back to the viewport.
+    const availW = parent.clientWidth || window.innerWidth;
+    const availH = parent.clientHeight || window.innerHeight;
+
+    const fit = Math.min(availW / VIEW_W, availH / VIEW_H);
+    // Snap *down* to a whole-number scale when we are barely above one, so an
+    // exact multiple stays perfectly square. Never snap up: that would overflow
+    // the host box. Otherwise fill the box -- flooring to an integer would
+    // strand the game at 1x inside a nearly-2x frame.
+    const floor = Math.floor(fit);
+    const scale = floor >= 1 && fit - floor < 0.02 ? floor : fit;
+    const w = `${Math.round(VIEW_W * scale)}px`;
+    const h = `${Math.round(VIEW_H * scale)}px`;
+    // Guard against a resize loop if the host sizes itself from its children.
+    if (canvas.style.width === w && canvas.style.height === h) return;
+    canvas.style.width = w;
+    canvas.style.height = h;
   };
   resize();
   window.addEventListener("resize", resize);
+  if (typeof ResizeObserver !== "undefined") new ResizeObserver(resize).observe(parent);
 
   canvas.focus();
   canvas.addEventListener("pointerdown", () => canvas.focus());

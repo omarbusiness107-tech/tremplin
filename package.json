@@ -10,7 +10,9 @@
     "bundle": "npm run build && node tools/inline.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "smoke": "npm run bundle && node tools/smoke.mjs"
+    "smoke": "npm run bundle && node tools/smoke.mjs",
+    "artifact": "npm run build && node tools/artifact.mjs",
+    "verify:artifact": "npm run artifact && node tools/verify-artifact.mjs"
   },
   "devDependencies": {
     "playwright": "^1.62.1",
