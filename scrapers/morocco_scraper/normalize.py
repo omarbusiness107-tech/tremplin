@@ -193,10 +193,14 @@ DOMAIN_KEYWORDS: dict[str, tuple[str, ...]] = {
         "administrateur", "administration", "fonction publique", "secretariat",
         "affaires generales", "collectivites territoriales", "redacteur",
     ),
+    # Kept to words that describe *teaching* as the work. "universitaire"
+    # and "pedagog" were dropped: every scholarship announcement mentions
+    # "études universitaires" or an "équipe pédagogique", which put half
+    # the scholarships in this field.
     "education-teaching": (
-        "enseignement", "enseignant", "professeur", "education", "pedagog", "formateur",
-        "instituteur", "scolaire", "maitre de conferences", "professeur assistant",
-        "enseignant chercheur", "universitaire",
+        "enseignant", "professeur", "instituteur", "formateur", "scolaire",
+        "maitre de conferences", "professeur assistant", "enseignant chercheur",
+        "sciences de l'education", "didactique", "corps enseignant",
     ),
     "humanities": (
         "lettres", "sciences humaines", "histoire", "geographie", "sociolog", "philosoph",
@@ -213,6 +217,12 @@ DOMAIN_KEYWORDS: dict[str, tuple[str, ...]] = {
     "logistics-transport": (
         "logistique", "transport", "supply chain", "ferroviaire", "portuaire", "aerien",
         "douane",
+    ),
+    "customer-service": (
+        "centre d'appel", "centres d'appel", "call center", "centre de contact",
+        "relation client", "teleconseil", "televente", "telemarketing", "teleoperateur",
+        "televendeur", "service client", "hotline", "support client", "back office",
+        "chargé de clientele", "conseiller clientele", "outsourcing", "offshoring",
     ),
     "tourism-hospitality": ("tourisme", "hotell", "restauration", "artisanat"),
     "security-defense": (

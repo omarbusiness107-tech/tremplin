@@ -38,6 +38,22 @@ insert into public.sources (key, name, homepage_url, category, request_delay_sec
     'public_sector',
     2.0,
     'Official Moroccan public-sector concours portal. robots.txt only disallows /*/concours/download/ ; listing and detail pages are permitted.'
+  ),
+  (
+    'moncallcenter',
+    'MonCallCenter',
+    'https://www.moncallcenter.ma',
+    'job_board',
+    3.0,
+    'Call-centre and BPO job board. robots.txt allows the offers listing; only /contact.php, /cgu.php, /docs/ and some employer sub-paths are disallowed.'
+  ),
+  (
+    'bourses_9rayti',
+    '9rayti.com — Bourses',
+    'https://www.9rayti.com',
+    'scholarships',
+    3.0,
+    'Scholarship announcements on Morocco''s main student orientation portal. robots.txt is `User-agent: * / Allow: /`.'
   )
 on conflict (key) do update
   set name                  = excluded.name,

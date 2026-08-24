@@ -11,8 +11,9 @@ searches and details opportunities; accounts, profiles, personalised
 recommendations, bookmarks, email alerts and a scraper monitoring page are all
 in place.
 
-The only source wired up so far is `emploi_public`. Adding more is one file
-each — see [`scrapers/README.md`](scrapers/README.md).
+Three sources are live, covering three different opportunity types: public-sector
+*concours*, call-centre jobs, and scholarships. Adding a fourth is one file —
+see [`scrapers/README.md`](scrapers/README.md).
 
 ---
 
@@ -346,16 +347,30 @@ Sending is via Resend; `--dry-run` prints the rendered emails and rolls back.
 
 ---
 
+## Sources
+
+| Key | Site | Type | Shape it exercises |
+| --- | --- | --- | --- |
+| `emploi_public` | [emploi-public.ma](https://www.emploi-public.ma) | `concours` | Structured label/value detail pages, hard deadlines, no city |
+| `moncallcenter` | [moncallcenter.ma](https://www.moncallcenter.ma) | `job` | **No deadline** (rolling), required languages, city, remote flag |
+| `bourses_9rayti` | [9rayti.com](https://www.9rayti.com) | `scholarship` | Prose announcements, deadline only in a data attribute |
+
+That spread is the point: between them they cover every branch of the pipeline
+— a source whose listings never close, one whose deadline is machine-readable
+only, and one that publishes everything as label/value pairs.
+
 ## What's next
 
-The pipeline is proven end to end on one source, so the highest-value work is
-breadth: university admissions (UM6P, ENSA, ENCG, Al Akhawayn, EMI), CNRST and
-the Ministry of Higher Education for doctorat and scholarship calls, and
-AMCI / Campus France / DAAD / Erasmus+ for scholarships.
+Breadth, still. The obvious gaps are university admissions (ENSA, ENCG, EMI,
+Al Akhawayn), CNRST and the Ministry of Higher Education for doctorat calls,
+and AMCI / Campus France / DAAD for more scholarships.
 
-Worth knowing before adding them:
+Two things worth knowing before adding them:
 
-- Search uses the `french` text search configuration. Arabic-language listings
-  will index as unstemmed tokens and match only exactly.
-- `location_city` is unpopulated so far, because `emploi_public` does not
-  publish it. The city filter hides itself until a source does.
+- **Some sites need a browser.** UM6P renders its programme catalogue entirely
+  client-side — 338 KB of JavaScript and no text in the HTML. The framework can
+  take a Playwright-backed session, but nothing needs one yet, so none is wired
+  in.
+- **Search uses the `french` configuration.** Arabic-language listings will
+  index as unstemmed tokens and match only exactly. 9rayti publishes some of
+  its concours announcements in Arabic; the scholarships are French.

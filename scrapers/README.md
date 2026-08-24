@@ -87,9 +87,32 @@ python -m morocco_scraper run --source example --pages 1 --max-items 5 --dry-run
 
 | Key | Site | Types | Notes |
 | --- | --- | --- | --- |
-| `emploi_public` | [emploi-public.ma](https://www.emploi-public.ma) | `concours` | Official MMSP public-sector portal. Server-rendered, UUID per listing, structured detail pages. robots.txt disallows only `/*/concours/download/`. |
+| `emploi_public` | [emploi-public.ma](https://www.emploi-public.ma) | `concours` | Official MMSP portal. Server-rendered, UUID per listing, structured detail pages. robots.txt disallows only `/*/concours/download/`. |
+| `moncallcenter` | [moncallcenter.ma](https://www.moncallcenter.ma) | `job` | Call-centre and BPO board. Rolling adverts with **no deadline**, plus languages, city and a remote flag. Sponsored offers repeat on the same page under the same id. |
+| `bourses_9rayti` | [9rayti.com](https://www.9rayti.com) | `scholarship` | Student portal. Prose announcements; the deadline lives in a `data-target-date` attribute — **the visible date is a placeholder**, see below. |
 
-Planned next, per the build plan: university admissions (UM6P, ENSA, ENCG, Al
-Akhawayn, EMI), CNRST and the Ministry of Higher Education for doctorat and
-scholarship calls, AMCI / Campus France / DAAD / Erasmus+ for scholarships, and
-job boards where their terms permit it.
+Planned next, per the build plan: university admissions (ENSA, ENCG, EMI, Al
+Akhawayn), CNRST and the Ministry of Higher Education for doctorat calls, and
+AMCI / Campus France / DAAD / Erasmus+ for scholarships.
+
+## Two traps worth reading before you write a scraper
+
+Both were found by checking the data rather than trusting the page, and both
+would have failed silently.
+
+**A visible value can be a placeholder.** On 9rayti every scholarship detail
+page prints its deadline twice: `data-target-date` on the countdown element,
+and the rendered text inside it. The rendered text is identical on every page
+— a template default that JavaScript overwrites at runtime. Scraping what a
+human sees would have given all twenty scholarships the same wrong deadline,
+and since the deadline drives sorting, urgency and email alerts, nothing would
+have looked broken. Check that a field actually *varies* across pages before
+trusting it.
+
+**The same listing can appear twice on one page.** MonCallCenter repeats
+sponsored offers further down the normal list, and emploi-public shows a
+"last chance" carousel of listings that are also in the grid. Neither is a
+reason to write a filter: both carry the same id, so the store's
+`(source_key, external_id)` match collapses them. Scoping selectors to the
+results container handles the carousel; the sponsored repeats are simply
+allowed through.

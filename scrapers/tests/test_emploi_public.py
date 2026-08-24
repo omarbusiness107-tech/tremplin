@@ -18,28 +18,9 @@ from morocco_scraper.sources.emploi_public import (
     LayoutChanged,
     _infer_education_level,
 )
+from tests.fake_session import FakeSession
 
 FIXTURES = Path(__file__).parent / "fixtures"
-
-
-class FakeSession:
-    """Serves fixtures instead of making requests."""
-
-    def __init__(self, pages: dict[str, str]):
-        self.pages = pages
-        self.requested: list[str] = []
-        self.pages_fetched = 0
-
-    def get_text(self, url: str) -> str:
-        self.requested.append(url)
-        for fragment, body in self.pages.items():
-            if fragment in url:
-                self.pages_fetched += 1
-                return body
-        raise AssertionError(f"unexpected request: {url}")
-
-    def close(self) -> None:
-        pass
 
 
 def read(name: str) -> str:
