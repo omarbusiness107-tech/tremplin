@@ -140,6 +140,16 @@
     aspect-ratio: 16 / 9;
   }
 
+  /* On a phone held sideways the game takes the whole viewport: the page
+     chrome is for reading on a desktop, and thumbs need the full panel. */
+  @media (max-width: 900px) and (orientation: landscape) {
+    .frame { padding: 0; gap: 0; max-width: none; }
+    .lintel, .columns, .colophon, .hint { display: none; }
+    .stage-frame { max-width: none; border: 0; box-shadow: none; }
+    .stage { aspect-ratio: auto; height: 100svh; height: 100dvh; }
+    body { background-image: none; }
+  }
+
   #stage canvas {
     display: block;
     image-rendering: pixelated;
@@ -283,6 +293,7 @@
         <div class="row"><dt>Pause</dt><i class="leader"></i><dd><kbd>Esc</kbd></dd></div>
         <div class="row"><dt>Mute</dt><i class="leader"></i><dd><kbd>M</kbd></dd></div>
         <div class="row"><dt>Volume</dt><i class="leader"></i><dd><kbd>-</kbd> <kbd>+</kbd></dd></div>
+        <div class="row"><dt>On a phone</dt><i class="leader"></i><dd>on-screen pad</dd></div>
       </dl>
     </section>
 
@@ -317,7 +328,7 @@
 
   <p class="colophon">
     Drawn entirely from primitives and scored by synthesis — no sprites, no samples, no engine.
-    Progress is saved in this browser.
+    Progress is saved in this browser. On a phone, turn it sideways for on-screen controls.
   </p>
 </div>
 

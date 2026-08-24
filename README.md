@@ -16,7 +16,7 @@ npm run bundle   # build, then inline everything into dist/penitence.html
 npm run smoke    # bundle, then drive the game in headless Chromium
 npm run artifact # build a single-file embeddable page (artifact/page.html shell)
 npm run smoke:mobile  # emulate a phone and drive the touch controls
-npm run android:apk   # build a signed, sideloadable APK into dist/app/
+npm run android:apk   # build a signed, sideloadable APK into release/
 ```
 
 ## Controls
@@ -92,7 +92,7 @@ native iOS build needs Xcode on a Mac plus a paid Apple developer account.
 
 ```bash
 npm run android:key   # once: generate a local signing key
-npm run android:apk   # -> dist/app/penitence-1.0.apk
+npm run android:apk   # -> release/penitence-1.0.apk
 ```
 
 Copy the APK to the phone and open it, allowing installs from unknown sources

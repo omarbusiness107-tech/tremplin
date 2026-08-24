@@ -17,7 +17,7 @@
     "smoke:mobile": "npm run build && node tools/smoke-mobile.mjs",
     "android:key": "mkdir -p android/keystore && keytool -genkeypair -v -keystore android/keystore/penitence.jks -alias penitence -keyalg RSA -keysize 2048 -validity 10000 -storepass penitence -keypass penitence -dname \"CN=Penitence, OU=Game, O=Penitence\"",
     "android:sync": "npm run build && npx cap sync android",
-    "android:apk": "npm run android:sync && cd android && ./gradlew assembleRelease && cd .. && mkdir -p dist/app && cp android/app/build/outputs/apk/release/app-release.apk dist/app/penitence-1.0.apk"
+    "android:apk": "npm run android:sync && cd android && ./gradlew assembleRelease && cd .. && mkdir -p release && cp android/app/build/outputs/apk/release/app-release.apk release/penitence-1.0.apk && echo \"APK -> release/penitence-1.0.apk\""
   },
   "devDependencies": {
     "@capacitor/android": "^8.5.0",
