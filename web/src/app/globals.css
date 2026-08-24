@@ -1,0 +1,126 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Design tokens. Neutral greys with a single teal accent, plus a small
+   urgency scale used for deadline proximity — amber and rose rather than
+   a hard red, so a listing closing this week reads as "soon", not "alarm". */
+:root {
+  --radius: 0.75rem;
+
+  --background: oklch(0.99 0.002 240);
+  --foreground: oklch(0.21 0.01 250);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.01 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.01 250);
+
+  --primary: oklch(0.52 0.11 195);
+  --primary-foreground: oklch(0.99 0.002 240);
+  --secondary: oklch(0.96 0.004 250);
+  --secondary-foreground: oklch(0.28 0.012 250);
+  --muted: oklch(0.96 0.004 250);
+  --muted-foreground: oklch(0.53 0.014 250);
+  --accent: oklch(0.95 0.015 195);
+  --accent-foreground: oklch(0.32 0.05 195);
+
+  --destructive: oklch(0.58 0.19 27);
+  --border: oklch(0.92 0.005 250);
+  --input: oklch(0.92 0.005 250);
+  --ring: oklch(0.52 0.11 195);
+
+  --urgent: oklch(0.55 0.17 20);
+  --urgent-foreground: oklch(0.99 0.002 240);
+  --urgent-muted: oklch(0.96 0.03 20);
+  --soon: oklch(0.62 0.13 65);
+  --soon-muted: oklch(0.96 0.04 80);
+  --calm: oklch(0.52 0.09 160);
+  --calm-muted: oklch(0.95 0.03 165);
+}
+
+.dark {
+  --background: oklch(0.17 0.008 250);
+  --foreground: oklch(0.96 0.003 250);
+  --card: oklch(0.21 0.01 250);
+  --card-foreground: oklch(0.96 0.003 250);
+  --popover: oklch(0.21 0.01 250);
+  --popover-foreground: oklch(0.96 0.003 250);
+
+  --primary: oklch(0.72 0.11 195);
+  --primary-foreground: oklch(0.18 0.02 220);
+  --secondary: oklch(0.27 0.012 250);
+  --secondary-foreground: oklch(0.96 0.003 250);
+  --muted: oklch(0.27 0.012 250);
+  --muted-foreground: oklch(0.71 0.012 250);
+  --accent: oklch(0.3 0.03 195);
+  --accent-foreground: oklch(0.9 0.04 195);
+
+  --destructive: oklch(0.65 0.18 25);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.72 0.11 195);
+
+  --urgent: oklch(0.7 0.15 22);
+  --urgent-foreground: oklch(0.18 0.02 220);
+  --urgent-muted: oklch(0.32 0.07 22);
+  --soon: oklch(0.78 0.12 70);
+  --soon-muted: oklch(0.32 0.05 70);
+  --calm: oklch(0.72 0.1 165);
+  --calm-muted: oklch(0.28 0.04 165);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-urgent: var(--urgent);
+  --color-urgent-foreground: var(--urgent-foreground);
+  --color-urgent-muted: var(--urgent-muted);
+  --color-soon: var(--soon);
+  --color-soon-muted: var(--soon-muted);
+  --color-calm: var(--calm);
+  --color-calm-muted: var(--calm-muted);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    color-scheme: dark;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+}

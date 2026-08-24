@@ -1,0 +1,1007 @@
+<!doctype html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<link rel="preconnect" href="https://emploi-public.pages.dev">
+<link rel="shortcut icon" type="image/x-icon" href="https://emploi-public.pages.dev/media/icons/favicon.ico">
+<title>EMPLOI-PUBLIC -  Liste des concours </title>
+<link rel="stylesheet" href="https://emploi-public.pages.dev/media/fonts/fontawesome/css/all.min.css">
+<link rel="stylesheet" href="https://emploi-public.pages.dev/css/slick.min.css">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.1-rc.1/css/select2.min.css">
+<link rel="preconnect" href="https://unpkg.com">
+<link rel="stylesheet" href="https://unpkg.com/aos/dist/aos.css">
+<link rel="stylesheet" href="https://emploi-public.pages.dev/css/vendor/monthly.css">
+<link rel="stylesheet" href="https://emploi-public.pages.dev/css/styles.css">
+<link rel="stylesheet" href="https://emploi-public.pages.dev/css/custom.css">
+<link rel="stylesheet" href="https://emploi-public.pages.dev/accessibilty.min.css">
+</head>
+<body>
+<div class="loader-d">
+<img src="https://emploi-public.pages.dev/media/images/drapeau.svg" alt="drapeau loader">
+<div class="loader-c">
+<div class="inner one"></div>
+<div class="inner two"></div>
+<div class="inner three"></div>
+</div>
+</div>
+<div id="accessPanel" class="accessibility-panel" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="accessPanelTitle">
+<div class="accessPanel-header">
+<div class="accessPanel-header__l">
+<h2 id="accessPanelTitle" class="accessPanel-header__title">front_office.accessibilite_options</h2>
+</div>
+<button class="accessPanel-header__close" type="button" aria-label="front_office.accessibilite_fermer">
+<span style="width: 24px; height: 16px; display: flex;">
+</span>
+<span class="focus-outline"></span>
+</button>
+</div>
+<div class="accessPanel-features__wrapper">
+<button class="accessPanel-features__reset">
+<span class="accessPanel-features__reset__i">
+</span>
+<span class="accessPanel-features__reset__text">front_office.accessibilite_reinitialiser</span>
+</button>
+<div class="accessPanel-features__title">
+<span id="content_title" class="accessPanel-features__title__s">front_office.accessibilite_ajustement_contenu</span>
+</div>
+<div class="accessPanel-features">
+<div class="accessPanel-features__item">
+<button type="button" id="spacingText" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-spacing-1"></span></span>
+<div class="accessPanel-features__item__name">front_office.accessibilite_espacement</div>
+<span class="accessPanel-features__item__steps">
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+</span>
+</button>
+</div>
+<div class="accessPanel-features__item">
+<button type="button" id="biggerText" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-bigger-text-1"></span></span>
+<div class="accessPanel-features__item__name">front_office.accessibilite_texte_grand</div>
+<span class="accessPanel-features__item__steps">
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+</span>
+</button>
+</div>
+<div class="accessPanel-features__item">
+<button type="button" id="lineHeightText" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-line-height-1"></span></span>
+<div class="accessPanel-features__item__name">...</div>
+<span class="accessPanel-features__item__steps">
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+</span>
+</button>
+</div>
+<div class="accessPanel-features__item">
+<button type="button" id="dyslexiaText" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-font-dx"></span></span>
+<div class="accessPanel-features__item__name">front_office.accessibilite_dyslexie</div>
+<span class="accessPanel-features__item__steps">
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+</span>
+</button>
+</div>
+</div>
+<div class="accessPanel-features__title">
+<span id="display_title" class="accessPanel-features__title__s">front_office.accessibilite_ajustement_affichage</span>
+</div>
+<div class="accessPanel-features">
+<div class="accessPanel-features__item">
+<button type="button" id="contrastBg" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-contrast-plus"></span></span>
+<div class="accessPanel-features__item__name">front_office.accessibilite_contraste</div>
+<span class="accessPanel-features__item__steps">
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+</span>
+</button>
+</div>
+<div class="accessPanel-features__item">
+<button type="button" id="screenReader" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-screen-reader"></span></span>
+<div class="accessPanel-features__item__name">front_office.accessibilite_lecteur_ecran</div>
+</button>
+</div>
+<div class="accessPanel-features__item">
+<button type="button" id="highlightLinks" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-highlight-links"></span></span>
+<div class="accessPanel-features__item__name">front_office.accessibilite_liens</div>
+</button>
+</div>
+<div class="accessPanel-features__item">
+<button type="button" id="cursorGuide" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-cursor-1"></span></span>
+<div class="accessPanel-features__item__name">front_office.accessibilite_curseur</div>
+<span class="accessPanel-features__item__steps">
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+</span>
+</button>
+</div>
+<div class="accessPanel-features__item">
+<button type="button" id="hideImages" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-hide-images"></span></span>
+<div class="accessPanel-features__item__name">front_office.accessibilite_masquer_images</div>
+</button>
+</div>
+<div class="accessPanel-features__item">
+<button type="button" id="saturationBg" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-saturation-1"></span></span>
+<div class="accessPanel-features__item__name">front_office.accessibilite_saturation</div>
+<span class="accessPanel-features__item__steps">
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+</span>
+</button>
+</div>
+</div>
+</div>
+<div class="accessPanel-footer">
+<div class="accessPanel-footer__l">
+<p class="accessPanel-footer__title">Spark Vibe ForNet</p>
+</div>
+</div>
+</div>
+<header>
+<div class="top-header">
+<div class="container">
+<div class="header-links">
+<a class="header-links-admin underline" href="https://backoffice.emploi-public.ma"><i class="icon-espace-admin"></i>Espace administration</a>
+<ul>
+<li><a class="hover-link openLoginPopup"><i class="icon-open-account-login"></i>Se connecter</a></li>
+<li><a href="/fr/candidat/register" class="hover-link"><i class="icon-user-plus"></i>Créer un compte</a></li>
+</ul>
+</div>
+<div class="social-media">
+</div>
+<div class="dropdown-lang">
+<button class="dropdown-toggle hover-link" data-label="FR" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+FR
+<i class="fa fa-chevron-down"></i>
+</button>
+<ul class="dropdown-menu">
+<li><a class="dropdown-item" href="/ar/%D8%AA%D9%81%D8%A7%D8%B5%D9%8A%D9%84/%D8%A7%D9%84%D9%85%D8%A8%D8%A7%D8%B1%D9%8A%D8%A7%D8%AA/7babf89f-94cb-4f16-8e62-84adf1859961">العربية</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="main-menu" data-sticky-wrap="true" data-sticky-class="is-sticky">
+<div class="container">
+<button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+<span class="burger-menu">
+<span></span><span></span><span></span>
+</span>
+</button>
+<a href="/fr/" class="logo">
+<img src="https://emploi-public.pages.dev/media/images/logo.svg" width="227" alt="L&#039;EMPLOI PUBLIC">
+</a>
+<div class="nav">
+<ul>
+<li class="has-submenu">
+<span class="nav-link underline">Chercher une annonce</span>
+<ul class="nav-submenu">
+<li><a href="/fr/concours-liste">Concours de recrutement</a></li>
+<li><a href="/fr/emploi-sup-liste">Emplois supérieurs</a></li>
+<li><a href="/fr/postes-respo-liste">Postes de responsabilités</a></li>
+<li><a href="/fr/experts-liste">Recrutement des experts</a></li>
+<li><a href="/fr/concours/calendrier">Calendrier des concours</a></li>
+<li><a href="/fr/poste_budgetaire-liste">Postes budgétaires</a></li>
+</ul>
+</li>
+<li class="has-submenu">
+<span class="nav-link underline">Fonctionnaire</span>
+<ul class="nav-submenu">
+<li><a href="/fr/eap-liste">Examens d&#039;Aptitude Professionnelle et Concours Professionnels</a></li>
+<li><a href="/fr/mobilite">Mobilité des fonctionnaires</a></li>
+<li><a href="/fr/content/decouvrir-la-fonction-publique">Questions fréquentes</a></li>
+</ul>
+</li>
+<li class="has-submenu">
+<span class="nav-link underline">Administrations qui recrutent</span>
+<ul class="nav-submenu">
+<li><a href="/fr/administration-liste?stat=service_etat">Services de l&#039;Etat</a></li>
+<li><a href="/fr/administration-liste?stat=collec">Collectivités territoriales</a></li>
+<li><a href="/fr/administration-liste?stat=etab_publics">Etablissements et Entreprises publiques</a></li>
+</ul>
+</li>
+<li class="has-submenu">
+<span class="nav-link underline">Textes juridiques</span>
+<ul class="nav-submenu">
+<li><a href="/fr/content/textes-concours">Concours de recrutement</a></li>
+<li><a href="/fr/content/textes-emploi-superieur">Emplois supérieurs</a></li>
+<li><a href="/fr/content/textes-examen">Postes de responsabilités</a></li>
+<li><a href="/fr/content/textes-experts">Recrutement des experts</a></li>
+<li><a href="/fr/content/textes-eap">Examens d&#039;Aptitude Professionnelle et Concours Professionnels</a></li>
+<li><a href="/fr/content/textes-mobilite">Mobilité des fonctionnaires</a></li>
+</ul>
+</li>
+<li class="has-submenu">
+<span class="nav-link underline">Nos services</span>
+<ul class="nav-submenu ">
+<li><a href="/fr/content/remuneration">Simulateur des salaires</a></li>
+<li><a href="/fr/content/r-c-grh">Référentiel Commun de la GRH</a></li>
+<li><a href="/fr/content/b-d-juridiques">Banque de Données Juridiques de la Fonction Publique</a></li>
+<li><a href="/fr/content/portail-de-transparence-et-acc-s-l-information-chafafiya">Portail de transparence et accès à l&#039;information chafafiya</a></li>
+<li><a href="https://www.idarati.ma/" target="_blank">Portail National Idarati</a></li>
+<li><a href="/fr/content/centre-d-appel-et-d-orientation-administrative">Centre d&#039;appel et d&#039;orientation administrative</a></li>
+<li><a href="/fr/content/portail-de-la-geolocalisation">Portail de géolocalisation des Services Publics</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="mobile-menu-wrapper collapse navbar-collapse" id="navbarSupportedContent"></div>
+</header>
+<div class="sticky-dc" data-margin-top="120" data-sticky-for="1023" data-sticky-class="is-sticky">
+<div>
+<button id="toggleAccessPanel" type="button" class="btn-accessibilty shadow" aria-controls="accessPanel" aria-expanded="false">
+</button>
+<a href="/fr/poser-une-question" title="Poser une question" class="tooltip-dc"><i class="fa-regular fa-envelope"></i><i class="fa-solid fa-envelope"></i></a>
+<a href="/fr/faq-liste" title="FAQ" class="tooltip-dc"><i class="fa-regular fa-circle-question"></i><i class="fa-solid fa-circle-question"></i></a>
+</div>
+<a href="#" class="tooltip-dc see-all d-sm-none"><i class="fa-regular fa-plus"></i></a>
+</div>
+<section class="block-banner banner-details">
+<div class="banner-wrapper">
+<div class="banner-image">
+<img src="/starterkit/build/assets/media/images/bn.png" class="bg" alt="node.field_banniere.alt" data-aos="zoom-out" data-aos-duration="600">
+</div>
+</div>
+<div class="overlay">
+<div class="container" data-aos="zoom-in" data-aos-duration="600">
+<h1>
+<span>Concours de recrutement :</span>
+Administrateur 2ème grade - echelle 11
+</h1>
+<div class="banner-logo">
+<div class="lg-inner" data-bs-toggle="modal" data-bs-target="#popup-img--profile">
+<img src="/backoffice/files/images/administrations/cbb3113bc17d8ffd8e94cef3847ab94c.png" alt="Ministère de la Jeunesse, de la Culture et de la Communication - Département de la Communication">
+</div>
+<a class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#popup-login"><i class="fa-solid fa-arrow-pointer"></i>Dépôt en ligne</a>
+</div>
+</div>
+</div>
+<div class="modal fade fade-scale" id="popup-img--profile" data-easein="bounce" tabindex="-1" role="dialog" aria-labelledby="popup-svLabel" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered no-transform" role="document">
+<div class="modal-content p-3">
+<button type="button" class="position-absolute top-0 end-0 bg-white close" data-bs-dismiss="modal">
+<i class="fa fa-close"></i>
+</button>
+<img alt="Ministère de la Jeunesse, de la Culture et de la Communication - Département de la Communication" draggable="false" class="active" src="/backoffice/files/images/administrations/logo-017.png">
+</div>
+</div>
+</div>
+</section>
+<div class="b-breadcrumb container">
+<ul class="b-breadcrumb-list" data-aos="fade-up" data-aos-duration="600">
+<li><a href="/fr/">Accueil</a></li>
+<li><a href="/fr/concours-liste">Concours de recrutement</a></li>
+<li><span class="b-current">Administrateur 2ème grade - echelle 11</span></li>
+</ul>
+</div>
+<div class="sticky-dc-container" data-sticky-container>
+<div class="sticky-dc" data-margin-top="120" data-sticky-for="1023" data-sticky-class="is-sticky">
+<div>
+<div class="read_speaker mb-3 lang-fr">
+<a href="//app-af.readspeaker.com/cgi-bin/rsent?customerid=14834&amp;lang=fr_fr&amp;readid=read_content&url=" onclick="readpage(this.href, 'xp1');return false;" class="rs_href" title="Ecouter">
+<i class="fa-solid fa-volume-high m-0"></i>
+<i class="fa-solid fa-volume-high m-0"></i>
+</a>
+<div id="xp1" class="rs_addtools rs_splitbutton rs_preserve rs_skip rs_exp"></div>
+</div>
+<button id="toggleAccessPanel" type="button" class="btn-accessibilty shadow">
+</button>
+<a type="button" title="Suivez ce concours" class="tooltip-dc" data-bs-toggle="modal" data-bs-target="#popup-login"><i class="fa-regular fa-bell"></i><i class="icon-Icon-ionic-ios-notifications"></i></a>
+<a type="button" title="Ajouter au favoris" data-id="7babf89f-94cb-4f16-8e62-84adf1859961" class="tooltip-dc classFavorisConcours "><i class="fa-regular fa-star"></i><i class="fa-solid fa-star"></i></a>
+<a  title="Partager ce concours" data-bs-toggle="modal" data-bs-target="#sharemodal" class="tooltip-dc"><i class="icon-share"></i><i class="fa-solid fa-share-nodes"></i></a>
+<a href="/fr/poser-une-question" title="Poser une question" class="tooltip-dc"><i class="fa-regular fa-envelope"></i><i class="fa-solid fa-envelope"></i></a>
+<a href="/fr/faq-liste" title="FAQ" class="tooltip-dc"><i class="fa-regular fa-circle-question"></i><i class="fa-solid fa-circle-question"></i></a>
+</div>
+<a href="#" class="tooltip-dc see-all d-sm-none"><i class="fa-regular fa-plus"></i></a>
+</div>
+<div class="container" id="read_content">
+<div class="nav-container" data-aos="fade-up" data-aos-duration="500">
+<nav class="nav nav-pills nav-fill">
+<span class="nav-link active" aria-current="page" href="#">Annonce</span>
+<span class="nav-link rs_skip disabled" href="#">Convocation pour l&#039;examen écrit</span>
+<span class="nav-link rs_skip disabled" href="#" aria-disabled="true">Convocation pour l&#039;entretien oral</span>
+<span class="nav-link rs_skip disabled" href="#" tabindex="-1" aria-disabled="true">Résultats</span>
+</nav>
+</div>
+<div class="row s-content">
+<div class="col-12 col-md-4">
+<div class="s-content-box" data-aos="fade-up" data-aos-duration="500">
+<h2 class="h3">Détail de l&#039;annonce</h2>
+<h3 class="h4">
+<span>Administration qui recrute</span>
+Ministère de la Jeunesse, de la Culture et de la Communication - Département de la Communication
+</h3>
+<h3 class="h4">
+<span>Délai de dépôt des candidatures</span>
+28 Août 2026
+- 16:30
+</h3>
+<h3 class="h4">
+<span>Date du concours</span>
+13 Septembre 2026
+</h3>
+<h3 class="h4">
+<span>Date de publication</span>
+13 Août 2026
+</h3>
+</div>
+<h2 class="h3">Téléchargement</h2>
+<a target="_blank" href="/fr/concours/download/arrete/7babf89f-94cb-4f16-8e62-84adf1859961" class="s-content-box btn bg-blue">
+<i class="icon-pdf"></i> Arrêté d&#039;ouverture du concours
+</a>
+</div>
+<div class="col-12 col-md-8">
+<div class="s-content-box full" data-aos="fade-up" data-aos-duration="500">
+<h2 class="h3">Description</h2>
+<ul>
+<li>
+<img src="/starterkit/build/assets/media/images/005-star.svg" alt="icon" class="rs_skip">
+<span>Spécialité :</span>
+<strong>
+- Audit et Contrôle de Gestion
+</strong>
+</li>
+<li>
+<img src="/starterkit/build/assets/media/images/004-poll.svg" alt="icon" class="rs_skip">
+<span>Grade :</span>
+<strong>
+Administrateur 2ème grade - echelle 11
+</strong>
+</li>
+<li>
+<img src="/starterkit/build/assets/media/images/003-user.svg" alt="icon" class="rs_skip">
+<span>Nombre de postes :</span>
+<strong>1</strong>
+</li>
+<li>
+<img src="/starterkit/build/assets/media/images/007-briefcase.svg" alt="icon" class="rs_skip">
+<span>Type de recrutement :</span>
+<strong>
+Recrutement régulier
+</strong>
+</li>
+<li>
+<img src="/starterkit/build/assets/media/images/006-mortarboard.svg" alt="icon" class="rs_skip">
+<span>Type de dépôt :</span>
+<strong>
+sur emploi-public
+</strong>
+</li>
+<li>
+<i class="fa-solid fa-hashtag"></i>
+<span>Code du concours :</span>
+<strong>
+C43263/26
+</strong>
+</li>
+</ul>
+</div>
+<div class="text-center p-4 mb-4">
+<a class="btn btn-warning text-decoration-none btn-lg" data-bs-toggle="modal" data-bs-target="#popup-login">
+<i class="fa-solid fa-paper-plane"></i> Dépôt en ligne
+</a>
+</div>
+<div class="s-content-box full details-contact rs_skip" id="block-form-contact" data-aos="fade-up" data-aos-duration="500">
+<div class="form-title">
+<img src="/backoffice/files/images/administrations/7cded330aaa4972925e6bdcf1715270c.png" alt="Ministère de la Jeunesse, de la Culture et de la Communication - Département de la Communication">
+<h3 class="h3">
+<span>
+Administration organisatrice :
+<strong>Ministère de la Jeunesse, de la Culture et de la Communication - Département de la Communication </strong>
+</span>
+</h3>
+</div>
+<div class="form-info">
+<a href="https://mjcc.gov.ma" class="underline" target="_blank"><i class="fa-solid fa-globe"></i>https://mjcc.gov.ma</a>
+</div>
+<hr>
+<div class="text-center mb-4">
+<button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseContactForm" aria-expanded="false" aria-controls="collapseContactForm">
+<i class="fa-regular fa-envelope"></i>
+Contacter l&#039;administration organisatrice
+</button>
+</div>
+<div class="collapse " id="collapseContactForm">
+<div class="form-title">
+<p class="alert alert-info">
+<i class="fa-solid fa-circle-info"></i>
+Ce formulaire est réservé aux demandes d&#039;informations. Il ne permet pas de déposer une candidature.
+</p>
+<span class="btn btn-primary b-b pe-none mb-0" >Sujet : Concours</span>
+<div class="form-contact">
+<form name="contact" method="post" class="row form-contact-f">
+<div class="form-group col-12 col-md-6">
+<input type="text" id="contact_name" name="contact[name]" required="required" />
+<label for="contact_name" class="required">Nom et prénom</label>
+<span class="text-danger">
+</span>
+</div>
+<div class="form-group col-12 col-md-6">
+<input type="email" id="contact_email" name="contact[email]" required="required" />
+<label for="contact_email" class="required">Adresse mail</label>
+<span class="text-danger">
+</span>
+</div>
+<div class="form-group col-12 col-md-12">
+<textarea id="contact_message" name="contact[message]" required="required" rows="3"></textarea>
+<label for="contact_message" class="required">Message</label>
+<span class="text-danger">
+</span>
+</div>
+<div class="form-group col-12 col-md-12">
+<div class="d-flex px-2 mb-2"><img width="100" id="captcha_6a8ba35849ea6" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD//gA7Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2NjIpLCBxdWFsaXR5ID0gOTAK/9sAQwADAgIDAgIDAwMDBAMDBAUIBQUEBAUKBwcGCAwKDAwLCgsLDQ4SEA0OEQ4LCxAWEBETFBUVFQwPFxgWFBgSFBUU/9sAQwEDBAQFBAUJBQUJFA0LDRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU/8AAEQgAMgCCAwERAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A/VOgAoAKACgCve39tpsDT3dzFawr1kmcIo/E0AOtLuC/tYrm2mjuLeVQ8c0TBkdSMggjgg+ooA5v4nfFDwv8GvBGo+L/ABlq0eieHdPCG5vZI3k273CKAiKzMSzKAFBPNAFT4QfF/wAM/HTwPa+L/B9zcX3h67lkjtry4tJbbz/LYozKsiqxXcGXOOqmgDtaACgDM8TeIbPwj4b1bXdRZ00/TLSW9uWjQuwijQu5CjknCngdaAPNf2dP2pfAv7Umja1qngWe+uLPSbpbS4a+tjAxdk3AqCSSMdzjoaAPXaACgAoAKACgAoAqavq1noOlXup6hcJaWFlA9zcXEpwkUaKWdifQAE/hQB8MeKv+CsvhvVPE02gfB74Z+KvjBqEWcyadA9vE4zjcgEcspHu0a0AM8Ff8FXNLsfHlp4U+Mvwu8Q/Bq9uyoiutUZ5YkDHAeVZIYXRP9sKw9cDJAB9O/tI/s/8Ahj9qf4P6j4P1soYrtBc6bqkIDtZ3IU+VPGe45wQD8yswzzmgD4i/4J3/AB88Rfs/fFDVP2Wfi4xsb+yunTw5dzufL3t8/wBnVz96OUHzIjxyxXqyqAB3/BTfxdq37QHxy+Gn7Mfg+fN1eXkWo6y6fMsLup8veBziKDzZ2HcOh6igD9E/AHgfSfhn4I0LwnoNuLXR9Gs4rG1i7hEUKCx7scZJ7kk96APB/wBqP9v34e/sk+L9J8OeL9G8TalfalY/2hDJolrbyxrH5jx4YyzxkNlD0BGMc0AeMf8AD6v4If8AQrfED/wXWP8A8mUAfSnwR+PPhb9sz4Ka3rvhex1XT9Hu3utFeHWoYopt/lLuOI5JF24lH8WevFAHwx/wQ91p4JPjDoE2UdG0y6SM9QR9pST/ANp0AfqlQAUAFABQAUAFAFDX9EtfEug6lpF8pey1C2ktJ1U4JjkUqwB+hNAHO/Cr4QeDvgl4StvDXgnQLPw/pEAH7q2T55WxjfK5+aRz3ZiT70AfJv8AwWC8I6HrP7Jsmt38MP8AbGjatatptwQPMDSv5csYPXayEsR0JjU/wigD1P8A4Jz65qniH9ir4WXesPI94lhNaq0nXyIbqaGD8PKjjx7YoA8m/wCCrP7Pnh/xj8GJvixHqEXhvxp4JWOa11QMY2uojKoW2LLzv8xg0Z7MSOA5IAPC/wDgkZq2mfFr46/E74i+NPEC6z8Vri3TyIblQshtnIE86cYOCsMeFA2KcdHoA/V2gD8v/wDgoL/ykh/Zi/6/NF/9PBoA/UCgAoA/Jr/gmEP+EJ/by+OXg1v3SRw6nEE6fNbalGgH5O35UAfrLQAUAFABQAUAFABQAUAflT+3f461f9tz9pzwt+zf8O5/P0jQ71ptc1GP5oY7lRtmkfHG23jLr1GZJGTrtyAfpv4A8EaV8NPA+g+E9DhNvpGi2UNhaxk5by40Cgse7HGSe5JNAH5yf8FNfHerftA/HX4dfsw+DbjdcXN7De608fzLHK6kxhwOdsMBknYdw6HqtAEP7bX7J97+yld+DPj58Cbc6TN4NgtrLWLGBciSCNBEtzIoxvDoPLn/ALwYP/fagD7r/Zm/aH8O/tO/CTSfG3h9xEZh5N/p7OGksLtQPMhf6ZBU4G5WVsDOKAPFv2sf2AY/2sPjb4a8Xan4yufDGjaJpSWaxaVDm9lmE8km5ZGO2IAOuGwxyDwMZIB4x8Q/+CRX/CGaNd+IPgv8UPFumeNrNDcW6apeoPtUijOwTwLE0THHDHcM4zgcgA9D/wCCY37YniL9oTwz4h8FeP5DP458KbC19IgjlvbZiUzIoA/exuu1jgZ3oTzuJAPnz4I/8UF/wWc8Z6V/qxrN1qnHTPnWn239duaAP1loArJqdnJfNZLdwNeKhkNuJAZAuQNxXOcZI59xQBZoAKACgAoAKAPkf/gop+1437N/wyj0DwxKZviX4rVrTSILcb5bSMna91tHOQTtjHdyDghGFAD/APgnh+x4v7MfwxbV/EUIm+JHiZFudXnkO97RD8yWit/s53OR95yeSFU0AfS3jbxUfCPhPXNXt9Ou9dvNNspLqPSdNiaa6umVSUijRQSWcgKOMc88A0AfB/8AwTh/Zt8eL8WviH8dvjFoV3o/jHWLiSDT7TUojHKnnHzJ5gh5RceXEnookHSgD9BtT0y01rTbvT7+2ivbG7ieC4tp0DxyxsCrIyngggkEHqDQB8Wfsy/sKeNv2U/2ifEmveD/ABjpj/CbWZGWXw3diZrrysFoucbRJE7FVfJ3JkHBbgA+0LTV7DULu9tbW9t7m6sXWK6ghlV3t3ZQ6rIoOVJVlYA4yCD0NAFXxZ4s0fwL4a1LxDr+owaToumwNc3d7cvtjijUZJJ/kOpJAHJoA/Lr/gkfp9546/aU+NfxOtbSW18PXcc8KbxhfMurwXCoOxKpEc46bh6igD2b9oH/AIJseKfjB+1DrHxc8M/Fd/h3dXqW/kz6bZyve27papbOyyJNFt3KpHB6MRQBU/4dOzeIv+R2/aB8f+KN33/3xTd6/wCtkm/rQB7N+zJ/wT7+G37KXjO68U+EtR8R3+s3Vg+nSy6xeRSI0TvHI3yxxIM7okOfagD6aoAKACgAoAKAPz9/aN/4JseOfjn+0/q3xT034rp4TiZrRtKMdtNPd6f5MEa/uyJECfvFkddpGC+euaAHf8OrNd8Rf8jr+0l4/wDFG77/AO8kTd/39nmoA91/ZY/YZ8D/ALJOra5qnhXWfEWrX2tQR294+t3UMqkIxZSojiTByT1J60AfRdABQAUAfFvx+/4JsxfF741a38UfDfxX8SfD7xPq4h+0Pp8YdEMUMcK7CkkTgFYlJBY85+gAOHuP+CT+teObm1i+J37Rvjbx9o0DhxYTpIp4/utPcThTjjOygD7W+EPwd8JfAnwLY+EfBWkRaPolplhGhLPLIcbpZHPLu2Blj6ADAAAAO0oAKACgAoAKACgAoAKACgAoAKACgAoAKACgAoAKACgAoAKACgAoAKAP/9k=" alt="" title="captcha" width="130" height="50" /><span class="mx-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Le code de vérification peut inclure des lettres latines en (Majuscule) ainsi que des chiffres."><i class="fas fa-info-circle text-info" ></i></span></div><input type="text" id="contact_recaptcha" name="contact[recaptcha]" required="required" data-msg="Ce champ est obligatoire" class="captcha-input" />
+<label class="captcha-label required" for="contact_recaptcha">Code de sécurité</label>
+</div>
+<div class="form-group actions">
+<button type="submit" id="contact_submit" name="contact[submit]" class="btn btn-dark b-y" value="front_office.envoyer">Envoyer</button>
+</div>
+<div style="display: none;"><label for="contact_phone">Phone</label><input type="text" id="contact_phone" name="contact[phone]" autocomplete="off" tabindex="-1" /></div><div style="display: none;"><label for="contact_fax">Fax</label><input type="text" id="contact_fax" name="contact[fax]" autocomplete="off" tabindex="-1" /></div><input type="hidden" id="contact__token" name="contact[_token]" value="05d39dd60692c667e090ce89.1wrvNyytU3Btw68MmQ-qEF3RucdGFSqu2jsS1T5iem4.40OtXk_oEQk8koJO7GvyJTS3_PN3WWaXlU1AogYlID-ZWYsOQ-Y_RDSv2A" /></form>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<section class="c-wrapper bg-white pt-5">
+<div class="container">
+<h2 class="title-3 text-center" data-aos="fade-up" data-aos-duration="600">Concours similaires</h2>
+<div class="row">
+<div class="col-12 col-md-4" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/bab44ec2-c7f4-4bb6-b1f5-f15a3bf8f042" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-5">
+<img src="/starterkit/build/assets/media/images/Ministre-md-default-image.jpg" alt="Province Nouaceur" width="85" height="85">
+<h3 class="card-title">Infirmier de premier grade - echelle 10</h3>
+<div class="card-text">
+<i class="icon-building-gra"></i>
+Province Nouaceur
+</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>1 poste</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 14 Septembre 2026
+- 16:30
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 18 Octobre 2026</div>
+</div>
+</a>
+</div>
+<div class="col-12 col-md-4" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/314127fa-7dd1-4335-9ec8-00ae8fd98fe1" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-5">
+<img src="/starterkit/build/assets/media/images/Ministre-md-default-image.jpg" alt="Province de Berkane" width="85" height="85">
+<h3 class="card-title">Technicien de 3ème grade - echelle 9</h3>
+<div class="card-text">
+<i class="icon-building-gra"></i>
+Province de Berkane
+</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>15 poste</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 28 Août 2026
+- 16:30
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 20 Septembre 2026</div>
+</div>
+</a>
+</div>
+<div class="col-12 col-md-4" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/84e7a895-53f3-4b2e-ae4e-f2f2242d8621" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-5">
+<img src="/starterkit/build/assets/media/images/Ministre-md-default-image.jpg" alt="Province de Berkane" width="85" height="85">
+<h3 class="card-title">Technicien de 4ème grade - echelle 8</h3>
+<div class="card-text">
+<i class="icon-building-gra"></i>
+Province de Berkane
+</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>10 poste</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 28 Août 2026
+- 16:30
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 20 Septembre 2026</div>
+</div>
+</a>
+</div>
+<div class="col-12 col-md-4" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/6ac15be2-f9d1-45f5-9f77-b7fde674c933" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-5">
+<img src="/starterkit/build/assets/media/images/Ministre-md-default-image.jpg" alt="Province de Berkane" width="85" height="85">
+<h3 class="card-title">Infirmier diplômé d&#039;Etat de 1er grade - echelle 10</h3>
+<div class="card-text">
+<i class="icon-building-gra"></i>
+Province de Berkane
+</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>4 poste</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 28 Août 2026
+- 16:30
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 20 Septembre 2026</div>
+</div>
+</a>
+</div>
+<div class="col-12 col-md-4" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/ddf9001b-26b5-4354-b79f-13f9f1fef573" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-5">
+<img src="/starterkit/build/assets/media/images/Ministre-md-default-image.jpg" alt="Province de Berkane" width="85" height="85">
+<h3 class="card-title">Architecte 1er grade - echelle 11</h3>
+<div class="card-text">
+<i class="icon-building-gra"></i>
+Province de Berkane
+</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>1 poste</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 28 Août 2026
+- 16:30
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 20 Septembre 2026</div>
+</div>
+</a>
+</div>
+<div class="col-12 col-md-4" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/909cf4d3-fa7f-4cc7-81a0-cb2940bcb4d2" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-5">
+<img src="/backoffice/files/images/administrations/7cbef912d38f0d0b9c33bf3caca9ca89.png" alt="Université Moulay Ismaïl - Meknès" width="85" height="85">
+<h3 class="card-title">Maître de conférences grade A - echelle 11</h3>
+<div class="card-text">
+<i class="icon-building-gra"></i>
+Université Moulay Ismaïl - Meknès
+</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>1 poste</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 8 Septembre 2026
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 17 Septembre 2026</div>
+</div>
+</a>
+</div>
+<div class="col-12 col-md-4" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/cea3417a-38d5-442b-bd5a-9b17d7b0c250" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-5">
+<img src="/backoffice/files/images/administrations/7cbef912d38f0d0b9c33bf3caca9ca89.png" alt="Université Moulay Ismaïl - Meknès" width="85" height="85">
+<h3 class="card-title">Maître de conférences grade A - echelle 11</h3>
+<div class="card-text">
+<i class="icon-building-gra"></i>
+Université Moulay Ismaïl - Meknès
+</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>1 poste</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 8 Septembre 2026
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 17 Septembre 2026</div>
+</div>
+</a>
+</div>
+<div class="col-12 col-md-4" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/466d8c9b-9247-4086-9f8d-dc746029e503" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-5">
+<img src="/backoffice/files/images/administrations/87425aa5b1c57f6e44880cdb6828d23e.png" alt="Université Cadi Ayyad" width="85" height="85">
+<h3 class="card-title">Maître de conférences grade A - echelle 11</h3>
+<div class="card-text">
+<i class="icon-building-gra"></i>
+Université Cadi Ayyad
+</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>1 poste</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 31 Août 2026
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 9 Septembre 2026</div>
+</div>
+</a>
+</div>
+<div class="col-12 col-md-4" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/6d99b3d2-4020-4a0f-95d5-930f0289216a" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-5">
+<img src="/backoffice/files/images/administrations/87425aa5b1c57f6e44880cdb6828d23e.png" alt="Université Cadi Ayyad" width="85" height="85">
+<h3 class="card-title">Maître de conférences grade A - echelle 11</h3>
+<div class="card-text">
+<i class="icon-building-gra"></i>
+Université Cadi Ayyad
+</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>1 poste</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 31 Août 2026
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 9 Septembre 2026</div>
+</div>
+</a>
+</div>
+<div class="col-12 col-md-4" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/7e0862d2-7365-4755-ba33-a6e09d9f0828" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-5">
+<img src="/backoffice/files/images/administrations/87425aa5b1c57f6e44880cdb6828d23e.png" alt="Université Cadi Ayyad" width="85" height="85">
+<h3 class="card-title">Maître de conférences grade A - echelle 11</h3>
+<div class="card-text">
+<i class="icon-building-gra"></i>
+Université Cadi Ayyad
+</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>1 poste</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 31 Août 2026
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 9 Septembre 2026</div>
+</div>
+</a>
+</div>
+<div class="col-12 col-md-4" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/6e864baa-5363-4a09-a1a1-167735f25182" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-5">
+<img src="/backoffice/files/images/administrations/87425aa5b1c57f6e44880cdb6828d23e.png" alt="Université Cadi Ayyad" width="85" height="85">
+<h3 class="card-title">Maître de conférences grade A - echelle 11</h3>
+<div class="card-text">
+<i class="icon-building-gra"></i>
+Université Cadi Ayyad
+</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>1 poste</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 31 Août 2026
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 9 Septembre 2026</div>
+</div>
+</a>
+</div>
+<div class="col-12 col-md-4" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/aa8e15c5-ebed-4e72-8004-aae589ec8c61" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-5">
+<img src="/backoffice/files/images/administrations/87425aa5b1c57f6e44880cdb6828d23e.png" alt="Université Cadi Ayyad" width="85" height="85">
+<h3 class="card-title">Maître de conférences grade A - echelle 11</h3>
+<div class="card-text">
+<i class="icon-building-gra"></i>
+Université Cadi Ayyad
+</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>1 poste</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 31 Août 2026
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 9 Septembre 2026</div>
+</div>
+</a>
+</div>
+</div>
+</div>
+</section>
+<div class="modal fade fade-scale" id="sharemodal" data-easein="bounce" tabindex="-1" role="dialog" aria-labelledby="popup-svLabel" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered no-transform" role="document">
+<div class="modal-content">
+<button type="button" class="close" data-bs-dismiss="modal">
+<i class="fa fa-close"></i>
+</button>
+<div class="modal-body">
+<div>
+<h4>Partager cette annonce</h4>
+</div>
+<div class="a2a_kit a2a_kit_size_32 a2a_default_style d-flex justify-content-center">
+<a class="a2a_dd" href="https://www.addtoany.com/share"></a>
+<a class="a2a_button_facebook"></a>
+<a class="a2a_button_x"></a>
+<a class="a2a_button_linkedin"></a>
+<a class="a2a_button_whatsapp"></a>
+<a class="a2a_button_email"></a>
+<a class="a2a_button_copy_link"></a>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="modal fade fade-scale" id="popup-login" data-easein="bounce" tabindex="-1" role="dialog" aria-labelledby="popup-svLabel" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered no-transform" role="document">
+<div class="modal-content">
+<button type="button" class="close" data-bs-dismiss="modal">
+<i class="fa fa-close"></i>
+</button>
+<div class="modal-body">
+<form class="login-form-1 card text-center" id="login-form">
+<input type="hidden" id="login_type">
+<h2 class="h3">
+<i class="icon-login"></i>
+Se connecter
+</h2>
+<div class="alert alert-danger d-none" id="loginError1"></div>
+<div class="form-group">
+<input id="login_email1" class="form-control border-1" name="login_email" type="email">
+<label for="login_email">Adresse mail</label>
+</div>
+<div class="form-group">
+<input id="login_pwd1" class="form-control border-1" name="login_pwd" type="password" autocomplete="off">
+<label for="login_pwd">Mot de passe</label>
+<span toggle="#login_pwd1" class="fa fa-fw fa-eye field-icon toggle-password"></span>
+</div>
+<div class="captcha-block d-none">
+<div class="d-flex px-2 mb-2">
+<img id="captcha-image" width="100" src="data:image/jpeg;base64,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" alt="Captcha">
+<span class="mx-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Le code de vérification peut inclure des lettres latines en (Majuscule) ainsi que des chiffres.">
+<i class="fas fa-info-circle text-info" ></i>
+</span>
+</div>
+<div class="form-group">
+<input type="text" id="captcha-input1" class="form-control border-1 px-3" name="captcha-input1" >
+<label for="captcha-input1">Code de sécurité</label>
+</div>
+</div>
+<div class="form-group" style="display: none;">
+<input type="text" id="phone1" name="phone">
+</div>
+<div class="form-group" style="display: none;">
+<input type="text" id="fax1" name="fax">
+</div>
+<div class="form-check form-check-inline">
+<input class="form-check-input" type="checkbox" id="option_save_1" name="_remember_me_1">
+<label class="form-check-label" for="option_save_1"><span>Enregistrer le mot de passe</span></label>
+</div>
+<div class="form-group text-center">
+<input type="hidden" name="_csrf_token" id="_csrf_token_1" data-token="70b8143e17e4818ee176.E8Yy5OJa_X0fimnn9GZfU4czYzNV-ylFBzOXydPnsIY.K6VFnpg7mCV87VmBswMPMbdCLFoDtHohZUrQ_bCh4dZ6rGqmswqTKnS8JA"/>
+<button type="button" class="btn btn-yellow" id="btn-login1">Se connecter</button>
+<span class="pwd_note">Mot de passe oublié ?</span>
+<a href="#" class="underline" data-bs-toggle="modal" data-bs-target="#popup-password">Cliquez ici pour le récupérer</a>
+</div>
+<h2 class="h3 separate"><span>Accès à l&#039;espace filtre</span></h2>
+<div class="form-group text-center">
+<a  href="/fr/candidat/register" class="btn btn-primary b-b">Créer un compte</a>
+</div>
+</form>
+</div>
+</div>
+</div>
+</div>
+<div class="modal fade fade-scale" id="popup-password" data-easein="bounce" tabindex="-1" role="dialog" aria-labelledby="popup-svLabel" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered no-transform" role="document">
+<div class="modal-content">
+<button type="button" class="close" data-bs-dismiss="modal">
+<i class="fa fa-close"></i>
+</button>
+<div class="modal-body">
+<form  class="modal-password-form">
+<div class="row">
+<div class="col-12 mb-3">
+<img src="https://emploi-public.pages.dev/media/images/lock.png" alt="icon forgotten pass">
+<h2 class="h3">Récupération du mot de passe</h2>
+<p>Les instructions pour réinitialiser votre nouveau mot de passe seront envoyées à votre adresse e-mail</p>
+</div>
+<div class="col-12 text-start mb-3">
+<label for="recup_email">Adresse mail</label>
+<input type="email" name="email" class="form-control border-1" id="recup_email" data-msg="Ce champ est obligatoire">
+</div>
+<div class="captcha-block ">
+<div class="d-flex px-2 mb-2">
+<img id="captcha-image" width="100" src="data:image/jpeg;base64,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" alt="Captcha">
+<span class="mx-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Le code de vérification peut inclure des lettres latines en (Majuscule) ainsi que des chiffres.">
+<i class="fas fa-info-circle text-info" ></i>
+</span>
+</div>
+<div class="form-group">
+<input type="text" id="captcha-input2" class="form-control border-1 px-3" name="captcha-input2" required>
+<label for="captcha-input2">Code de sécurité</label>
+</div>
+</div>
+<div class="col-12">
+<button type="submit" class="btn btn-yellow">Envoyer</button>
+<input type="hidden" name="_csrf_token" id="csrf_token_recup_email" value="5e25fc343bbe.Sw-HhaE_iterkloOO7nII6ktoZi7OuZkB_nj3DDNObc.L2LrwfMJx6_aw2pASu6CSp5KwqrvVY0VY5WHr3aiUeAiat3J1XjT7-D8KQ">
+</div>
+</div>
+</form>
+</div>
+</div>
+</div>
+</div>
+<div class="modal fade fade-scale" id="popup-reset-password" data-easein="bounce" tabindex="-1" role="dialog" aria-labelledby="popup-svLabel" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered no-transform" role="document">
+<div class="modal-content">
+<button type="button" class="close" data-bs-dismiss="modal">
+<i class="fa fa-close"></i>
+</button>
+<div class="modal-body">
+<div class="row">
+<div class="col-12 mb-3">
+<img src="https://emploi-public.pages.dev/media/images/mail.png" class="mb-2" alt="mail confirmation icon">
+<h2 class="h3">Vérification de l&#039;E-mail</h2>
+<p>Un message a été envoyé pour confirmer l&#039;enregistrement de votre compte. Merci de consulter votre email</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<button class="action-gototop"><i class="fa-sharp fa-solid fa-chevron-up"></i></button>
+<footer>
+<div class="container" data-aos="fade-up">
+<div class="top-footer">
+<a href="/fr/" class="logo-footer">
+<img src="https://emploi-public.pages.dev/media/images/logo-footer.svg" alt="L&#039;EMPLOI PUBLIC">
+</a>
+<div class="social-media">
+</div>
+</div>
+<div class="footer-nav pb-2">
+<div class="footer-nav-wrapper">
+<div class="footer-nav-col">
+<div class="footer-nav-inner">
+<span class="footer-link">Chercher une annonce<i class="fa fa-chevron-down"></i></span>
+<div class="sous-link-container">
+<a href="/fr/concours-liste" class="footer-sous-link link-hover">Concours de recrutement</a>
+<a href="/fr/emploi-sup-liste" class="footer-sous-link link-hover">Emplois supérieurs</a>
+<a href="/fr/experts-liste" class="footer-sous-link link-hover">Recrutement des experts</a>
+<a href="/fr/postes-respo-liste" class="footer-sous-link link-hover">Postes de responsabilités
+<a href="/fr/concours/calendrier" class="footer-sous-link link-hover">Calendrier des concours</a>
+<a href="/fr/poste_budgetaire-liste" class="footer-sous-link link-hover">Postes budgétaires</a>
+</div>
+</div>
+</div>
+<div class="footer-nav-col">
+<div class="footer-nav-inner">
+<span class="footer-link">Fonctionnaire<i class="fa fa-chevron-down"></i></span>
+<div class="sous-link-container">
+<a href="/fr/eap-liste" class="footer-sous-link link-hover">Examens d&#039;Aptitude Professionnelle et Concours Professionnels</a>
+<a href="/fr/mobilite" class="footer-sous-link link-hover">Mobilité des fonctionnaires</a>
+<a href="/fr/content/decouvrir-la-fonction-publique" class="footer-sous-link link-hover">Questions fréquentes</a>
+</div>
+</div>
+</div>
+<div class="footer-nav-col">
+<div class="footer-nav-inner">
+<span class="footer-link">Administrations qui recrutent<i class="fa fa-chevron-down"></i></span>
+<div class="sous-link-container">
+<a href="/fr/administration-liste" class="footer-sous-link link-hover">Annuaire des administrations qui recrutent</a>
+<a href="/fr/administration-liste?stat=service_etat" class="footer-sous-link link-hover">Services de l&#039;Etat</a>
+<a href="/fr/administration-liste?stat=collec" class="footer-sous-link link-hover">Collectivités territoriales</a>
+<a href="/fr/administration-liste?stat=etab_publics" class="footer-sous-link link-hover">Etablissements et Entreprises publiques</a>
+</div>
+</div>
+</div>
+<div class="footer-nav-col">
+<div class="footer-nav-inner">
+<span class="footer-link">Textes juridiques<i class="fa fa-chevron-down"></i></span>
+<div class="sous-link-container">
+<a href="/fr/content/textes-concours" class="footer-sous-link link-hover">Concours de recrutement</a>
+<a href="/fr/content/textes-emploi-superieur" class="footer-sous-link link-hover">Emplois supérieurs</a>
+<a href="/fr/content/textes-examen" class="footer-sous-link link-hover">Postes de responsabilités</a>
+<a href="/fr/content/textes-experts" class="footer-sous-link link-hover">Recrutement des experts</a>
+<a href="/fr/content/textes-eap" class="footer-sous-link link-hover">Examens d&#039;Aptitude Professionnelle et Concours Professionnels</a>
+<a href="/fr/content/textes-mobilite" class="footer-sous-link link-hover">Mobilité des fonctionnaires</a>
+</div>
+</div>
+</div>
+<div class="footer-nav-col">
+<div class="footer-nav-inner">
+<span class="footer-link">Nos services<i class="fa fa-chevron-down"></i></span>
+<div class="sous-link-container">
+<a href="/fr/content/remuneration" class="footer-sous-link link-hover">Simulateur des salaires</a>
+<a href="/fr/content/r-c-grh" class="footer-sous-link link-hover">Référentiel Commun de la GRH</a>
+<a href="/fr/content/b-d-juridiques" class="footer-sous-link link-hover">Banque de Données Juridiques de la Fonction Publique</a>
+<a href="/fr/content/portail-de-transparence-et-acc-s-l-information-chafafiya" class="footer-sous-link link-hover">Portail de transparence et accès à l&#039;information chafafiya</a>
+<a href="https://www.idarati.ma/" target="_blank" class="footer-sous-link link-hover">Portail National Idarati</a>
+<a href="/fr/content/centre-d-appel-et-d-orientation-administrative" class="footer-sous-link link-hover">Centre d&#039;appel et d&#039;orientation administrative</a>
+<a href="/fr/content/portail-de-la-geolocalisation" class="footer-sous-link link-hover">Portail de géolocalisation des Services Publics</a>
+<a href="/fr/content/administration-en-chiffres" class="footer-sous-link link-hover">Administration en chiffres</a>
+<a href="/fr/sondage" class="footer-sous-link link-hover">Sondage et suggestions</a>
+<a href="/fr/poser-une-question" class="footer-sous-link link-hover">Poser une question</a>
+<a href="/fr/content/formulaire-type" class="footer-sous-link link-hover">Formulaire type</a>
+</div>
+<a href="/fr/content/Contactez-nous" class="footer-sous-link link-hover">
+<span class="footer-link mt-5">Contactez-nous<i class="fa fa-chevron-down"></i></span>
+</a>
+</div>
+</div>
+</div>
+</div>
+<div class="footer-nav p-0">
+<div class="footer-nav-inner mb-1">
+<a href="/fr/content/accessibilite" class="footer-sous-link link-hover">Accessibilité</a>
+</div>
+<div class="footer-nav-inner mb-2">
+<a href="/fr/content/mention-legale" class="footer-sous-link link-hover">Mentions légales</a>
+</div>
+</div>
+<div class="footer-copyright">
+<span>© Copyright 2026 - <a href="#" class="link-hover"> emploi-public.ma </a></span>
+</div>
+</div>
+</footer>
+<link rel="preconnect" href="https://ajax.googleapis.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://static.addtoany.com">
+</body>
+</html>
