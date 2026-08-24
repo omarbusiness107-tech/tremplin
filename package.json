@@ -12,7 +12,9 @@
     "typecheck": "tsc --noEmit",
     "smoke": "npm run bundle && node tools/smoke.mjs",
     "artifact": "npm run build && node tools/artifact.mjs",
-    "verify:artifact": "npm run artifact && node tools/verify-artifact.mjs"
+    "verify:artifact": "npm run artifact && node tools/verify-artifact.mjs",
+    "icons": "node tools/icons.mjs",
+    "smoke:mobile": "npm run build && node tools/smoke-mobile.mjs"
   },
   "devDependencies": {
     "playwright": "^1.62.1",

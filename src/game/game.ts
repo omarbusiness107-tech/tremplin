@@ -2,6 +2,16 @@ import { input } from "../core/input";
 import { Loop } from "../core/loop";
 import { audio } from "../engine/audio";
 import { clear, createScreen, VIEW_H, VIEW_W } from "../engine/canvas";
+import {
+  enterFullscreen,
+  fullscreenSupported,
+  isStandalone,
+  lockLandscape,
+  onBackgrounded,
+  ScreenAwake,
+  watchOrientation,
+} from "../engine/device";
+import { prefersTouchControls, TouchControls } from "../engine/touch";
 import { drawText, drawTextShadow } from "../engine/font";
 import { fx } from "../engine/fx";
 import { PAL } from "../content/palette";
@@ -29,13 +39,39 @@ export class Game {
   private resetKeyDown = false;
   /** Frames left showing the volume readout after a change. */
   private audioHud = 0;
+  private touch: TouchControls;
+  private readonly awake = new ScreenAwake();
+  private gestureDone = false;
+  private readonly stage: HTMLElement;
 
   constructor(parent: HTMLElement) {
     const screen = createScreen(parent);
     this.ctx = screen.ctx;
+    this.stage = parent;
     input.attach(window);
+
+    // The touch layer sits over the canvas, so the stage must be a containing
+    // block for its absolute positioning.
+    if (getComputedStyle(parent).position === "static") parent.style.position = "relative";
+    this.touch = new TouchControls(parent);
+    if (prefersTouchControls()) this.touch.show();
+    // A desktop machine with a touchscreen only reveals itself when touched.
+    window.addEventListener("touchstart", () => this.touch.show(), { passive: true });
+
+    watchOrientation((portrait) => {
+      const blocking = portrait && this.touch.shown;
+      this.touch.setRotatePrompt(blocking);
+      // Turning the phone mid-fight should not cost a run.
+      if (blocking && this.scene === "playing") this.scene = "paused";
+    });
+
+    // Losing focus mid-fight should not cost a run.
+    onBackgrounded(() => {
+      if (this.scene === "playing") this.scene = "paused";
+    });
+
     // Browsers hold audio until a gesture, so unlock on the first real input.
-    const unlock = (): void => audio.unlock();
+    const unlock = (): void => this.onFirstGesture();
     window.addEventListener("keydown", unlock);
     window.addEventListener("pointerdown", unlock);
     // The title screen offers a reset, which is not worth a whole action binding.
@@ -54,6 +90,22 @@ export class Game {
 
   start(): void {
     this.loop.start();
+  }
+
+  /**
+   * The first gesture is the only moment the browser will let us start audio,
+   * go fullscreen or lock orientation, so all of it happens together here.
+   */
+  private onFirstGesture(): void {
+    audio.unlock();
+    if (this.gestureDone) return;
+    this.gestureDone = true;
+    void this.awake.enable();
+    // Only take over the screen on a device that actually wants it; doing this
+    // on a desktop browser would be obnoxious.
+    if (this.touch.shown && !isStandalone() && fullscreenSupported(this.stage)) {
+      void enterFullscreen(document.documentElement).then(() => lockLandscape());
+    }
   }
 
   /** Exposed for smoke tests and for poking at state from the console. */

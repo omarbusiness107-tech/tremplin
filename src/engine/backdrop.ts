@@ -21,6 +21,24 @@ const STYLES: Record<Mood, MoodStyle> = {
 };
 
 /**
+ * Gradients are immutable for a given mood and view size, so they are built
+ * once and reused. Allocating two of them per frame is affordable on a desktop
+ * and distinctly not on a phone.
+ */
+const washCache = new Map<Mood, CanvasGradient>();
+let vignetteCache: CanvasGradient | null = null;
+
+function wash(ctx: CanvasRenderingContext2D, mood: Mood, style: MoodStyle): CanvasGradient {
+  const cached = washCache.get(mood);
+  if (cached) return cached;
+  const gradient = ctx.createLinearGradient(0, 0, 0, VIEW_H);
+  gradient.addColorStop(0, style.top);
+  gradient.addColorStop(1, style.bottom);
+  washCache.set(mood, gradient);
+  return gradient;
+}
+
+/**
  * Parallax backdrop drawn from primitives: a vertical wash, two ranks of
  * pointed arches at different depths, and a vignette. Cheap, and it keeps the
  * rooms from reading as flat boxes.
@@ -34,10 +52,7 @@ export function drawBackdrop(
 ): void {
   const style = STYLES[mood];
 
-  const gradient = ctx.createLinearGradient(0, 0, 0, VIEW_H);
-  gradient.addColorStop(0, style.top);
-  gradient.addColorStop(1, style.bottom);
-  ctx.fillStyle = gradient;
+  ctx.fillStyle = wash(ctx, mood, style);
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
 
   drawArcades(ctx, style.far, camX * 0.18, camY * 0.1, 96, 118, 34);
@@ -82,9 +97,12 @@ function drawArcades(
 }
 
 function drawVignette(ctx: CanvasRenderingContext2D): void {
-  const g = ctx.createRadialGradient(VIEW_W / 2, VIEW_H / 2, VIEW_H * 0.32, VIEW_W / 2, VIEW_H / 2, VIEW_H * 0.85);
-  g.addColorStop(0, "rgba(0,0,0,0)");
-  g.addColorStop(1, "rgba(4,2,6,0.72)");
-  ctx.fillStyle = g;
+  if (!vignetteCache) {
+    const g = ctx.createRadialGradient(VIEW_W / 2, VIEW_H / 2, VIEW_H * 0.32, VIEW_W / 2, VIEW_H / 2, VIEW_H * 0.85);
+    g.addColorStop(0, "rgba(0,0,0,0)");
+    g.addColorStop(1, "rgba(4,2,6,0.72)");
+    vignetteCache = g;
+  }
+  ctx.fillStyle = vignetteCache;
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
 }

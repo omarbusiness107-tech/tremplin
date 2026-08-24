@@ -77,19 +77,18 @@ function drawFlasks(ctx: CanvasRenderingContext2D, player: Player): void {
   }
 }
 
+/** Row below the flasks. Kept left so on-screen controls own the top corners. */
+const STAT_Y = ORIGIN_Y + PIP_H + 26;
+
 function drawTears(ctx: CanvasRenderingContext2D, tears: number): void {
-  const x = VIEW_W - 8;
-  drawTextShadow(ctx, `${tears}`, x, ORIGIN_Y + 1, PAL.ui, 1, "right");
   ctx.fillStyle = PAL.fervourPale;
-  const iconX = x - (`${tears}`.length * 6 + 8);
-  ctx.fillRect(iconX, ORIGIN_Y + 2, 3, 4);
-  ctx.fillRect(iconX + 1, ORIGIN_Y, 1, 2);
+  ctx.fillRect(ORIGIN_X, STAT_Y + 2, 3, 4);
+  ctx.fillRect(ORIGIN_X + 1, STAT_Y, 1, 2);
+  drawTextShadow(ctx, `${tears}`, ORIGIN_X + 7, STAT_Y, PAL.ui, 1, "left");
 }
 
 function drawGuiltMark(ctx: CanvasRenderingContext2D): void {
-  const x = VIEW_W - 8;
-  const y = ORIGIN_Y + 12;
-  drawTextShadow(ctx, "guilt", x, y, PAL.guiltPale, 1, "right");
+  drawTextShadow(ctx, "guilt", ORIGIN_X, STAT_Y + 10, PAL.guiltPale, 1, "left");
 }
 
 function drawBossBar(ctx: CanvasRenderingContext2D, boss: Boss, name: string): void {

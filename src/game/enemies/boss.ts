@@ -1,4 +1,5 @@
 import { clamp, rect } from "../../core/math";
+import { hapticHeavy } from "../../core/haptics";
 import { fx } from "../../engine/fx";
 import { wallAhead } from "../../engine/physics";
 import { rng } from "../../core/rng";
@@ -121,6 +122,7 @@ export class Boss extends Enemy {
           fx.flash(PAL.blood, 22);
           fx.hitstop(24);
           playSfx("bossPhase");
+          hapticHeavy();
           fx.popText(this.centerX, this.body.y - 14, "the wound opens", PAL.bloodBright);
         }
         if (this.timer % 6 === 0) fx.souls(this.centerX, this.centerY, PAL.bloodBright, 6);

@@ -2,21 +2,50 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- user-scalable=no stops a double-tap during a fight from zooming the page.
+         viewport-fit=cover lets the game reach under the notch, with the touch
+         controls inset by safe-area padding. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#07050a" />
+    <meta name="description" content="A pilgrimage of thorns: parry-led combat in a sunken cathedral." />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Penitence" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
     <title>Penitence</title>
     <style>
-      html, body {
+      html,
+      body {
         margin: 0;
+        padding: 0;
         height: 100%;
         background: #07050a;
         overflow: hidden;
+        /* Kill rubber-band scroll and pull-to-refresh, which otherwise fire
+           whenever a thumb drags on the movement pad. */
+        overscroll-behavior: none;
+        position: fixed;
+        inset: 0;
+        touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
         font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
       }
       #stage {
+        position: relative;
         display: grid;
         place-items: center;
-        width: 100%;
-        height: 100%;
+        width: 100vw;
+        /* dvh tracks the collapsing browser bars on mobile; vh is the fallback. */
+        height: 100vh;
+        height: 100dvh;
       }
       canvas {
         display: block;

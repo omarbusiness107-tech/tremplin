@@ -1,5 +1,6 @@
 import { flipRectAround, rect, sign, type Rect } from "../core/math";
 import { outlineRect, radialGlow, silhouette } from "../engine/draw";
+import { hapticHit } from "../core/haptics";
 import { fx } from "../engine/fx";
 import { bodyRect, makeBody, moveBody, type Body } from "../engine/physics";
 import { Tilemap } from "../engine/tilemap";
@@ -183,6 +184,7 @@ export abstract class Enemy implements Damageable {
     fx.blood(this.centerX, this.centerY, dir, 8 + hit.damage * 3);
     fx.popText(this.centerX, this.body.y - 4, `${hit.damage}`, PAL.bone);
     playSfxVaried("hitFlesh", 0.1);
+    hapticHit();
 
     if (this.health <= 0) {
       this.kill(dir);

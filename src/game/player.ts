@@ -1,4 +1,5 @@
 import { approach, clamp, flipRectAround, rect, sign, type Rect } from "../core/math";
+import { hapticHeavy, hapticHurt, hapticParry } from "../core/haptics";
 import { input } from "../core/input";
 import { outlineRect, radialGlow, silhouette } from "../engine/draw";
 import { fx } from "../engine/fx";
@@ -498,6 +499,7 @@ export class Player implements Damageable {
     fx.blood(this.centerX, this.centerY, dir, 12);
     fx.flash(PAL.blood, 6);
     playSfx("playerHurt");
+    hapticHurt();
 
     if (this.health <= 0) {
       this.health = 0;
@@ -519,6 +521,7 @@ export class Player implements Damageable {
     fx.flash(PAL.goldPale, 5);
     fx.popText(this.centerX, this.body.y - 4, "parry", PAL.goldPale);
     playSfx("parry");
+    hapticParry();
     this.events.onParrySuccess();
   }
 
@@ -553,6 +556,7 @@ export class Player implements Damageable {
     fx.flash(PAL.blood, 14);
     fx.souls(this.centerX, this.centerY, PAL.guiltPale, 22);
     playSfx("playerDeath");
+    hapticHeavy();
     this.events.onDeath();
   }
 

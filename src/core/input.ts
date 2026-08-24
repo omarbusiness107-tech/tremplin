@@ -166,6 +166,21 @@ export class Input {
     return true;
   }
 
+  /**
+   * Press or release from an on-screen control. Routed through the same buffer
+   * as physical keys, so jump buffering and coyote time behave identically
+   * under a thumb.
+   */
+  setVirtual(action: Action, down: boolean): void {
+    if (down) this.press(action);
+    else this.release(action);
+  }
+
+  /** Release every virtual press, e.g. when the controls are hidden. */
+  releaseAllVirtual(actions: Iterable<Action>): void {
+    for (const action of actions) this.release(action);
+  }
+
   /** Discard any buffered press, e.g. when entering a menu. */
   flush(action: Action): void {
     const at = this.pressedAt.get(action);
