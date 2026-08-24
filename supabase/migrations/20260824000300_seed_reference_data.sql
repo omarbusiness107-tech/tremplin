@@ -54,6 +54,14 @@ insert into public.sources (key, name, homepage_url, category, request_delay_sec
     'scholarships',
     3.0,
     'Scholarship announcements on Morocco''s main student orientation portal. robots.txt is `User-agent: * / Allow: /`.'
+  ),
+  (
+    'concoursa_9rayti',
+    '9rayti.com — Concours post-bac',
+    'https://www.9rayti.com',
+    'post_bac_concours',
+    3.0,
+    'Post-bac entrance exam announcements (ENSA, EST, FST, ENCG, medicine faculties) on Morocco''s main student orientation portal, mostly published in Arabic. robots.txt is `User-agent: * / Allow: /`.'
   )
 on conflict (key) do update
   set name                  = excluded.name,

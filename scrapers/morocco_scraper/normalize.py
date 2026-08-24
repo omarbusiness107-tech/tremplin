@@ -161,6 +161,7 @@ DOMAIN_KEYWORDS: dict[str, tuple[str, ...]] = {
     "engineering": (
         "ingenieur", "ingenierie", "genie industriel", "genie mecanique", "genie electrique",
         "mecanique", "electrique", "electronique", "automatisme", "industriel", "maintenance",
+        "المدارس العليا للتكنولوجيا", "العلوم التطبيقية", "الهندسة",
     ),
     "civil-engineering": (
         "genie civil", "btp", "batiment", "travaux publics", "topograph", "geotechnique",
@@ -176,22 +177,27 @@ DOMAIN_KEYWORDS: dict[str, tuple[str, ...]] = {
     "health-medicine": (
         "sante", "medecin", "medical", "infirmier", "pharmac", "chirurg", "dentaire",
         "biolog medicale", "paramedical", "hospitalier",
+        "الطب", "طب الأسنان", "الصيدلة", "التمريض",
     ),
     "law": (
         "droit", "juridique", "juriste", "judiciaire", "justice", "notariat", "contentieux",
         "legislation", "magistrat", "greffier", "huissier", "tribunal", "avocat",
+        "الحقوق", "القانون",
     ),
     "economics-finance": (
         "economie", "economique", "finance", "financier", "comptab", "audit", "fiscal",
         "tresorerie", "banque", "assurance", "controle de gestion",
+        "العلوم الاقتصادية", "التجارة",
     ),
     "management-business": (
         "gestion", "management", "commerce", "commercial", "marketing", "vente",
         "ressources humaines", "achat", "entrepreneuriat",
+        "التسيير", "إدارة الأعمال",
     ),
     "administration": (
         "administrateur", "administration", "fonction publique", "secretariat",
         "affaires generales", "collectivites territoriales", "redacteur",
+        "الإدارة العمومية", "الوظيفة العمومية",
     ),
     # Kept to words that describe *teaching* as the work. "universitaire"
     # and "pedagog" were dropped: every scholarship announcement mentions
@@ -201,6 +207,7 @@ DOMAIN_KEYWORDS: dict[str, tuple[str, ...]] = {
         "enseignant", "professeur", "instituteur", "formateur", "scolaire",
         "maitre de conferences", "professeur assistant", "enseignant chercheur",
         "sciences de l'education", "didactique", "corps enseignant",
+        "الإجازة في التربية", "علوم التربية", "التكوين",
     ),
     "humanities": (
         "lettres", "sciences humaines", "histoire", "geographie", "sociolog", "philosoph",
@@ -209,10 +216,14 @@ DOMAIN_KEYWORDS: dict[str, tuple[str, ...]] = {
     "sciences": (
         "mathematiq", "physique", "chimie", "biologie", "sciences fondamentales", "geolog",
         "laboratoire",
+        "العلوم والتقنيات", "كلية العلوم", "العلوم الأساسية",
     ),
-    "architecture-design": ("architecte", "architecture", "urbanisme", "design", "amenagement"),
+    "architecture-design": (
+        "architecte", "architecture", "urbanisme", "design", "amenagement", "الهندسة المعمارية",
+    ),
     "communication-media": (
         "communication", "journalis", "audiovisuel", "media", "presse", "relations publiques",
+        "السمعي البصري والسينما",
     ),
     "logistics-transport": (
         "logistique", "transport", "supply chain", "ferroviaire", "portuaire", "aerien",
@@ -232,6 +243,27 @@ DOMAIN_KEYWORDS: dict[str, tuple[str, ...]] = {
 }
 
 
+# Moroccan institution acronyms, matched case-sensitively and whole-word
+# against the RAW (unfolded) text rather than as a keyword substring.
+# Folding would make this unsafe: "EST" is also ordinary French ("c'est",
+# "il est"), and only the uppercase, standalone form is the institution.
+# Matching case-sensitively against the original text sidesteps that
+# entirely, since prose "est" is never capitalised mid-sentence.
+ACRONYM_DOMAINS: dict[str, tuple[str, ...]] = {
+    "sciences": ("FST",),
+    "engineering": ("EST", "ENSA", "ENSAM"),
+    "management-business": ("ENCG",),
+    "administration": ("ENA",),
+    "communication-media": ("ISMAC",),
+    "health-medicine": ("FMD", "FMP"),
+}
+
+_ACRONYM_PATTERNS = {
+    slug: [re.compile(rf"\b{re.escape(acronym)}\b") for acronym in acronyms]
+    for slug, acronyms in ACRONYM_DOMAINS.items()
+}
+
+
 def classify_domains(*texts: str | None, limit: int = 3) -> list[str]:
     """Tag a listing with up to `limit` domain slugs.
 
@@ -240,18 +272,25 @@ def classify_domains(*texts: str | None, limit: int = 3) -> list[str]:
     than an arbitrary one of the two. Falls back to ["other"] so every row
     carries at least one filterable tag.
     """
-    haystack = fold(" ".join(t for t in texts if t))
+    raw = " ".join(t for t in texts if t)
+    haystack = fold(raw)
     if not haystack:
         return ["other"]
 
     scored: list[tuple[int, int, str]] = []
     for slug, keywords in DOMAIN_KEYWORDS.items():
         hits = sum(1 for kw in keywords if kw in haystack)
-        if hits:
-            # Longest matching keyword breaks ties: a specific phrase like
-            # "genie civil" should outrank a generic "genie".
-            longest = max(len(kw) for kw in keywords if kw in haystack)
-            scored.append((hits, longest, slug))
+        # An institution acronym counts as a keyword hit too, so "FST" and
+        # a matching subject keyword compound rather than one hiding the
+        # other, and ties break the same way (longest match wins).
+        acronym_hits = sum(1 for pat in _ACRONYM_PATTERNS.get(slug, ()) if pat.search(raw))
+        total = hits + acronym_hits
+        if total:
+            lengths = [len(kw) for kw in keywords if kw in haystack]
+            lengths += [
+                len(pat.pattern) for pat in _ACRONYM_PATTERNS.get(slug, ()) if pat.search(raw)
+            ]
+            scored.append((total, max(lengths), slug))
 
     if not scored:
         return ["other"]

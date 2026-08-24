@@ -90,15 +90,23 @@ python -m morocco_scraper run --source example --pages 1 --max-items 5 --dry-run
 | `emploi_public` | [emploi-public.ma](https://www.emploi-public.ma) | `concours` | Official MMSP portal. Server-rendered, UUID per listing, structured detail pages. robots.txt disallows only `/*/concours/download/`. |
 | `moncallcenter` | [moncallcenter.ma](https://www.moncallcenter.ma) | `job` | Call-centre and BPO board. Rolling adverts with **no deadline**, plus languages, city and a remote flag. Sponsored offers repeat on the same page under the same id. |
 | `bourses_9rayti` | [9rayti.com](https://www.9rayti.com) | `scholarship` | Student portal. Prose announcements; the deadline lives in a `data-target-date` attribute — **the visible date is a placeholder**, see below. |
+| `concoursa_9rayti` | [9rayti.com](https://www.9rayti.com) | `concours` | Post-bac entrance exams (ENSA, EST, FST, ENCG, medicine faculties), mostly **Arabic**. Same site, same template and same deadline trap as `bourses_9rayti` — both subclass `sources/_nine_rayti.py`. |
 
-Planned next, per the build plan: university admissions (ENSA, ENCG, EMI, Al
-Akhawayn), CNRST and the Ministry of Higher Education for doctorat calls, and
-AMCI / Campus France / DAAD / Erasmus+ for scholarships.
+The two 9rayti sources share every quirk of that site's template through
+`_nine_rayti.py`, which is not itself a registered scraper — it defines
+`NineRaytiScraper`, and each leaf sets `LISTING_PATH`, `PATH_RE` and
+`OPPORTUNITY_TYPE`. Adding a third 9rayti section (the portal also runs
+`/actualites` and `/evenements` feeds) is close to that ten lines.
 
-## Two traps worth reading before you write a scraper
+Planned next, per the build plan: university admissions beyond what 9rayti
+already surfaces (ENSA's own sites, EMI, Al Akhawayn), CNRST and the Ministry
+of Higher Education for doctorat calls, and AMCI / Campus France / DAAD /
+Erasmus+ for scholarships.
 
-Both were found by checking the data rather than trusting the page, and both
-would have failed silently.
+## Three traps worth reading before you write a scraper
+
+All three were found by checking the data rather than trusting the page, and
+all three would have failed silently.
 
 **A visible value can be a placeholder.** On 9rayti every scholarship detail
 page prints its deadline twice: `data-target-date` on the countdown element,
@@ -116,3 +124,16 @@ reason to write a filter: both carry the same id, so the store's
 `(source_key, external_id)` match collapses them. Scoping selectors to the
 results container handles the carousel; the sponsored repeats are simply
 allowed through.
+
+**A keyword classifier only knows the languages you fed it.** `DOMAIN_KEYWORDS`
+in `normalize.py` was French-only until `concoursa_9rayti` landed and every
+Arabic title fell to `other`. Adding Arabic vocabulary to the existing tuples
+was straightforward; institution acronyms (FST, EST, ENCG, ENA, ISMAC — no
+field description at all, just the name) were not, because the obvious
+approach is unsafe: matching `"EST"` as a folded, case-insensitive keyword
+would tag half of every French sentence as engineering, since `"est"` is also
+the ordinary verb ("c'est", "il est"). `ACRONYM_DOMAINS` matches those
+case-sensitively and whole-word against the *original*, unfolded text
+instead — real institution acronyms are capitalised, prose never is. If a new
+source names things by acronym rather than by field, extend that dict rather
+than adding the acronym to a keyword tuple.

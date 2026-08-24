@@ -92,6 +92,34 @@ class TestDomainClassification:
         )
         assert len(tags) == 3
 
+    def test_arabic_vocabulary_is_matched_like_any_other_keyword(self):
+        assert classify_domains("فتح باب الترشيح لولوج كليات العلوم والتقنيات") == ["sciences"]
+
+    def test_an_uppercase_institution_acronym_is_recognised(self):
+        assert classify_domains("Résultats de présélection ENCG 2026-2027") == [
+            "management-business"
+        ]
+
+    def test_the_acronym_match_is_case_sensitive_so_ordinary_french_is_safe(self):
+        """EST is also the ordinary French verb form ("c'est", "il est").
+        Matching it case-insensitively would tag nearly every French
+        sentence as engineering."""
+        assert classify_domains("C'est une opportunité de recrutement dans la vente") != [
+            "engineering"
+        ]
+        assert classify_domains("Il est recommandé de postuler avant la date limite") == ["other"]
+
+    def test_the_acronym_match_requires_a_word_boundary(self):
+        """"ENA" must not match inside an unrelated capitalised word."""
+        assert classify_domains("ENARBONNE, une entreprise partenaire") != ["administration"]
+
+    def test_an_acronym_and_a_keyword_can_both_contribute(self):
+        """A title naming two institutions tags both fields -- that is
+        correct when the announcement genuinely covers both, not a bug."""
+        tags = classify_domains("Concours ENCG et FMP-FMD 2026 : seuils publiés")
+        assert "management-business" in tags
+        assert "health-medicine" in tags
+
 
 class TestDeduplicationHashes:
     def test_fingerprint_ignores_case_accents_and_spacing(self):

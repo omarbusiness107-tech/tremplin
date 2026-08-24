@@ -11,9 +11,9 @@ searches and details opportunities; accounts, profiles, personalised
 recommendations, bookmarks, email alerts and a scraper monitoring page are all
 in place.
 
-Three sources are live, covering three different opportunity types: public-sector
-*concours*, call-centre jobs, and scholarships. Adding a fourth is one file —
-see [`scrapers/README.md`](scrapers/README.md).
+Four sources are live, covering public-sector *concours*, post-bac entrance
+exams, call-centre jobs, and scholarships — in both French and Arabic. Adding
+a fifth is one file — see [`scrapers/README.md`](scrapers/README.md).
 
 ---
 
@@ -326,8 +326,10 @@ grade match the whole table (see `COLUMN_BACKED_LABELS` in the emploi-public
 scraper). And render user content with `dir="auto"`, so an Arabic title lays
 out right-to-left without the page needing to know which language it is.
 
-No source ingests Arabic yet — 9rayti's post-bac concours section is the
-obvious first one.
+`concoursa_9rayti` (below) is the source that actually exercises this — real
+Arabic listings, not just tests. Confirmed against the live data: `ترشيح`
+matches 5 rows and `مباراة` matches 8, neither of which the French column can
+reach at all.
 
 ---
 
@@ -397,23 +399,34 @@ Sending is via Resend; `--dry-run` prints the rendered emails and rolls back.
 | `emploi_public` | [emploi-public.ma](https://www.emploi-public.ma) | `concours` | Structured label/value detail pages, hard deadlines, no city |
 | `moncallcenter` | [moncallcenter.ma](https://www.moncallcenter.ma) | `job` | **No deadline** (rolling), required languages, city, remote flag |
 | `bourses_9rayti` | [9rayti.com](https://www.9rayti.com) | `scholarship` | Prose announcements, deadline only in a data attribute |
+| `concoursa_9rayti` | [9rayti.com](https://www.9rayti.com) | `concours` | Same trap as above, mostly **Arabic** content, institution acronyms instead of a field description |
 
 That spread is the point: between them they cover every branch of the pipeline
 — a source whose listings never close, one whose deadline is machine-readable
-only, and one that publishes everything as label/value pairs.
+only, one that publishes everything as label/value pairs, and one in a second
+script and writing system entirely.
+
+The last two share a template (`sources/_nine_rayti.py`) since they are the
+same site's two sections — same listing grid, same deadline trap, same
+article structure. A new 9rayti section is a ten-line leaf on that base
+rather than a full scraper; see the file for what it provides.
 
 ## What's next
 
-Breadth, still. The obvious gaps are university admissions (ENSA, ENCG, EMI,
-Al Akhawayn), CNRST and the Ministry of Higher Education for doctorat calls,
-and AMCI / Campus France / DAAD for more scholarships.
+Breadth, still. The obvious gaps are university admissions (ENSA's own sites,
+EMI, Al Akhawayn — beyond what 9rayti already surfaces), CNRST and the
+Ministry of Higher Education for doctorat calls, and AMCI / Campus France /
+DAAD for more scholarships.
 
-Two things worth knowing before adding them:
+Worth knowing before adding them:
 
 - **Some sites need a browser.** UM6P renders its programme catalogue entirely
   client-side — 338 KB of JavaScript and no text in the HTML. The framework can
   take a Playwright-backed session, but nothing needs one yet, so none is wired
   in.
-- **Arabic search is ready but unexercised.** The second vector and the RTL
-  rendering are in place, and no source ingests Arabic yet — so the first one
-  that does will exercise a path only covered by tests.
+- **The domain classifier now understands institution acronyms.** Titles that
+  name only "FST" or "ENCG" with no field description are tagged via
+  `normalize.ACRONYM_DOMAINS` — matched case-sensitively and whole-word against
+  the *original* text, never folded, because a folded "EST" collides with the
+  ordinary French verb ("c'est"). Extend that dict, not the keyword lists,
+  when a new source names institutions this way.
