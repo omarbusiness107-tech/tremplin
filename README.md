@@ -5,17 +5,21 @@ programmes, scholarships and public-sector *concours* — discovers new listings
 automatically, keeps them up to date, and presents them in a searchable,
 filterable interface sorted by how soon they close.
 
-**Status: steps 1–7 of the build plan are done.** The schema, the scraper
-framework and the first source (`emploi_public`) are in place and tested end to
-end; ingestion runs daily on GitHub Actions; and the app has a browse page with
-URL-backed filtering, sorting, full-text search and an opportunity detail page.
+**Status: all twelve steps of the build plan are done.** Ingestion runs daily
+on GitHub Actions from a modular scraper framework; the app browses, filters,
+searches and details opportunities; accounts, profiles, personalised
+recommendations, bookmarks, email alerts and a scraper monitoring page are all
+in place.
+
+The only source wired up so far is `emploi_public`. Adding more is one file
+each — see [`scrapers/README.md`](scrapers/README.md).
 
 ---
 
 ## Repository layout
 
 ```
-.github/workflows/     daily ingestion + CI
+.github/workflows/     daily ingestion, notifications, CI
 supabase/
   migrations/          schema, RLS policies, seed reference data
   local-dev/           run the same migrations against plain Postgres
@@ -23,12 +27,16 @@ scrapers/
   morocco_scraper/     the ingestion pipeline (see "How ingestion works")
     sources/           one module per site — add a source by adding a file
   tests/               offline tests, incl. saved HTML fixtures
+notifier/
+  morocco_notifier/    email alerts and deadline reminders
 web/                   Next.js 16 + Tailwind v4 + shadcn-style components
 docs/schema.md         table-by-table schema reference
 ```
 
-The scrapers never import from the web app and the web app never imports from
-the scrapers. They meet only at the database.
+The three parts share a database and nothing else. Scrapers never import from
+the web app, the notifier never imports from the scrapers, and the web app
+imports from neither — so a source, an email template or a page can change
+without touching the others.
 
 ---
 
@@ -136,11 +144,16 @@ delivered listings.
 ### Tests
 
 ```bash
-pip install -r scrapers/requirements-dev.txt
-cd scrapers && pytest                     # offline: fixtures, no network
+pip install -r scrapers/requirements-dev.txt -r notifier/requirements-dev.txt
 
-# Also exercise the dedup SQL against a real database:
-TEST_DATABASE_URL=postgresql://localhost/morocco_opportunities pytest
+cd scrapers && pytest    # offline: saved HTML fixtures, no network
+cd notifier && pytest    # offline: rendering is pure
+
+# The dedup, RLS and trigger behaviour is SQL, so those tests want a real
+# database. Use a dedicated one — they assert exact counts.
+createdb tracker_test
+DATABASE_URL=postgresql://localhost/tracker_test ./supabase/local-dev/apply.sh
+TEST_DATABASE_URL=postgresql://localhost/tracker_test pytest
 ```
 
 ---
@@ -220,18 +233,26 @@ ingestions never write at once.
 
 Configure once, in the repository settings:
 
-| Kind | Name | Value |
-| --- | --- | --- |
-| Secret | `SUPABASE_DB_URL` | the Supabase Postgres connection string |
-| Variable | `SCRAPER_USER_AGENT` | your crawler UA, with a contact URL |
+| Kind | Name | Used by | Value |
+| --- | --- | --- | --- |
+| Secret | `SUPABASE_DB_URL` | ingestion, notifications | the Supabase Postgres connection string |
+| Secret | `RESEND_API_KEY` | notifications | Resend API key |
+| Variable | `SCRAPER_USER_AGENT` | ingestion | your crawler UA, with a contact URL |
+| Variable | `NOTIFIER_FROM` | notifications | `Name <alerts@your-domain.ma>`, on a verified domain |
+| Variable | `SITE_URL` | notifications | deployment URL, used for links in emails |
 
 The job only fails when *every* source failed, so one broken site does not turn
 the whole run red. A source that ends `partial` or `failed` is written to the
 run summary and raises a workflow warning; the underlying detail lands in
 `scraper_runs`.
 
-`.github/workflows/ci.yml` runs the Python tests against a real Postgres 16
-service with the migrations applied, and lints and builds the web app.
+`notify.yml` runs after ingestion completes, with a daily schedule as a safety
+net so deadline reminders still go out on a day ingestion failed. Both firing is
+harmless — the dedup described under [Notifications](#notifications) means the
+second run sends nothing.
+
+`ci.yml` runs the scraper and notifier tests against a real Postgres 16 service
+with the migrations applied, and lints and builds the web app.
 
 ---
 
@@ -266,11 +287,75 @@ practice.
 
 ---
 
+---
+
+## Accounts and personalisation
+
+Sign-in is Supabase Auth — a magic link by email, or Google. Browsing needs no
+account; signing in adds the personal parts:
+
+- **Profile** (`/profile`) — education level, fields of interest, target
+  opportunity types, preferred cities, languages, and alert settings.
+- **Recommended for you** — the home page ranks open listings against that
+  profile. Scoring is a SQL function, `recommended_opportunities()`, so ranking
+  happens next to the data instead of the app fetching everything to sort it.
+  Weights are plain integers and every row comes back with the reasons it
+  matched, which is what the card badge shows. An empty profile returns nothing
+  at all rather than an arbitrary list.
+- **Saved** (`/saved`) — bookmarks, soonest deadline first, with a banner for
+  anything closing within a week.
+
+Every table is protected by RLS rather than by page-level checks: a user can
+only ever read or write their own rows, and forging someone else's `user_id`
+is rejected by the database. `/admin` is admin-only and returns 404 to everyone
+else — a non-admin has no business knowing it exists.
+
+---
+
+## Notifications
+
+`notifier/` is a separate package from `scrapers/` on purpose: they share a
+database and nothing else.
+
+```bash
+cd notifier
+python -m morocco_notifier send --kind new_match --dry-run   # prints, sends nothing
+python -m morocco_notifier send --all                        # both kinds
+```
+
+Two kinds:
+
+- **new_match** — a listing discovered since yesterday that matches a profile.
+  Stricter than the on-site ranking: it must match a target type or a field of
+  interest, *and* the user must meet any stated education requirement. An email
+  is interruptive in a way a list on a page is not.
+- **deadline_reminder** — a bookmarked listing closing inside the user's chosen
+  window (`deadline_reminder_days`, 0 to opt out).
+
+Each person gets **one email per kind per run**, as a digest. Five separate
+alerts in an inbox is how an alerts feature gets muted.
+
+**Nobody is emailed twice.** `notifications` has a unique constraint on
+`(user_id, opportunity_id, kind)`, and the runner *claims* rows before sending
+rather than after. A crash mid-send costs one missed email; doing it the other
+way round would cost duplicates, which is the worse failure. A failed send
+keeps its row with the error recorded and is retried on the next run after a
+cooldown.
+
+Sending is via Resend; `--dry-run` prints the rendered emails and rolls back.
+
+---
+
 ## What's next
 
-Steps 8–12 of the plan: Supabase Auth accounts and profiles, personalised
-matching, bookmarks, email notifications, and the scraper monitoring page.
+The pipeline is proven end to end on one source, so the highest-value work is
+breadth: university admissions (UM6P, ENSA, ENCG, Al Akhawayn, EMI), CNRST and
+the Ministry of Higher Education for doctorat and scholarship calls, and
+AMCI / Campus France / DAAD / Erasmus+ for scholarships.
 
-The schema already carries what these need — `profiles`, `user_preferences`,
-`bookmarks`, `scraper_runs` and the `source_health` view — so they are
-additive.
+Worth knowing before adding them:
+
+- Search uses the `french` text search configuration. Arabic-language listings
+  will index as unstemmed tokens and match only exactly.
+- `location_city` is unpopulated so far, because `emploi_public` does not
+  publish it. The city filter hides itself until a source does.

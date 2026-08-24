@@ -13,12 +13,15 @@ import {
   Users,
 } from "lucide-react";
 
+import { BookmarkButton } from "@/components/bookmark-button";
 import { OpportunityCard } from "@/components/opportunity-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { EducationLevel, Opportunity } from "@/lib/database.types";
 import { TYPE_LABELS, URGENCY_BADGE, deadlineLabel, urgencyOf } from "@/lib/deadline";
+import { getCurrentUser } from "@/lib/auth";
+import { bookmarkedIds } from "@/lib/bookmarks";
 import { getOpportunity, listDomains, relatedOpportunities } from "@/lib/opportunities";
 
 const EDUCATION_LABELS: Record<EducationLevel, string> = {
@@ -56,9 +59,11 @@ export default async function OpportunityPage({
   const opportunity = await getOpportunity(id);
   if (!opportunity) notFound();
 
-  const [domains, related] = await Promise.all([
+  const [domains, related, user, saved] = await Promise.all([
     listDomains(),
     relatedOpportunities(opportunity),
+    getCurrentUser(),
+    bookmarkedIds([id]),
   ]);
   const domainLabels = new Map(domains.map((d) => [d.slug, d.label_en]));
 
@@ -207,16 +212,23 @@ export default async function OpportunityPage({
                 )}
               </dl>
 
-              <Button asChild className="w-full">
-                <a
-                  href={opportunity.application_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Open the announcement
-                  <ExternalLink />
-                </a>
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button asChild className="w-full">
+                  <a
+                    href={opportunity.application_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Open the announcement
+                    <ExternalLink />
+                  </a>
+                </Button>
+                <BookmarkButton
+                  opportunityId={opportunity.id}
+                  bookmarked={saved.has(opportunity.id)}
+                  signedIn={user !== null}
+                />
+              </div>
 
               <p className="text-xs leading-relaxed text-muted-foreground">
                 Collected from{" "}
@@ -239,7 +251,11 @@ export default async function OpportunityPage({
           <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {related.map((item: Opportunity) => (
               <li key={item.id} className="relative flex">
-                <OpportunityCard opportunity={item} domainLabels={domainLabels} />
+                <OpportunityCard
+                  opportunity={item}
+                  domainLabels={domainLabels}
+                  signedIn={user !== null}
+                />
               </li>
             ))}
           </ul>

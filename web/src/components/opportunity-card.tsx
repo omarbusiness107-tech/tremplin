@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Building2, CalendarClock, MapPin, Users } from "lucide-react";
 
+import { BookmarkButton } from "@/components/bookmark-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Opportunity } from "@/lib/database.types";
@@ -16,9 +17,19 @@ import { cn } from "@/lib/utils";
 interface Props {
   opportunity: Opportunity;
   domainLabels: Map<string, string>;
+  bookmarked?: boolean;
+  signedIn?: boolean;
+  /** Why this was recommended, when shown in the recommendations rail. */
+  matchReasons?: string[];
 }
 
-export function OpportunityCard({ opportunity, domainLabels }: Props) {
+export function OpportunityCard({
+  opportunity,
+  domainLabels,
+  bookmarked = false,
+  signedIn = false,
+  matchReasons,
+}: Props) {
   const urgency = urgencyOf(opportunity.deadline);
   const closed = opportunity.status === "closed";
 
@@ -31,8 +42,19 @@ export function OpportunityCard({ opportunity, domainLabels }: Props) {
     >
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
-          <Badge variant="secondary">{TYPE_LABELS[opportunity.type]}</Badge>
-          {!closed && isNewlyDiscovered(opportunity.discovered_at) && <Badge>New</Badge>}
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="secondary">{TYPE_LABELS[opportunity.type]}</Badge>
+            {!closed && isNewlyDiscovered(opportunity.discovered_at) && <Badge>New</Badge>}
+          </div>
+          {/* Sits above the stretched title link so it stays clickable. */}
+          <div className="relative z-10 -mt-1 -mr-1.5">
+            <BookmarkButton
+              opportunityId={opportunity.id}
+              bookmarked={bookmarked}
+              signedIn={signedIn}
+              variant="icon"
+            />
+          </div>
         </div>
 
         <CardTitle className="mt-1 line-clamp-3">
@@ -80,11 +102,16 @@ export function OpportunityCard({ opportunity, domainLabels }: Props) {
         </div>
       </CardContent>
 
-      <CardFooter>
+      <CardFooter className="flex-wrap gap-2">
         <Badge variant={URGENCY_BADGE[urgency]}>
           <CalendarClock className="size-3.5" aria-hidden />
           {deadlineLabel(opportunity.deadline)}
         </Badge>
+        {matchReasons?.slice(0, 1).map((reason) => (
+          <Badge key={reason} variant="outline">
+            {reason}
+          </Badge>
+        ))}
       </CardFooter>
     </Card>
   );

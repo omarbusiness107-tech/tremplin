@@ -168,3 +168,34 @@ export async function listCities(): Promise<CityFacet[]> {
   const { data } = await supabase.from("available_cities").select("*").limit(40);
   return (data ?? []) as CityFacet[];
 }
+
+export interface Recommendation {
+  opportunity: Opportunity;
+  score: number;
+  reasons: string[];
+}
+
+/**
+ * "Recommended for you", ranked by `recommended_opportunities()`.
+ *
+ * Scoring happens in SQL so the database ranks in place instead of the
+ * app fetching every open listing to sort it. Returns nothing when the
+ * profile is empty — the page then asks the user to fill it in rather
+ * than showing an arbitrary list.
+ */
+export async function recommendedForUser(limit = 6): Promise<Recommendation[]> {
+  if (!isSupabaseConfigured) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("recommended_opportunities", {
+    p_limit: limit,
+  });
+
+  if (error || !data) return [];
+
+  return data.map((row) => ({
+    opportunity: row.opportunity,
+    score: row.match_score,
+    reasons: row.match_reasons ?? [],
+  }));
+}

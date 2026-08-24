@@ -4,10 +4,13 @@ import { SearchX, SlidersHorizontal } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
 import { FilterPanel } from "@/components/filter-panel";
+import { Recommendations } from "@/components/recommendations";
 import { OpportunityCard } from "@/components/opportunity-card";
 import { OpportunityCardSkeleton } from "@/components/opportunity-card-skeleton";
 import { Pagination } from "@/components/pagination";
 import { Button } from "@/components/ui/button";
+import { getCurrentUser } from "@/lib/auth";
+import { bookmarkedIds } from "@/lib/bookmarks";
 import { PAGE_SIZE, isUnfiltered, parseFilters, type RawSearchParams } from "@/lib/filters";
 import { browseOpportunities, listCities, listDomains } from "@/lib/opportunities";
 
@@ -22,7 +25,12 @@ export default async function HomePage({
 }) {
   const params = await searchParams;
   const filters = parseFilters(params);
-  const [domains, cities] = await Promise.all([listDomains(), listCities()]);
+  const [domains, cities, user] = await Promise.all([
+    listDomains(),
+    listCities(),
+    getCurrentUser(),
+  ]);
+  const signedIn = user !== null;
 
   return (
     <div className="flex flex-col gap-8">
@@ -36,13 +44,19 @@ export default async function HomePage({
         </p>
       </section>
 
+      {/* Recommendations load independently: a slow personalised query
+          must not hold up the browse grid everyone shares. */}
+      <Suspense fallback={null}>
+        <Recommendations signedIn={signedIn} domains={domains} />
+      </Suspense>
+
       <FilterPanel filters={filters} domains={domains} cities={cities} />
 
       {/* Keyed on the filters so changing them re-suspends and the
           skeletons come back, instead of the old results sitting there
           looking current. */}
       <Suspense key={JSON.stringify(filters)} fallback={<OpportunityGridSkeleton />}>
-        <OpportunityGrid filters={filters} domains={domains} />
+        <OpportunityGrid filters={filters} domains={domains} signedIn={signedIn} />
       </Suspense>
     </div>
   );
@@ -51,9 +65,11 @@ export default async function HomePage({
 async function OpportunityGrid({
   filters,
   domains,
+  signedIn,
 }: {
   filters: ReturnType<typeof parseFilters>;
   domains: Awaited<ReturnType<typeof listDomains>>;
+  signedIn: boolean;
 }) {
   const { opportunities, total, page, pageCount, configured, error } =
     await browseOpportunities(filters);
@@ -114,6 +130,7 @@ async function OpportunityGrid({
   }
 
   const domainLabels = new Map(domains.map((d) => [d.slug, d.label_en]));
+  const saved = await bookmarkedIds(opportunities.map((o) => o.id));
   const first = (page - 1) * PAGE_SIZE + 1;
   const last = Math.min(page * PAGE_SIZE, total);
 
@@ -128,7 +145,12 @@ async function OpportunityGrid({
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {opportunities.map((opportunity) => (
           <li key={opportunity.id} className="relative flex">
-            <OpportunityCard opportunity={opportunity} domainLabels={domainLabels} />
+            <OpportunityCard
+              opportunity={opportunity}
+              domainLabels={domainLabels}
+              bookmarked={saved.has(opportunity.id)}
+              signedIn={signedIn}
+            />
           </li>
         ))}
       </ul>

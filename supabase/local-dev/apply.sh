@@ -18,4 +18,7 @@ for f in "$ROOT"/supabase/migrations/*.sql; do
   psql "$DB_URL" -v ON_ERROR_STOP=1 -q -f "$f"
 done
 
+echo "==> grants (local only)"
+psql "$DB_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/local-dev/99_grants.sql"
+
 echo "==> done"

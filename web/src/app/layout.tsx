@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { Compass } from "lucide-react";
 
+import { AccountMenu } from "@/components/account-menu";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -28,8 +29,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-2 px-4 sm:px-6">
             <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
               <Compass className="size-5 text-primary" aria-hidden />
-              <span>Morocco Opportunities</span>
+              <span className="hidden sm:inline">Morocco Opportunities</span>
+              <span className="sm:hidden">Opportunities</span>
             </Link>
+            <div className="ml-auto">
+              <AccountMenu />
+            </div>
           </div>
         </header>
 

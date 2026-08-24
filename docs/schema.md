@@ -8,6 +8,8 @@ Defined in `supabase/migrations/`, applied in filename order:
 | `20260824000200_rls_policies.sql` | row level security |
 | `20260824000300_seed_reference_data.sql` | domain vocabulary + source registry (idempotent) |
 | `20260824000400_browse_views.sql` | `available_cities` facet view for the filter UI |
+| `20260824000500_notifications.sql` | `notifications` table + RLS |
+| `20260824000600_recommendations.sql` | `education_rank()` and `recommended_opportunities()` |
 
 ```
 sources ──< opportunities >── domains (by slug, soft reference)
@@ -152,14 +154,65 @@ seeded domains from *AI & Data Science* to *Public Administration*.
 classifier in `normalize.py`, which is deliberately inspectable rather than
 learned.
 
+## `notifications`
+
+One row per `(user_id, opportunity_id, kind)` — and that unique constraint,
+`notifications_once_per_reason`, is the entire duplicate-email guarantee. The
+notifier inserts the row *before* attempting the send, so a crash mid-send
+costs a missed email rather than a duplicate.
+
+| Column | Notes |
+| --- | --- |
+| `kind` | `new_match` or `deadline_reminder` |
+| `created_at` | when the send was claimed |
+| `sent_at` | null until the provider accepted it |
+| `error` | why it failed, kept for debugging |
+
+A row with `sent_at` set blocks that notification forever. A row with an error
+blocks it only for a cooldown (20 hours), after which the claim is re-taken via
+`on conflict … do update … where sent_at is null` — so a transient email outage
+retries tomorrow instead of silently swallowing the alert.
+
+## `recommended_opportunities(p_limit)`
+
+Ranks open opportunities against `auth.uid()`'s preferences and returns
+`(opportunity, match_score, match_reasons)`. `security invoker`, so the
+`opportunities` read policy still applies and it cannot be used to read another
+user's preferences.
+
+| Signal | Weight |
+| --- | --- |
+| Type is one the user wants | +4 |
+| Each matching domain tag | +3, capped at +6 |
+| Remote (and open to it), or a preferred city | +2 |
+| Meets the stated education requirement | +3 |
+| Falls short of it | **−2** |
+| Closes within 30 days | +1 |
+
+Falling short is scored negatively rather than zero, so listings the user
+cannot apply for sink instead of merely not rising. The preferences row is
+joined rather than read through scalar subqueries, so an empty profile yields
+no rows at all and the page prompts the user to fill it in.
+
+`match_reasons` is ordered most-specific-first: "matches the type you are
+looking for" is true of nearly every recommendation, so leading with it would
+make every card show the same badge.
+
+`education_rank()` exists because the `education_level` enum declares `other`
+last, which is meaningless as a level — it maps `bac`…`doctorat` to 1–5 and
+everything else to 0 (unknown, not lowest).
+
 ## `profiles`, `user_preferences`, `bookmarks`
 
 `profiles` is 1:1 with `auth.users` and carries `is_admin`.
-`user_preferences` holds what personalised matching (step 9) scores against:
+`user_preferences` holds what personalised matching scores against:
 `education_level`, `fields_of_interest`, `target_types`, `preferred_cities`,
 `languages`, plus `email_alerts_enabled` and `deadline_reminder_days` for
-notifications (step 11). `bookmarks` is a `(user_id, opportunity_id)` join with
-`notes` and `reminder_sent_at`.
+notifications. `bookmarks` is a `(user_id, opportunity_id)` join with `notes`.
+
+Writes go through RLS, never through a page-level check: `with check
+(auth.uid() = user_id)` means a forged `user_id` is rejected by the database
+itself, whatever the app sends.
 
 A trigger on `auth.users` creates the profile and an empty preferences row on
 sign-up, so the app never handles a missing profile.
@@ -189,6 +242,7 @@ Enabled on every table.
 | --- | --- | --- |
 | `opportunities`, `sources`, `domains` | read | read |
 | `profiles`, `user_preferences`, `bookmarks` | — | own rows only |
+| `notifications` | — | read own only |
 | `scraper_runs` | — | read if `profiles.is_admin` |
 
 No table grants write access to `anon` or `authenticated`: ingestion is the

@@ -30,15 +30,32 @@ create table if not exists auth.users (
   created_at           timestamptz not null default now()
 );
 
--- Supabase reads the user id out of the request JWT claims. Locally we
--- fall back to a session GUC so RLS policies can be exercised by hand:
+-- Same definition Supabase ships: the user id comes out of the request JWT.
+-- PostgREST exposes the claims as a `request.jwt.claims` JSON GUC; the
+-- singular form is the older spelling, kept as a fallback so RLS can also
+-- be exercised by hand:
 --   set local request.jwt.claim.sub = '<uuid>';
 create or replace function auth.uid()
 returns uuid
 language sql
 stable
 as $$
-  select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid;
+  select coalesce(
+    nullif(current_setting('request.jwt.claim.sub', true), ''),
+    nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub'
+  )::uuid;
+$$;
+
+create or replace function auth.role()
+returns text
+language sql
+stable
+as $$
+  select coalesce(
+    nullif(current_setting('request.jwt.claim.role', true), ''),
+    nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role',
+    'anon'
+  );
 $$;
 
 grant usage on schema public to anon, authenticated, service_role;
