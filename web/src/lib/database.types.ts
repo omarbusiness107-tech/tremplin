@@ -95,6 +95,11 @@ export interface SourceHealth {
   total_opportunities: number;
 }
 
+export interface CityFacetRow {
+  city: string;
+  opportunity_count: number;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -104,6 +109,7 @@ export interface Database {
     };
     Views: {
       source_health: { Row: SourceHealth };
+      available_cities: { Row: CityFacetRow };
     };
   };
 }

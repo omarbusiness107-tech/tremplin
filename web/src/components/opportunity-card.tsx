@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Building2, CalendarClock, MapPin, Users } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,7 @@ import {
   isNewlyDiscovered,
   urgencyOf,
 } from "@/lib/deadline";
+import { cn } from "@/lib/utils";
 
 interface Props {
   opportunity: Opportunity;
@@ -18,24 +20,30 @@ interface Props {
 
 export function OpportunityCard({ opportunity, domainLabels }: Props) {
   const urgency = urgencyOf(opportunity.deadline);
+  const closed = opportunity.status === "closed";
 
   return (
-    <Card className="group transition-shadow hover:shadow-md">
+    <Card
+      className={cn(
+        "group h-full transition-shadow hover:shadow-md",
+        closed && "opacity-65",
+      )}
+    >
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <Badge variant="secondary">{TYPE_LABELS[opportunity.type]}</Badge>
-          {isNewlyDiscovered(opportunity.discovered_at) && <Badge>New</Badge>}
+          {!closed && isNewlyDiscovered(opportunity.discovered_at) && <Badge>New</Badge>}
         </div>
 
         <CardTitle className="mt-1 line-clamp-3">
-          <a
-            href={opportunity.application_link}
-            target="_blank"
-            rel="noopener noreferrer"
+          {/* Stretched link: the whole card is the target, but only the
+              title is in the tab order and read out as the link. */}
+          <Link
+            href={`/opportunities/${opportunity.id}`}
             className="after:absolute after:inset-0 focus-visible:underline"
           >
             {opportunity.title}
-          </a>
+          </Link>
         </CardTitle>
 
         {opportunity.institution && (

@@ -7,6 +7,7 @@ Defined in `supabase/migrations/`, applied in filename order:
 | `20260824000100_init_schema.sql` | enums, tables, indexes, triggers, functions, `source_health` view |
 | `20260824000200_rls_policies.sql` | row level security |
 | `20260824000300_seed_reference_data.sql` | domain vocabulary + source registry (idempotent) |
+| `20260824000400_browse_views.sql` | `available_cities` facet view for the filter UI |
 
 ```
 sources ──< opportunities >── domains (by slug, soft reference)
@@ -162,6 +163,12 @@ notifications (step 11). `bookmarks` is a `(user_id, opportunity_id)` join with
 
 A trigger on `auth.users` creates the profile and an empty preferences row on
 sign-up, so the app never handles a missing profile.
+
+## `available_cities`
+
+Cities that currently have open listings, with counts, for the browse page's
+city filter — a view rather than a client-side distinct so it does not grow
+with the table. `security_invoker`, so the `opportunities` read policy applies.
 
 ## `scraper_runs` and `source_health`
 

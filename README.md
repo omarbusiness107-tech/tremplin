@@ -5,16 +5,17 @@ programmes, scholarships and public-sector *concours* — discovers new listings
 automatically, keeps them up to date, and presents them in a searchable,
 filterable interface sorted by how soon they close.
 
-**Status: steps 1–2 of the build plan are done.** The database schema, the
-scraper framework and the first working source (`emploi_public`) are in place
-and tested end to end. The Next.js app is scaffolded with a browse page that
-renders whatever ingestion has collected.
+**Status: steps 1–7 of the build plan are done.** The schema, the scraper
+framework and the first source (`emploi_public`) are in place and tested end to
+end; ingestion runs daily on GitHub Actions; and the app has a browse page with
+URL-backed filtering, sorting, full-text search and an opportunity detail page.
 
 ---
 
 ## Repository layout
 
 ```
+.github/workflows/     daily ingestion + CI
 supabase/
   migrations/          schema, RLS policies, seed reference data
   local-dev/           run the same migrations against plain Postgres
@@ -208,12 +209,68 @@ what you found in the class's `robots_note`.
 
 ---
 
+---
+
+## Scheduled ingestion
+
+`.github/workflows/ingest.yml` runs every day at 05:00 UTC (06:00 in
+Casablanca), plus on demand from the Actions tab with per-run source, page-count
+and dry-run inputs. Runs are serialised by a concurrency group so two
+ingestions never write at once.
+
+Configure once, in the repository settings:
+
+| Kind | Name | Value |
+| --- | --- | --- |
+| Secret | `SUPABASE_DB_URL` | the Supabase Postgres connection string |
+| Variable | `SCRAPER_USER_AGENT` | your crawler UA, with a contact URL |
+
+The job only fails when *every* source failed, so one broken site does not turn
+the whole run red. A source that ends `partial` or `failed` is written to the
+run summary and raises a workflow warning; the underlying detail lands in
+`scraper_runs`.
+
+`.github/workflows/ci.yml` runs the Python tests against a real Postgres 16
+service with the migrations applied, and lints and builds the web app.
+
+---
+
+## Browsing
+
+All browse state lives in the URL, so any filtered view is shareable and
+survives a reload:
+
+```
+/?q=ingénieur&type=concours&domain=civil-engineering&within=30d&sort=newest
+```
+
+| Param | Meaning |
+| --- | --- |
+| `q` | full-text search (websearch syntax: quoted phrases, `-exclusions`) |
+| `type` | comma-separated opportunity types |
+| `domain` | comma-separated domain slugs |
+| `city` | comma-separated cities |
+| `within` | `7d`, `30d` or `90d` from now |
+| `closed` | `1` to include listings past their deadline |
+| `sort` | `deadline` (default), `newest`, `title` |
+| `page` | 1-based |
+
+Different filters combine with AND; multiple values inside one filter are OR —
+"master **or** doctorat, in Rabat" is what a multi-select means to a reader.
+
+Search runs against the stored `search_vector` with the `french` configuration.
+Because French stemming collapses *administrateur* and *administration* to one
+token, scrapers must keep field **labels** out of indexed text — see
+`COLUMN_BACKED_LABELS` in the emploi-public scraper for what that looks like in
+practice.
+
+---
+
 ## What's next
 
-Steps 3–12 of the plan, in order: scheduled daily ingestion (GitHub Actions
-cron), filtering and sorting reflected in the URL, full-text search, the
-opportunity detail page, Supabase Auth accounts and profiles, personalised
+Steps 8–12 of the plan: Supabase Auth accounts and profiles, personalised
 matching, bookmarks, email notifications, and the scraper monitoring page.
 
-The schema already carries the columns these need — `search_vector`,
-`user_preferences`, `bookmarks`, `scraper_runs` — so they are additive.
+The schema already carries what these need — `profiles`, `user_preferences`,
+`bookmarks`, `scraper_runs` and the `source_health` view — so they are
+additive.

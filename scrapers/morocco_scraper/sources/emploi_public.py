@@ -71,6 +71,26 @@ class EmploiPublicScraper(BaseScraper):
     LABEL_POSITIONS = "nombre de postes"
     LABEL_CITY = ("ville", "lieu", "lieu du concours", "region")
 
+    # Labels whose value already has a first-class column. Excluded from
+    # `attributes` and `description` so the detail page does not show them
+    # twice, and -- more importantly -- so their label text does not enter
+    # the search index. "Administration qui recrute" appears on every
+    # listing and stems to the same token as "administrateur", which made a
+    # search for that grade match the entire table.
+    COLUMN_BACKED_LABELS = frozenset(
+        {
+            "administration qui recrute",
+            "delai de depot des candidatures",
+            "date du concours",
+            "date de publication",
+            "nombre de postes",
+            "ville",
+            "lieu",
+            "lieu du concours",
+            "region",
+        }
+    )
+
     # Labels that describe who may apply, joined into conditions_to_apply.
     ELIGIBILITY_LABELS = (
         "specialite",
@@ -232,11 +252,21 @@ class EmploiPublicScraper(BaseScraper):
             elif folded in self.LABEL_CITY:
                 opportunity.location_city = value
 
-        # Keep every pair verbatim: the detail page renders them as a table,
-        # and new labels appear without needing a scraper change.
-        opportunity.attributes = {**opportunity.attributes, **fields}
+        # Everything the columns do not already carry, verbatim: the detail
+        # page renders these as a table, so a new label appears without
+        # needing a scraper change.
+        extras = {
+            label: value
+            for label, value in fields.items()
+            if fold(label) not in self.COLUMN_BACKED_LABELS
+        }
+        opportunity.attributes = {**opportunity.attributes, **extras}
 
-        opportunity.description = "\n".join(f"{label} : {value}" for label, value in fields.items())
+        # Indexed at the lowest weight; keeps the concours code and
+        # speciality searchable without re-indexing the structured columns.
+        opportunity.description = (
+            "\n".join(f"{label} : {value}" for label, value in extras.items()) or None
+        )
 
         conditions = [
             f"{label} : {value}"

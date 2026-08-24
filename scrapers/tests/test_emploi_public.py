@@ -125,6 +125,24 @@ class TestDetailEnrichment:
         assert "economics-finance" in opportunity.domains
         assert opportunity.description
 
+    def test_fields_that_have_their_own_column_are_not_repeated(self, listing_html, detail_html):
+        """"Administration qui recrute" appears on every listing and stems to
+        the same token as "administrateur", so leaving its label in the
+        indexed description made a search for that grade match everything."""
+        session = FakeSession({"concours-liste": listing_html, "concours/details": detail_html})
+        scraper = EmploiPublicScraper(session, {"pages": 1})
+
+        opportunity = next(iter(scraper.scrape()))
+
+        for label in ("Administration qui recrute", "Date de publication", "Nombre de postes"):
+            assert label not in opportunity.attributes
+            assert label not in (opportunity.description or "")
+
+        # The value still reached its column.
+        assert opportunity.institution
+        assert opportunity.published_at
+        assert opportunity.positions_available
+
     def test_a_broken_detail_page_downgrades_to_listing_data(self, listing_html):
         session = FakeSession({"concours-liste": listing_html, "concours/details": "<html></html>"})
         scraper = EmploiPublicScraper(session, {"pages": 1})

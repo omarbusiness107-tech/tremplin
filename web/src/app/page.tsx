@@ -1,16 +1,29 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { SearchX, SlidersHorizontal } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
+import { FilterPanel } from "@/components/filter-panel";
 import { OpportunityCard } from "@/components/opportunity-card";
 import { OpportunityCardSkeleton } from "@/components/opportunity-card-skeleton";
-import { browseOpportunities, listDomains } from "@/lib/opportunities";
+import { Pagination } from "@/components/pagination";
+import { Button } from "@/components/ui/button";
+import { PAGE_SIZE, isUnfiltered, parseFilters, type RawSearchParams } from "@/lib/filters";
+import { browseOpportunities, listCities, listDomains } from "@/lib/opportunities";
 
-// Ingestion runs daily; revalidating hourly keeps the page cheap while
-// still surfacing a new listing within the hour.
-export const revalidate = 3600;
+export const metadata = {
+  title: "Browse opportunities",
+};
 
-export default function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<RawSearchParams>;
+}) {
+  const params = await searchParams;
+  const filters = parseFilters(params);
+  const [domains, cities] = await Promise.all([listDomains(), listCities()]);
+
   return (
     <div className="flex flex-col gap-8">
       <section className="flex flex-col gap-2">
@@ -23,18 +36,27 @@ export default function HomePage() {
         </p>
       </section>
 
-      <Suspense fallback={<OpportunityGridSkeleton />}>
-        <OpportunityGrid />
+      <FilterPanel filters={filters} domains={domains} cities={cities} />
+
+      {/* Keyed on the filters so changing them re-suspends and the
+          skeletons come back, instead of the old results sitting there
+          looking current. */}
+      <Suspense key={JSON.stringify(filters)} fallback={<OpportunityGridSkeleton />}>
+        <OpportunityGrid filters={filters} domains={domains} />
       </Suspense>
     </div>
   );
 }
 
-async function OpportunityGrid() {
-  const [{ opportunities, total, configured, error }, domains] = await Promise.all([
-    browseOpportunities(),
-    listDomains(),
-  ]);
+async function OpportunityGrid({
+  filters,
+  domains,
+}: {
+  filters: ReturnType<typeof parseFilters>;
+  domains: Awaited<ReturnType<typeof listDomains>>;
+}) {
+  const { opportunities, total, page, pageCount, configured, error } =
+    await browseOpportunities(filters);
 
   if (!configured) {
     return (
@@ -63,7 +85,7 @@ async function OpportunityGrid() {
   }
 
   if (opportunities.length === 0) {
-    return (
+    return isUnfiltered(filters) ? (
       <EmptyState
         icon={<SearchX className="size-5" aria-hidden />}
         title="No open opportunities yet"
@@ -77,16 +99,32 @@ async function OpportunityGrid() {
           </>
         }
       />
+    ) : (
+      <EmptyState
+        icon={<SearchX className="size-5" aria-hidden />}
+        title="No opportunities match your filters"
+        description="Try widening your search — remove a field or a city, or extend the deadline window."
+        action={
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/">Clear all filters</Link>
+          </Button>
+        }
+      />
     );
   }
 
   const domainLabels = new Map(domains.map((d) => [d.slug, d.label_en]));
+  const first = (page - 1) * PAGE_SIZE + 1;
+  const last = Math.min(page * PAGE_SIZE, total);
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-5">
       <p className="text-sm text-muted-foreground">
-        {total} open {total === 1 ? "opportunity" : "opportunities"}
+        {total === 0
+          ? "No results"
+          : `Showing ${first}–${last} of ${total} ${total === 1 ? "opportunity" : "opportunities"}`}
       </p>
+
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {opportunities.map((opportunity) => (
           <li key={opportunity.id} className="relative flex">
@@ -94,6 +132,8 @@ async function OpportunityGrid() {
           </li>
         ))}
       </ul>
+
+      <Pagination filters={filters} pageCount={pageCount} />
     </section>
   );
 }
