@@ -2,4 +2,12 @@ node_modules/
 dist/
 *.log
 .androidsdk/
-android/
+
+# Capacitor build output and machine-specific paths; the project itself is tracked.
+android/build/
+android/app/build/
+android/.gradle/
+android/local.properties
+android/app/src/main/assets/public/
+android/keystore/
+android/capacitor-cordova-android-plugins/build/

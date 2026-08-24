@@ -1,0 +1,13 @@
+{
+  "appId": "dev.penitence.game",
+  "appName": "Penitence",
+  "webDir": "dist",
+  "android": {
+    "backgroundColor": "#07050a",
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

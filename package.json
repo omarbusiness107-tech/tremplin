@@ -14,9 +14,15 @@
     "artifact": "npm run build && node tools/artifact.mjs",
     "verify:artifact": "npm run artifact && node tools/verify-artifact.mjs",
     "icons": "node tools/icons.mjs",
-    "smoke:mobile": "npm run build && node tools/smoke-mobile.mjs"
+    "smoke:mobile": "npm run build && node tools/smoke-mobile.mjs",
+    "android:key": "mkdir -p android/keystore && keytool -genkeypair -v -keystore android/keystore/penitence.jks -alias penitence -keyalg RSA -keysize 2048 -validity 10000 -storepass penitence -keypass penitence -dname \"CN=Penitence, OU=Game, O=Penitence\"",
+    "android:sync": "npm run build && npx cap sync android",
+    "android:apk": "npm run android:sync && cd android && ./gradlew assembleRelease && cd .. && mkdir -p dist/app && cp android/app/build/outputs/apk/release/app-release.apk dist/app/penitence-1.0.apk"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
     "playwright": "^1.62.1",
     "typescript": "^5.6.3",
     "vite": "^5.4.10"

@@ -1,4 +1,5 @@
 import { Game } from "./game/game";
+import { isNativeShell } from "./engine/device";
 
 const stage = document.getElementById("stage");
 if (!stage) throw new Error("#stage not found");
@@ -11,10 +12,14 @@ game.start();
 
 /**
  * Register the offline shell so the installed web app launches with no signal.
- * Skipped on file:// and inside the packaged app, where assets are already
- * local and a worker would only add a failure mode.
+ * Skipped on file:// and inside the packaged Android app, where the assets are
+ * already local and a worker would only add a failure mode.
  */
-if ("serviceWorker" in navigator && location.protocol.startsWith("http") && !location.host.startsWith("localhost:0")) {
+if (
+  "serviceWorker" in navigator &&
+  location.protocol.startsWith("http") &&
+  !isNativeShell()
+) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js").catch(() => {
       // Unsupported, blocked by settings, or served without HTTPS.

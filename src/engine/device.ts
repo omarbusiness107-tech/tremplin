@@ -7,9 +7,19 @@
  * there rather than being special-cased.
  */
 
+/**
+ * True inside the packaged Android app. The native activity already runs
+ * immersive and serves its assets locally, so the web-side fullscreen request
+ * and the offline service worker are both redundant there.
+ */
+export function isNativeShell(): boolean {
+  return typeof window !== "undefined" && "Capacitor" in window;
+}
+
 export function isStandalone(): boolean {
   if (typeof window === "undefined") return false;
   return (
+    isNativeShell() ||
     window.matchMedia?.("(display-mode: fullscreen), (display-mode: standalone)").matches === true ||
     (navigator as unknown as { standalone?: boolean }).standalone === true
   );

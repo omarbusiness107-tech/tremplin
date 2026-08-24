@@ -15,6 +15,8 @@ npm run build    # typecheck + production build into dist/
 npm run bundle   # build, then inline everything into dist/penitence.html
 npm run smoke    # bundle, then drive the game in headless Chromium
 npm run artifact # build a single-file embeddable page (artifact/page.html shell)
+npm run smoke:mobile  # emulate a phone and drive the touch controls
+npm run android:apk   # build a signed, sideloadable APK into dist/app/
 ```
 
 ## Controls
@@ -56,6 +58,50 @@ Parry is the centre of the design, so everything else is built to serve it.
 
 Frame data lives in one place, `src/game/playerStats.ts`, so the feel can be
 tuned without touching logic.
+
+## On a phone
+
+The same build runs on a phone; there is no separate mobile version.
+
+**Touch controls.** A movement pad on the left, a thumb cluster on the right
+with jump and attack in the two most reachable spots, parry directly above
+attack, and roll above jump. Two details do the heavy lifting:
+
+- Pointers are tracked individually and the pressed set is the union across all
+  of them, so holding left while swinging and parrying works.
+- Hit-testing runs on every pointer *move*, not just on down, so rolling a thumb
+  from attack onto parry registers as a real press. Per-element listeners cannot
+  do this, and it is the difference between the combat being playable and not.
+
+The game is 16:9 and letterboxes on a taller phone panel, which is deliberate:
+the bars give thumbs somewhere to rest that is not on top of the action.
+
+Rotating to portrait pauses and shows a prompt. Backgrounding pauses. The screen
+is kept awake, and the wake lock is re-acquired after every hide because the
+browser drops it. Android gets haptics on hits, parries and death; iOS ignores
+`navigator.vibrate`, so it simply does not there.
+
+### Installing it
+
+**iPhone, or any browser** — open the site, then Share → *Add to Home Screen*.
+It runs fullscreen from its own icon and works offline via the service worker.
+This is the only route onto an iPhone: an APK cannot be installed there, and a
+native iOS build needs Xcode on a Mac plus a paid Apple developer account.
+
+**Android** — either install it as a web app the same way, or sideload the APK:
+
+```bash
+npm run android:key   # once: generate a local signing key
+npm run android:apk   # -> dist/app/penitence-1.0.apk
+```
+
+Copy the APK to the phone and open it, allowing installs from unknown sources
+when prompted. It is signed with a self-signed key, so Play Protect will warn
+that the developer is unrecognised — expected for a sideloaded build.
+
+Building the APK needs `ANDROID_HOME` pointing at an SDK with platform 36 and
+build-tools 36, plus a JDK. The `android/` project is tracked, but its build
+output, `local.properties` and the keystore are not.
 
 ## Sound
 

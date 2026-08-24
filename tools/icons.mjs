@@ -12,18 +12,23 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = join(root, "public", "icons");
 mkdirSync(outDir, { recursive: true });
 
-const draw = (size, maskable) => `
+const draw = (size, mode) => `
   const c = document.createElement("canvas");
   c.width = c.height = ${size};
   const x = c.getContext("2d");
   const S = ${size};
-  const pad = ${maskable ? 0.22 : 0.10};
+  const mode = "${mode}";
+  // The adaptive foreground is masked to roughly the central two thirds, so the
+  // figure is drawn smaller there and the plate is left transparent.
+  const pad = mode === "foreground" ? 0.28 : mode === "maskable" ? 0.22 : 0.10;
 
-  const g = x.createLinearGradient(0, 0, 0, S);
-  g.addColorStop(0, "#1a1020");
-  g.addColorStop(1, "#07050a");
-  x.fillStyle = g;
-  x.fillRect(0, 0, S, S);
+  if (mode !== "foreground") {
+    const g = x.createLinearGradient(0, 0, 0, S);
+    g.addColorStop(0, "#1a1020");
+    g.addColorStop(1, "#07050a");
+    x.fillStyle = g;
+    x.fillRect(0, 0, S, S);
+  }
 
   // Candle glow behind the figure.
   const glow = x.createRadialGradient(S/2, S*0.55, 0, S/2, S*0.55, S*0.52);
@@ -85,19 +90,49 @@ const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromi
 const page = await browser.newPage();
 await page.goto("about:blank");
 
-const targets = [
-  [192, false, "icon-192.png"],
-  [512, false, "icon-512.png"],
-  [512, true, "icon-maskable-512.png"],
-  [1024, false, "icon-1024.png"],
-];
+const { writeFileSync } = await import("node:fs");
 
-for (const [size, maskable, name] of targets) {
-  const dataUrl = await page.evaluate(new Function(draw(size, maskable)));
-  const buf = Buffer.from(dataUrl.split(",")[1], "base64");
-  const { writeFileSync } = await import("node:fs");
-  writeFileSync(join(outDir, name), buf);
-  console.log(`  ${name.padEnd(24)} ${size}x${size}  ${(buf.length / 1024).toFixed(1)} kB`);
+const render = async (size, mode) => {
+  const dataUrl = await page.evaluate(new Function(draw(size, mode)));
+  return Buffer.from(dataUrl.split(",")[1], "base64");
+};
+
+const write = (dir, name, buf, size) => {
+  writeFileSync(join(dir, name), buf);
+  console.log(`  ${name.padEnd(26)} ${String(size).padStart(4)}px  ${(buf.length / 1024).toFixed(1)} kB`);
+};
+
+console.log("web / pwa");
+for (const [size, mode, name] of [
+  [192, "square", "icon-192.png"],
+  [512, "square", "icon-512.png"],
+  [512, "maskable", "icon-maskable-512.png"],
+  [1024, "square", "icon-1024.png"],
+]) {
+  write(outDir, name, await render(size, mode), size);
+}
+
+// Android launcher icons, if the platform has been generated.
+const androidRes = join(root, "android", "app", "src", "main", "res");
+if (existsSync(androidRes)) {
+  console.log("android launcher");
+  // Legacy icons per density, plus the adaptive foreground, which must keep the
+  // figure inside the central safe zone or the launcher mask will crop it.
+  const densities = [
+    ["mdpi", 48, 108],
+    ["hdpi", 72, 162],
+    ["xhdpi", 96, 216],
+    ["xxhdpi", 144, 324],
+    ["xxxhdpi", 192, 432],
+  ];
+  for (const [density, legacy, adaptive] of densities) {
+    const dir = join(androidRes, `mipmap-${density}`);
+    if (!existsSync(dir)) continue;
+    const square = await render(legacy, "square");
+    write(dir, "ic_launcher.png", square, legacy);
+    write(dir, "ic_launcher_round.png", square, legacy);
+    write(dir, "ic_launcher_foreground.png", await render(adaptive, "foreground"), adaptive);
+  }
 }
 
 await browser.close();
