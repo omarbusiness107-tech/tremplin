@@ -200,3 +200,40 @@ export async function recommendedForUser(limit = 6): Promise<Recommendation[]> {
     reasons: row.match_reasons ?? [],
   }));
 }
+
+export interface CatalogueStats {
+  total: number;
+  sources: number;
+  closingSoon: number;
+}
+
+/**
+ * Headline counts for the hero.
+ *
+ * Three `head: true` counts rather than one aggregate query: PostgREST
+ * returns the count in a header without shipping any rows, so this costs
+ * three cheap index scans and no payload.
+ */
+export async function catalogueStats(): Promise<CatalogueStats> {
+  if (!isSupabaseConfigured) return { total: 0, sources: 0, closingSoon: 0 };
+
+  const supabase = await createClient();
+
+  const [open, closingSoon, sources] = await Promise.all([
+    supabase
+      .from("opportunities")
+      .select("*", { count: "exact", head: true })
+      .neq("status", "closed"),
+    supabase
+      .from("opportunities")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "closing_soon"),
+    supabase.from("sources").select("*", { count: "exact", head: true }).eq("enabled", true),
+  ]);
+
+  return {
+    total: open.count ?? 0,
+    sources: sources.count ?? 0,
+    closingSoon: closingSoon.count ?? 0,
+  };
+}

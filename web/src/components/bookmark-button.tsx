@@ -6,13 +6,16 @@ import { Bookmark, BookmarkCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { toggleBookmark } from "@/app/actions/bookmarks";
+import type { Locale } from "@/i18n/config";
 import { cn } from "@/lib/utils";
 
 interface Props {
   opportunityId: string;
   bookmarked: boolean;
   signedIn: boolean;
-  variant?: "button" | "icon";
+  locale: Locale;
+  labels: { save: string; unsave: string };
+  variant?: "button" | "glass";
   className?: string;
 }
 
@@ -20,6 +23,8 @@ export function BookmarkButton({
   opportunityId,
   bookmarked,
   signedIn,
+  locale,
+  labels,
   variant = "button",
   className,
 }: Props) {
@@ -31,7 +36,7 @@ export function BookmarkButton({
 
   function onClick() {
     if (!signedIn) {
-      router.push(`/login?next=/opportunities/${opportunityId}`);
+      router.push(`/${locale}/login?next=/${locale}/opportunities/${opportunityId}`);
       return;
     }
     startTransition(async () => {
@@ -40,10 +45,10 @@ export function BookmarkButton({
     });
   }
 
-  const label = optimistic ? "Remove from saved" : "Save this opportunity";
+  const label = optimistic ? labels.unsave : labels.save;
   const Icon = optimistic ? BookmarkCheck : Bookmark;
 
-  if (variant === "icon") {
+  if (variant === "glass") {
     return (
       <button
         type="button"
@@ -52,11 +57,9 @@ export function BookmarkButton({
         aria-label={label}
         aria-pressed={optimistic}
         className={cn(
-          "inline-flex size-8 items-center justify-center rounded-md transition-colors",
+          "grid size-8 place-items-center rounded-full bg-white/85 backdrop-blur-sm ring-1 ring-black/5 transition-colors",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          optimistic
-            ? "text-primary hover:bg-primary/10"
-            : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+          optimistic ? "text-primary" : "text-slate-600 hover:text-slate-900",
           className,
         )}
       >
@@ -75,7 +78,7 @@ export function BookmarkButton({
       className={cn("w-full", className)}
     >
       <Icon />
-      {optimistic ? "Saved" : "Save"}
+      {label}
     </Button>
   );
 }

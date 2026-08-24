@@ -9,17 +9,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { savePreferences, type PreferencesState } from "@/app/actions/preferences";
 import type { Domain, EducationLevel, UserPreferences } from "@/lib/database.types";
 import type { ProfileSummary } from "@/lib/auth";
-import { TYPE_LABELS } from "@/lib/deadline";
+import type { Dictionary } from "@/i18n/dictionary";
 import { OPPORTUNITY_TYPES } from "@/lib/filters";
 import { cn } from "@/lib/utils";
 
-const EDUCATION_OPTIONS: { value: EducationLevel; label: string }[] = [
-  { value: "bac", label: "Baccalauréat" },
-  { value: "bac_plus_2", label: "Bac +2" },
-  { value: "licence", label: "Licence (Bac +3)" },
-  { value: "master", label: "Master (Bac +5)" },
-  { value: "doctorat", label: "Doctorate" },
-  { value: "other", label: "Other" },
+const EDUCATION_VALUES: EducationLevel[] = [
+  "bac",
+  "bac_plus_2",
+  "licence",
+  "master",
+  "doctorat",
+  "other",
 ];
 
 const INITIAL: PreferencesState = { ok: false, message: null };
@@ -28,6 +28,9 @@ interface Props {
   profile: ProfileSummary;
   preferences: UserPreferences;
   domains: Domain[];
+  dict: Dictionary;
+  /** Slug -> label in the active locale, resolved on the server. */
+  domainLabels: Record<string, string>;
 }
 
 /**
@@ -35,38 +38,38 @@ interface Props {
  * form posts natively — the whole thing works as a plain FormData submit
  * rather than needing client state to mirror what is selected.
  */
-export function ProfileForm({ profile, preferences, domains }: Props) {
+export function ProfileForm({ profile, preferences, domains, dict, domainLabels }: Props) {
   const [state, formAction] = useActionState(savePreferences, INITIAL);
 
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>About you</CardTitle>
+          <CardTitle>{dict.profile.about}</CardTitle>
           <CardDescription>{profile.email}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <Field label="Name" htmlFor="full_name">
+          <Field label={dict.profile.name} htmlFor="full_name">
             <input
               id="full_name"
               name="full_name"
               defaultValue={profile.full_name ?? ""}
-              placeholder="Your name"
+              placeholder={dict.profile.namePlaceholder}
               className={inputClass}
             />
           </Field>
 
-          <Field label="Current education level" htmlFor="education_level">
+          <Field label={dict.profile.educationLevel} htmlFor="education_level">
             <select
               id="education_level"
               name="education_level"
               defaultValue={preferences.education_level ?? ""}
               className={inputClass}
             >
-              <option value="">Prefer not to say</option>
-              {EDUCATION_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+              <option value="">{dict.profile.preferNotToSay}</option>
+              {EDUCATION_VALUES.map((value) => (
+                <option key={value} value={value}>
+                  {dict.education[value]}
                 </option>
               ))}
             </select>
@@ -76,28 +79,28 @@ export function ProfileForm({ profile, preferences, domains }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle>What you are looking for</CardTitle>
-          <CardDescription>
-            Used to rank the &ldquo;Recommended for you&rdquo; list and to decide which new
-            listings are worth emailing you about.
-          </CardDescription>
+          <CardTitle>{dict.profile.lookingFor}</CardTitle>
+<CardDescription>{dict.profile.lookingForHelp}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
           <CheckboxChips
-            legend="Opportunity types"
+            legend={dict.profile.opportunityTypes}
             name="target_types"
-            options={OPPORTUNITY_TYPES.map((t) => ({ value: t, label: TYPE_LABELS[t] }))}
+            options={OPPORTUNITY_TYPES.map((t) => ({ value: t, label: dict.types[t] }))}
             selected={preferences.target_types}
           />
 
           <CheckboxChips
-            legend="Fields of interest"
+            legend={dict.profile.fieldsOfInterest}
             name="fields_of_interest"
-            options={domains.map((d) => ({ value: d.slug, label: d.label_en }))}
+            options={domains.map((d) => ({
+              value: d.slug,
+              label: domainLabels[d.slug] ?? d.slug,
+            }))}
             selected={preferences.fields_of_interest}
           />
 
-          <Field label="Preferred cities" htmlFor="preferred_cities" hint="Comma separated">
+          <Field label={dict.profile.preferredCities} htmlFor="preferred_cities" hint={dict.profile.commaSeparated}>
             <input
               id="preferred_cities"
               name="preferred_cities"
@@ -107,7 +110,7 @@ export function ProfileForm({ profile, preferences, domains }: Props) {
             />
           </Field>
 
-          <Field label="Languages you speak" htmlFor="languages" hint="Comma separated">
+          <Field label={dict.profile.languagesSpoken} htmlFor="languages" hint={dict.profile.commaSeparated}>
             <input
               id="languages"
               name="languages"
@@ -119,7 +122,7 @@ export function ProfileForm({ profile, preferences, domains }: Props) {
 
           <Toggle
             name="open_to_remote"
-            label="Open to remote opportunities"
+            label={dict.profile.openToRemote}
             defaultChecked={preferences.open_to_remote}
           />
         </CardContent>
@@ -127,19 +130,19 @@ export function ProfileForm({ profile, preferences, domains }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Email alerts</CardTitle>
+          <CardTitle>{dict.profile.emailAlerts}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <Toggle
             name="email_alerts_enabled"
-            label="Email me when a new opportunity matches my profile"
+            label={dict.profile.emailAlertsToggle}
             defaultChecked={preferences.email_alerts_enabled}
           />
 
           <Field
-            label="Remind me before a saved deadline"
+            label={dict.profile.reminderDays}
             htmlFor="deadline_reminder_days"
-            hint="Days ahead (0–30)"
+            hint={dict.profile.daysAhead}
           >
             <input
               id="deadline_reminder_days"
@@ -155,7 +158,7 @@ export function ProfileForm({ profile, preferences, domains }: Props) {
       </Card>
 
       <div className="flex items-center gap-3">
-        <SubmitButton />
+        <SubmitButton label={dict.profile.save} />
         {state.message && (
           <p
             role="status"
@@ -165,7 +168,10 @@ export function ProfileForm({ profile, preferences, domains }: Props) {
             )}
           >
             {state.ok && <CheckCircle2 className="size-4" aria-hidden />}
-            {state.message}
+            {/* The action returns a database error verbatim, which is
+                already in whatever language Postgres speaks; only the
+                success case has a string worth translating. */}
+            {state.ok ? dict.profile.saved : state.message}
           </p>
         )}
       </div>
@@ -173,12 +179,12 @@ export function ProfileForm({ profile, preferences, domains }: Props) {
   );
 }
 
-function SubmitButton() {
+function SubmitButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending}>
       {pending && <Loader2 className="animate-spin" />}
-      Save profile
+      {label}
     </Button>
   );
 }

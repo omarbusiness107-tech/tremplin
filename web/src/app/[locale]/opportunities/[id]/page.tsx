@@ -1,0 +1,379 @@
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import type { Metadata } from "next";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Building2,
+  CalendarClock,
+  CalendarDays,
+  ExternalLink,
+  GraduationCap,
+  Languages,
+  MapPin,
+  Users,
+} from "lucide-react";
+
+import { BookmarkButton } from "@/components/bookmark-button";
+import { OpportunityCard } from "@/components/opportunity-card";
+import { OpportunityCover } from "@/components/opportunity-cover";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { isLocale, isRtl, type Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/dictionary";
+import { formatDate, interpolate } from "@/i18n/format";
+import { getCurrentUser } from "@/lib/auth";
+import { bookmarkedIds } from "@/lib/bookmarks";
+import type { Opportunity } from "@/lib/database.types";
+import {
+  URGENCY_TONE,
+  deadlineLabel,
+  domainLabelMap,
+  educationLabel,
+  locationLabel,
+  typeLabel,
+  urgencyOf,
+} from "@/lib/labels";
+import { getOpportunity, listDomains, relatedOpportunities } from "@/lib/opportunities";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+}): Promise<Metadata> {
+  const { locale, id } = await params;
+  const opportunity = await getOpportunity(id);
+  if (!opportunity || !isLocale(locale)) return {};
+
+  const dict = await getDictionary(locale as Locale);
+  return {
+    title: opportunity.title,
+    description: opportunity.institution ?? dict.brand.tagline,
+  };
+}
+
+export default async function OpportunityPage({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+}) {
+  const { locale, id } = await params;
+  if (!isLocale(locale)) notFound();
+
+  const typed = locale as Locale;
+  const opportunity = await getOpportunity(id);
+  if (!opportunity) notFound();
+
+  const [dict, domains, related, user, saved] = await Promise.all([
+    getDictionary(typed),
+    listDomains(),
+    relatedOpportunities(opportunity),
+    getCurrentUser(),
+    bookmarkedIds([id]),
+  ]);
+  const domainLabels = domainLabelMap(domains, typed);
+
+  const urgency = urgencyOf(opportunity.deadline);
+  const BackIcon = isRtl(typed) ? ArrowRight : ArrowLeft;
+
+  // "Conditions to apply" is drawn from the same label/value pairs, so
+  // showing them again under Details would just repeat the card above.
+  const shownInConditions = labelsIn(opportunity.conditions_to_apply);
+  const attributes = Object.entries(opportunity.attributes ?? {}).filter(
+    ([label]) => !shownInConditions.has(label),
+  );
+
+  return (
+    <article className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
+      <Link
+        href={`/${typed}`}
+        className="mb-6 inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <BackIcon className="size-4" aria-hidden />
+        {dict.detail.back}
+      </Link>
+
+      <header className="overflow-hidden rounded-2xl border border-border bg-surface shadow-[var(--shadow-card)]">
+        <OpportunityCover
+          id={opportunity.id}
+          type={opportunity.type}
+          logoUrl={opportunity.institution_logo_url}
+          size="hero"
+        />
+
+        <div className="flex flex-col gap-4 p-5 sm:p-7">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="default">{typeLabel(opportunity.type, dict)}</Badge>
+            <Badge variant={URGENCY_TONE[urgency]}>
+              <CalendarClock className="size-3.5" aria-hidden />
+              {deadlineLabel(opportunity.deadline, dict, typed)}
+            </Badge>
+          </div>
+
+          <h1
+            className="text-2xl leading-tight font-bold text-balance sm:text-3xl"
+            dir="auto"
+          >
+            {opportunity.title}
+          </h1>
+
+          {opportunity.institution && (
+            <p
+              className="flex items-center gap-2 text-muted-foreground"
+              dir="auto"
+            >
+              <Building2 className="size-4 shrink-0" aria-hidden />
+              {opportunity.institution}
+            </p>
+          )}
+
+          <div className="flex flex-wrap gap-1.5">
+            {opportunity.domains.map((slug) => (
+              <Badge key={slug} variant="outline" dir="auto">
+                {domainLabels.get(slug) ?? slug}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      </header>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_21rem]">
+        <div className="flex flex-col gap-6">
+          {opportunity.conditions_to_apply && (
+            <Section title={dict.detail.conditions}>
+              <DefinitionList text={opportunity.conditions_to_apply} />
+            </Section>
+          )}
+
+          {attributes.length > 0 && (
+            <Section title={dict.detail.details}>
+              <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+                {attributes.map(([label, value]) => (
+                  <div key={label} className="flex flex-col gap-1">
+                    <dt
+                      className="text-[11px] font-medium tracking-wide text-subtle-foreground uppercase"
+                      dir="auto"
+                    >
+                      {label}
+                    </dt>
+                    <dd className="text-sm break-words" dir="auto">
+                      {renderValue(value)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </Section>
+          )}
+
+          {opportunity.description && attributes.length === 0 && (
+            <Section title={dict.detail.description}>
+              <DefinitionList text={opportunity.description} />
+            </Section>
+          )}
+        </div>
+
+        <aside className="flex flex-col gap-4">
+          {/* Sticky so the apply action stays reachable while reading a
+              long announcement on desktop. */}
+          <div className="rounded-xl border border-border bg-surface p-5 shadow-[var(--shadow-card)] lg:sticky lg:top-24">
+            <h2 className="font-display text-base font-semibold">{dict.detail.apply}</h2>
+
+            <dl className="mt-4 flex flex-col gap-3.5 text-sm">
+              <Fact icon={<CalendarClock className="size-4" aria-hidden />} label={dict.detail.deadline}>
+                {opportunity.deadline
+                  ? formatDate(opportunity.deadline, typed, {
+                      dateStyle: "long",
+                      timeStyle: "short",
+                      timeZone: "Africa/Casablanca",
+                    })
+                  : dict.deadline.rolling}
+              </Fact>
+
+              {opportunity.published_at && (
+                <Fact icon={<CalendarDays className="size-4" aria-hidden />} label={dict.detail.published}>
+                  {formatDate(opportunity.published_at, typed)}
+                </Fact>
+              )}
+
+              {opportunity.event_date && (
+                <Fact icon={<CalendarDays className="size-4" aria-hidden />} label={dict.detail.examDate}>
+                  {formatDate(opportunity.event_date, typed)}
+                </Fact>
+              )}
+
+              <Fact icon={<MapPin className="size-4" aria-hidden />} label={dict.detail.location}>
+                <span dir="auto">{locationLabel(opportunity, dict)}</span>
+              </Fact>
+
+              {opportunity.positions_available != null && (
+                <Fact icon={<Users className="size-4" aria-hidden />} label={dict.detail.positionsLabel}>
+                  {opportunity.positions_available}
+                </Fact>
+              )}
+
+              {opportunity.required_education_level && (
+                <Fact icon={<GraduationCap className="size-4" aria-hidden />} label={dict.detail.education}>
+                  {educationLabel(opportunity.required_education_level, dict)}
+                </Fact>
+              )}
+
+              {opportunity.languages_required.length > 0 && (
+                <Fact icon={<Languages className="size-4" aria-hidden />} label={dict.detail.languages}>
+                  {opportunity.languages_required.join("، ")}
+                </Fact>
+              )}
+            </dl>
+
+            <div className="mt-5 flex flex-col gap-2">
+              <Button asChild size="lg" className="w-full">
+                <a
+                  href={opportunity.application_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {dict.detail.openAnnouncement}
+                  <ExternalLink />
+                </a>
+              </Button>
+              <BookmarkButton
+                opportunityId={opportunity.id}
+                bookmarked={saved.has(opportunity.id)}
+                signedIn={user !== null}
+                locale={typed}
+                labels={{ save: dict.card.save, unsave: dict.card.unsave }}
+              />
+            </div>
+
+            <p className="mt-4 text-xs leading-relaxed text-subtle-foreground">
+              {interpolate(dict.detail.collectedFrom, {
+                source: opportunity.source_key,
+                date: formatDate(opportunity.discovered_at, typed, { dateStyle: "medium" }),
+              })}
+            </p>
+          </div>
+        </aside>
+      </div>
+
+      {related.length > 0 && (
+        <section className="mt-10 flex flex-col gap-4 border-t border-border pt-8">
+          <h2 className="font-display text-lg font-semibold" dir="auto">
+            {dict.detail.moreFrom}
+          </h2>
+          <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {related.map((item: Opportunity) => (
+              <li key={item.id} className="flex">
+                <OpportunityCard
+                  opportunity={item}
+                  domainLabels={domainLabels}
+                  locale={typed}
+                  dict={dict}
+                  signedIn={user !== null}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </article>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-xl border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
+      <h2 className="mb-4 font-display text-base font-semibold">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function Fact({
+  icon,
+  label,
+  children,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <span className="mt-0.5 text-subtle-foreground">{icon}</span>
+      <div className="flex flex-col">
+        <dt className="text-[11px] text-subtle-foreground">{label}</dt>
+        <dd className="font-medium">{children}</dd>
+      </div>
+    </div>
+  );
+}
+
+/** The labels a "Label : value" block renders, for de-duplicating sections. */
+function labelsIn(text: string | null): Set<string> {
+  if (!text) return new Set();
+  const labels = text
+    .split("\n")
+    .map((line) => {
+      const index = line.indexOf(" : ");
+      return index === -1 ? null : line.slice(0, index);
+    })
+    .filter((label): label is string => label !== null);
+  return new Set(labels);
+}
+
+/**
+ * Scrapers emit "Label : value" lines. Split them back apart when they
+ * look that way, and fall back to plain paragraphs when they do not, so a
+ * source that publishes prose still renders sensibly.
+ */
+function DefinitionList({ text }: { text: string }) {
+  const lines = text.split("\n").filter(Boolean);
+  const pairs = lines.map((line) => {
+    const index = line.indexOf(" : ");
+    return index === -1
+      ? null
+      : ([line.slice(0, index), line.slice(index + 3)] as [string, string]);
+  });
+
+  if (pairs.some((p) => p === null)) {
+    return (
+      <div className="flex flex-col gap-2.5 text-sm leading-relaxed" dir="auto">
+        {lines.map((line, i) => (
+          <p key={i}>{line}</p>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+      {(pairs as [string, string][]).map(([label, value]) => (
+        <div key={label} className="flex flex-col gap-1">
+          <dt
+            className="text-[11px] font-medium tracking-wide text-subtle-foreground uppercase"
+            dir="auto"
+          >
+            {label}
+          </dt>
+          <dd className="text-sm break-words" dir="auto">
+            {renderValue(value)}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+/** Sources sometimes put a URL in a value (a ministry's own deposit site). */
+function renderValue(value: string) {
+  if (!/^https?:\/\//i.test(value)) return value;
+  return (
+    <a
+      href={value}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-primary underline underline-offset-4 hover:no-underline"
+    >
+      {value}
+    </a>
+  );
+}

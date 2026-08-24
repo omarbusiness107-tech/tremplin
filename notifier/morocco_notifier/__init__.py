@@ -1,4 +1,4 @@
-"""Email notifications for the Morocco Opportunities Tracker.
+"""Email notifications for Tremplin.
 
 Deliberately a separate package from `scrapers/`: ingestion and
 notification share a database and nothing else, so either can be changed,

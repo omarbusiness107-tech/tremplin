@@ -196,6 +196,14 @@ class MonCallCenterScraper(BaseScraper):
         employer = soup.select_one("h1 ~ h2 a, h2 a[href^='/']")
         opportunity.institution = clean_text(employer.get_text(" ", strip=True)) if employer else None
 
+        # The listing card's <img alt> names a different company from the
+        # one its link points at, so the logo is taken from the detail
+        # page, where the alt does match the employer heading. Anything
+        # that does not match is the site's own branding, not the
+        # employer's.
+        if opportunity.institution:
+            opportunity.institution_logo_url = self._employer_logo(soup, opportunity.institution)
+
         opportunity.languages_required = self._languages(soup)
 
         # Sponsored cards show "Offre de la semaine" where the date goes,
@@ -230,6 +238,15 @@ class MonCallCenterScraper(BaseScraper):
         opportunity.domains = classify_domains(
             opportunity.title, opportunity.institution, opportunity.description
         )
+
+    def _employer_logo(self, soup: BeautifulSoup, employer: str) -> str | None:
+        """The company logo, identified by its alt matching the employer."""
+        wanted = fold(employer)
+        for img in soup.select("img[src][alt]"):
+            alt = fold(clean_text(img.get("alt")) or "")
+            if alt and alt == wanted:
+                return urljoin(self.homepage_url, img["src"])
+        return None
 
     def _published_at(self, soup: BeautifulSoup):
         """Read the date out of the detail meta line.

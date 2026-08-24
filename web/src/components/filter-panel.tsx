@@ -6,16 +6,15 @@ import { Loader2, Search, SlidersHorizontal, X } from "lucide-react";
 
 import { FilterChip } from "@/components/filter-chip";
 import { Button } from "@/components/ui/button";
+import type { Dictionary } from "@/i18n/dictionary";
+import { plural } from "@/i18n/format";
 import type { Domain } from "@/lib/database.types";
-import { TYPE_LABELS } from "@/lib/deadline";
 import {
   type BrowseFilters,
   DEADLINE_WINDOWS,
-  DEADLINE_WINDOW_LABELS,
   DEFAULT_FILTERS,
   OPPORTUNITY_TYPES,
   SORT_KEYS,
-  SORT_LABELS,
   countActiveFilters,
   filtersToHref,
   toggleValue,
@@ -27,9 +26,16 @@ interface Props {
   filters: BrowseFilters;
   domains: Domain[];
   cities: CityFacet[];
+  dict: Dictionary;
+  /**
+   * Slug -> label in the active locale, resolved on the server. Passing
+   * the resolved map rather than the locale keeps this component from
+   * needing to know how a domain label is chosen.
+   */
+  domainLabels: Record<string, string>;
 }
 
-export function FilterPanel({ filters, domains, cities }: Props) {
+export function FilterPanel({ filters, domains, cities, dict, domainLabels }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
@@ -50,12 +56,14 @@ export function FilterPanel({ filters, domains, cities }: Props) {
           id={searchId}
           value={filters.q}
           pending={isPending}
+          placeholder={dict.filters.searchPlaceholder}
+          label={dict.filters.searchLabel}
           onChange={(q) => apply({ ...filters, q, page: 1 })}
         />
 
         <div className="flex items-center gap-2">
           <label htmlFor={`${searchId}-sort`} className="sr-only">
-            Sort by
+            {dict.filters.sortBy}
           </label>
           <select
             id={`${searchId}-sort`}
@@ -63,26 +71,25 @@ export function FilterPanel({ filters, domains, cities }: Props) {
             onChange={(e) =>
               apply({ ...filters, sort: e.target.value as BrowseFilters["sort"], page: 1 })
             }
-            className="h-9 rounded-md border border-input bg-card px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-10 rounded-lg border border-input bg-surface px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {SORT_KEYS.map((key) => (
               <option key={key} value={key}>
-                {SORT_LABELS[key]}
+                {dict.filters.sort[key]}
               </option>
             ))}
           </select>
 
           <Button
             variant="outline"
-            size="sm"
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
-            className="h-9"
+            className="h-10"
           >
             <SlidersHorizontal />
-            Filters
+            {dict.filters.filters}
             {activeCount > 0 && (
-              <span className="ml-0.5 rounded-full bg-primary px-1.5 text-[10px] leading-4 text-primary-foreground tabular-nums">
+              <span className="ms-0.5 rounded-full bg-primary px-1.5 text-[10px] leading-4 text-primary-foreground tabular-nums">
                 {activeCount}
               </span>
             )}
@@ -97,14 +104,14 @@ export function FilterPanel({ filters, domains, cities }: Props) {
             active={filters.types.includes(type)}
             onToggle={() => apply(toggleValue(filters, "types", type))}
           >
-            {TYPE_LABELS[type]}
+            {dict.types[type]}
           </FilterChip>
         ))}
       </div>
 
       {expanded && (
-        <div className="flex flex-col gap-5 rounded-xl border border-border bg-card p-4">
-          <FilterGroup label="Deadline">
+        <div className="flex flex-col gap-5 rounded-xl border border-border bg-surface p-4">
+          <FilterGroup label={dict.filters.groups.deadline}>
             {DEADLINE_WINDOWS.map((window) => (
               <FilterChip
                 key={window}
@@ -117,7 +124,7 @@ export function FilterPanel({ filters, domains, cities }: Props) {
                   })
                 }
               >
-                {DEADLINE_WINDOW_LABELS[window]}
+                {dict.filters.windows[window]}
               </FilterChip>
             ))}
             <FilterChip
@@ -126,18 +133,18 @@ export function FilterPanel({ filters, domains, cities }: Props) {
                 apply({ ...filters, includeClosed: !filters.includeClosed, page: 1 })
               }
             >
-              Include closed
+              {dict.filters.windows.closed}
             </FilterChip>
           </FilterGroup>
 
-          <FilterGroup label="Field">
+          <FilterGroup label={dict.filters.groups.field}>
             {domains.map((domain) => (
               <FilterChip
                 key={domain.slug}
                 active={filters.domains.includes(domain.slug)}
                 onToggle={() => apply(toggleValue(filters, "domains", domain.slug))}
               >
-                {domain.label_en}
+                <span dir="auto">{domainLabels[domain.slug] ?? domain.slug}</span>
               </FilterChip>
             ))}
           </FilterGroup>
@@ -145,7 +152,7 @@ export function FilterPanel({ filters, domains, cities }: Props) {
           {/* Hidden entirely until a source actually publishes city data —
               an empty filter is worse than no filter. */}
           {cities.length > 0 && (
-            <FilterGroup label="City">
+            <FilterGroup label={dict.filters.groups.city}>
               {cities.map(({ city, opportunity_count }) => (
                 <FilterChip
                   key={city}
@@ -164,7 +171,7 @@ export function FilterPanel({ filters, domains, cities }: Props) {
       {activeCount > 0 && (
         <div className="flex items-center gap-3">
           <span className="text-xs text-muted-foreground">
-            {activeCount} filter{activeCount === 1 ? "" : "s"} active
+            {plural(dict.filters.active, activeCount)}
           </span>
           <Button
             variant="ghost"
@@ -173,7 +180,7 @@ export function FilterPanel({ filters, domains, cities }: Props) {
             onClick={() => apply({ ...DEFAULT_FILTERS, sort: filters.sort })}
           >
             <X />
-            Clear all
+            {dict.filters.clearAll}
           </Button>
         </div>
       )}
@@ -184,7 +191,7 @@ export function FilterPanel({ filters, domains, cities }: Props) {
 function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+      <h3 className="text-[11px] font-semibold tracking-wide text-subtle-foreground uppercase">
         {label}
       </h3>
       <div className="flex flex-wrap gap-2">{children}</div>
@@ -196,11 +203,15 @@ function SearchBox({
   id,
   value,
   pending,
+  placeholder,
+  label,
   onChange,
 }: {
   id: string;
   value: string;
   pending: boolean;
+  placeholder: string;
+  label: string;
   onChange: (value: string) => void;
 }) {
   const [draft, setDraft] = useState(value);
@@ -214,9 +225,12 @@ function SearchBox({
     setDraft(value);
   }
 
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
 
   // Debounced in the handler, not an effect: one navigation per pause in
   // typing rather than one per keystroke.
@@ -229,26 +243,27 @@ function SearchBox({
   return (
     <div className="relative flex-1">
       <Search
-        className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+        className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground"
         aria-hidden
       />
       <label htmlFor={id} className="sr-only">
-        Search opportunities
+        {label}
       </label>
       <input
         id={id}
         type="search"
         value={draft}
         onChange={(e) => handleChange(e.target.value)}
-        placeholder="Search title, institution, field…"
+        placeholder={placeholder}
+        dir="auto"
         className={cn(
-          "h-9 w-full rounded-md border border-input bg-card pr-9 pl-9 text-sm",
-          "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "h-10 w-full rounded-lg border border-input bg-surface pe-10 ps-9 text-sm",
+          "placeholder:text-subtle-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         )}
       />
       {pending && (
         <Loader2
-          className="absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground"
+          className="absolute end-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-subtle-foreground"
           aria-hidden
         />
       )}

@@ -1,0 +1,174 @@
+{
+  "brand": { "name": "Tremplin", "tagline": "Opportunités au Maroc" },
+  "nav": {
+    "browse": "Parcourir",
+    "saved": "Enregistrées",
+    "profile": "Profil",
+    "admin": "Administration",
+    "signIn": "Se connecter",
+    "signOut": "Se déconnecter",
+    "language": "Langue"
+  },
+  "home": {
+    "title": "Votre prochaine opportunité au Maroc",
+    "subtitle": "Emplois, stages, filières, bourses et concours — rassemblés chaque jour depuis les sources officielles, classés par échéance.",
+    "stats": { "opportunities": "opportunités", "sources": "sources", "closingSoon": "clôturent bientôt" }
+  },
+  "filters": {
+    "searchPlaceholder": "Rechercher un intitulé, un établissement, un domaine…",
+    "searchLabel": "Rechercher des opportunités",
+    "filters": "Filtres",
+    "sortBy": "Trier par",
+    "clearAll": "Tout effacer",
+    "active": { "one": "{count} filtre actif", "other": "{count} filtres actifs" },
+    "groups": { "deadline": "Échéance", "field": "Domaine", "city": "Ville", "type": "Type" },
+    "windows": { "7d": "Clôture cette semaine", "30d": "Sous 30 jours", "90d": "Sous 3 mois", "closed": "Inclure les clôturées" },
+    "sort": { "deadline": "Échéance — au plus tôt", "newest": "Ajoutées récemment", "title": "Ordre alphabétique" }
+  },
+  "types": {
+    "job": "Emploi",
+    "internship": "Stage",
+    "bachelor": "Licence",
+    "master": "Master",
+    "doctorat": "Doctorat",
+    "scholarship": "Bourse",
+    "concours": "Concours"
+  },
+  "deadline": {
+    "rolling": "Candidature continue",
+    "closed": "Clôturée",
+    "today": "Clôture aujourd'hui",
+    "oneDay": "1 jour restant",
+    "days": "{count} jours restants",
+    "closesOn": "Clôture le {date}"
+  },
+  "card": {
+    "new": "Nouveau",
+    "nationwide": "Maroc — tout le pays",
+    "remote": "À distance",
+    "positions": { "one": "1 poste", "other": "{count} postes" },
+    "save": "Enregistrer cette opportunité",
+    "unsave": "Retirer des enregistrées"
+  },
+  "list": {
+    "showing": "{first}–{last} sur {total}",
+    "noResults": "Aucun résultat",
+    "emptyFiltered": {
+      "title": "Aucune opportunité ne correspond à vos filtres",
+      "body": "Essayez d'élargir votre recherche — retirez un domaine ou une ville, ou allongez la période d'échéance.",
+      "action": "Effacer les filtres"
+    },
+    "emptyDatabase": {
+      "title": "Aucune opportunité pour le moment",
+      "body": "La base est accessible mais vide. Lancez la collecte puis rechargez la page."
+    },
+    "notConfigured": {
+      "title": "Supabase n'est pas encore configuré",
+      "body": "Copiez web/.env.example vers web/.env.local, renseignez l'URL du projet et la clé anon, puis rechargez."
+    },
+    "loadError": { "title": "Impossible de charger les opportunités" }
+  },
+  "detail": {
+    "back": "Toutes les opportunités",
+    "conditions": "Conditions de candidature",
+    "details": "Détails",
+    "description": "Description",
+    "apply": "Postuler",
+    "openAnnouncement": "Ouvrir l'annonce",
+    "deadline": "Échéance",
+    "published": "Publiée le",
+    "examDate": "Date du concours",
+    "location": "Lieu",
+    "positionsLabel": "Postes",
+    "education": "Niveau requis",
+    "languages": "Langues",
+    "collectedFrom": "Collectée depuis {source} le {date}. Vérifiez toujours les informations sur le site d'origine avant de postuler.",
+    "moreFrom": "Autres opportunités de cet établissement",
+    "notFound": "Opportunité introuvable"
+  },
+  "education": {
+    "bac": "Baccalauréat",
+    "bac_plus_2": "Bac +2",
+    "licence": "Licence (Bac +3)",
+    "master": "Master (Bac +5)",
+    "doctorat": "Doctorat",
+    "other": "Autre"
+  },
+  "auth": {
+    "signInTitle": "Connexion",
+    "signInSubtitle": "Pour enregistrer des opportunités, recevoir des recommandations adaptées à votre profil et être alerté par e-mail.",
+    "continueWithGoogle": "Continuer avec Google",
+    "or": "ou",
+    "emailPlaceholder": "vous@exemple.com",
+    "sendLink": "Recevoir un lien de connexion",
+    "checkInbox": "Consultez votre boîte mail",
+    "linkSent": "Nous avons envoyé un lien de connexion à {email}. Il est valable une heure.",
+    "browsingNote": "La consultation fonctionne sans compte — la connexion n'ajoute que les fonctions personnelles."
+  },
+  "profile": {
+    "title": "Votre profil",
+    "subtitle": "Plus vous le complétez, plus les recommandations sont pertinentes.",
+    "about": "À propos de vous",
+    "name": "Nom",
+    "namePlaceholder": "Votre nom",
+    "educationLevel": "Niveau d'études actuel",
+    "preferNotToSay": "Ne pas préciser",
+    "lookingFor": "Ce que vous recherchez",
+    "lookingForHelp": "Sert à classer la liste « Recommandé pour vous » et à décider quelles nouvelles annonces méritent un e-mail.",
+    "opportunityTypes": "Types d'opportunité",
+    "fieldsOfInterest": "Domaines d'intérêt",
+    "preferredCities": "Villes souhaitées",
+    "languagesSpoken": "Langues parlées",
+    "commaSeparated": "Séparées par des virgules",
+    "openToRemote": "Ouvert aux opportunités à distance",
+    "emailAlerts": "Alertes e-mail",
+    "emailAlertsToggle": "M'avertir quand une nouvelle opportunité correspond à mon profil",
+    "reminderDays": "Me rappeler avant une échéance enregistrée",
+    "daysAhead": "Jours à l'avance (0–30)",
+    "save": "Enregistrer le profil",
+    "saved": "Enregistré"
+  },
+  "recommendations": {
+    "title": "Recommandé pour vous",
+    "tune": "Ajuster",
+    "emptyTitle": "Obtenez des recommandations",
+    "emptyBody": "Indiquez votre niveau, vos domaines et les types d'opportunité recherchés, et cette liste se remplira.",
+    "emptyAction": "Compléter votre profil",
+    "reasons": {
+      "field": "Dans l'un de vos domaines",
+      "remote": "À distance",
+      "city": "Dans une ville choisie",
+      "education": "Vous avez le niveau requis",
+      "type": "Correspond au type recherché"
+    }
+  },
+  "saved": {
+    "title": "Enregistrées",
+    "none": "Rien d'enregistré pour le moment.",
+    "count": "{count} enregistrées, échéance la plus proche en premier.",
+    "closingSoon": "{count} de vos opportunités enregistrées clôturent sous une semaine.",
+    "reminderNote": "Vous recevrez aussi un rappel par e-mail — ajustez le délai dans votre {profileLink}.",
+    "profileLink": "profil",
+    "emptyTitle": "Aucune opportunité enregistrée",
+    "emptyBody": "Enregistrez ce que vous envisagez et vous le retrouverez ici, avec un rappel avant la clôture.",
+    "emptyAction": "Parcourir les opportunités"
+  },
+  "admin": {
+    "title": "État des collecteurs",
+    "subtitle": "Un collecteur qui échoue signifie presque toujours que le site a changé de structure. La colonne « alertes » se remplit avant qu'il ne casse complètement.",
+    "sources": "Sources",
+    "recentRuns": "Exécutions récentes",
+    "neverRun": "jamais exécuté",
+    "noRunRecorded": "Aucune exécution enregistrée",
+    "disabled": "désactivée",
+    "noRuns": "Aucune exécution enregistrée pour le moment.",
+    "columns": {
+      "started": "Début", "source": "Source", "status": "Statut", "found": "Trouvées",
+      "new": "Nouvelles", "updated": "Mises à jour", "failed": "Échecs",
+      "warnings": "Alertes", "duration": "Durée", "listings": "Annonces"
+    }
+  },
+  "footer": {
+    "disclaimer": "Les annonces sont collectées depuis des sources publiques et renvoient à l'annonce d'origine. Vérifiez toujours les informations sur le site émetteur avant de postuler."
+  }
+}

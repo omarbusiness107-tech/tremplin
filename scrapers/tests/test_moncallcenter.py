@@ -105,6 +105,25 @@ class TestDetail:
         assert opportunity.conditions_to_apply
         assert "Salaire Net + primes" in opportunity.attributes
 
+    def test_the_employer_logo_comes_from_the_detail_page(self, session):
+        """The listing card's <img alt> names a different company from the
+        one its link points at, so the logo has to come from the detail
+        page, where the alt matches the employer heading."""
+        scraper = MonCallCenterScraper(session, {"pages": 1, "max_items": 1})
+
+        opportunity = next(iter(scraper.scrape()))
+
+        assert opportunity.institution
+        assert opportunity.institution_logo_url
+        assert opportunity.institution_logo_url.startswith("https://www.moncallcenter.ma/")
+
+    def test_the_sites_own_branding_is_not_mistaken_for_a_logo(self, session):
+        """moncallcenter.ma's own header logo is on every page; only an
+        alt matching the employer counts."""
+        scraper = MonCallCenterScraper(session, {"pages": 1, "max_items": 1})
+        opportunity = next(iter(scraper.scrape()))
+        assert "logoo.png" not in (opportunity.institution_logo_url or "")
+
     def test_a_broken_detail_page_keeps_the_listing_data(self, listing_html):
         session = FakeSession({"offres-emploi": listing_html, "offre-emploi/": "<html></html>"})
         scraper = MonCallCenterScraper(session, {"pages": 1, "max_items": 3})

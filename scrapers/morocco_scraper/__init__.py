@@ -1,4 +1,4 @@
-"""Ingestion pipeline for the Morocco Opportunities Tracker.
+"""Ingestion pipeline for Tremplin.
 
 Layout:
     models.py     the normalized opportunity every scraper must return

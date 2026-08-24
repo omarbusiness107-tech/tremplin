@@ -1,9 +1,16 @@
-# Morocco Opportunities Tracker
+# Tremplin
+
+*Tremplin* — French for springboard, which is what the thing is meant to be.
 
 Aggregates opportunities in Morocco — jobs, internships, Bachelor/Master/Doctorat
 programmes, scholarships and public-sector *concours* — discovers new listings
 automatically, keeps them up to date, and presents them in a searchable,
-filterable interface sorted by how soon they close.
+filterable interface sorted by how soon they close, in **French, English and
+Arabic**.
+
+The Python packages are still named `morocco_scraper` and `morocco_notifier`.
+Renaming them would touch every import for no reader-facing gain, so the name
+change stops at what people actually see.
 
 **Status: all twelve steps of the build plan are done.** Ingestion runs daily
 on GitHub Actions from a modular scraper framework; the app browses, filters,
@@ -31,7 +38,9 @@ scrapers/
   tests/               offline tests, incl. saved HTML fixtures
 notifier/
   morocco_notifier/    email alerts and deadline reminders
-web/                   Next.js 16 + Tailwind v4 + shadcn-style components
+web/
+  src/i18n/            locale config + fr/en/ar dictionaries
+  src/app/[locale]/    every page, under its locale segment
 docs/schema.md         table-by-table schema reference
 docs/deploy.md         going from a clone to something people can use
 ```
@@ -103,10 +112,11 @@ python scripts/smoke_test.py --url https://your-app.vercel.app \
   --anon-key "$NEXT_PUBLIC_SUPABASE_ANON_KEY"
 ```
 
-Twenty checks across the public pages, the RLS rules and the database —
-including that bookmarks, profiles and scraper runs are *not* readable
-anonymously. Exit code is 0 only if all of them pass, so it works in CI or a
-cron.
+Twenty-three checks across the public pages — all three locales, each asserted
+on its `lang`/`dir` rather than on translated copy — plus the RLS rules and the
+database, including that bookmarks, profiles and scraper runs are *not*
+readable anonymously. Exit code is 0 only if all of them pass, so it works in
+CI or a cron.
 
 ---
 
@@ -391,6 +401,36 @@ cooldown.
 Sending is via Resend; `--dry-run` prints the rendered emails and rolls back.
 
 ---
+
+## The interface
+
+Three locales, French by default — it is the working language of Moroccan
+higher education and public-sector recruitment, and most announcements are
+published in it. A bare URL redirects to `/fr`, or to whichever locale a
+returning visitor last used.
+
+Arabic is a first-class locale rather than a translation bolted on. It flips
+the page to `dir="rtl"`, which the layout follows without a single
+RTL-specific rule because spacing and alignment are written with logical
+properties (`ms-`, `pe-`, `text-start`). It also selects the Arabic search
+vector. Both typefaces — Readex Pro for display, IBM Plex Sans Arabic for
+body — carry full Latin *and* Arabic coverage, so a card showing an Arabic
+title above a French institution name renders in one family instead of
+falling back mid-line.
+
+Listings themselves stay in whatever language their source published them in.
+A French concours notice is not machine-translated into Arabic; putting
+invented wording next to an official announcement would be worse than leaving
+it alone. `dir="auto"` on every piece of scraped text means each one lays out
+correctly whichever way the page runs.
+
+**Every listing has a cover image.** Where a source published a logo it sits on
+a plate; where it did not, or where a remote image fails to load, what you see
+is a generated *zellij* panel — the interlaced eight-point star of Moroccan
+tilework, coloured by opportunity type and varied per listing by a hash of its
+id. It is drawn as inline SVG rather than shipped as a placeholder graphic, so
+there is no request, no layout shift, and no broken state: a card whose image
+404s still looks finished.
 
 ## Sources
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check a live deployment end to end.
+"""Check a live Tremplin deployment end to end.
 
 Run this straight after deploying, and again whenever something looks
 wrong. It exercises the whole chain rather than any one layer: the public
@@ -36,6 +36,10 @@ except ImportError:  # pragma: no cover
     sys.exit("pip install -r scrapers/requirements.txt")
 
 PASS, FAIL, WARN, SKIP = "pass", "fail", "warn", "skip"
+
+#
+
+LOCALES = ("fr", "en", "ar")
 
 TIMEOUT = 30
 
@@ -82,52 +86,85 @@ class Report:
 def check_site(report: Report, base: str) -> None:
     print("\nPublic site")
 
-    def get(path: str) -> requests.Response:
-        return requests.get(base + path, timeout=TIMEOUT, allow_redirects=True)
+    def get(path: str, **kwargs) -> requests.Response:
+        return requests.get(base + path, timeout=TIMEOUT, **kwargs)
 
-    def browse() -> tuple[str, str]:
-        response = get("/")
+    def locale_redirect() -> tuple[str, str]:
+        """A bare URL must land on a locale, defaulting to French."""
+        response = requests.get(base + "/", timeout=TIMEOUT, allow_redirects=False)
+        if response.status_code not in (301, 302, 307, 308):
+            return FAIL, f"/ did not redirect (HTTP {response.status_code})"
+        target = response.headers.get("location", "")
+        if not any(target.rstrip("/").endswith(f"/{l}") for l in LOCALES):
+            return FAIL, f"/ redirected to {target!r}, which carries no locale"
+        return PASS, f"/ -> {target}"
+
+    def browse(locale: str) -> tuple[str, str]:
+        response = get(f"/{locale}")
         if response.status_code != 200:
             return FAIL, f"HTTP {response.status_code}"
-        if "Opportunities in Morocco" not in response.text:
-            return FAIL, "page rendered but the heading is missing"
-        if "Supabase is not configured" in response.text:
+        body = response.text
+        # Assert on markers that do not move when the copy is retranslated:
+        # the brand name, and the lang/dir the layout must emit.
+        if "Tremplin" not in body:
+            return FAIL, "page rendered without the brand name"
+        if f'lang="{locale}"' not in body:
+            return FAIL, f'missing lang="{locale}" on <html>'
+        expected_dir = "rtl" if locale == "ar" else "ltr"
+        if f'dir="{expected_dir}"' not in body:
+            return FAIL, f'missing dir="{expected_dir}" on <html>'
+        # The empty states carry a stable marker so this does not have to
+        # know the copy in three languages.
+        if 'data-empty-state="not-configured"' in body:
             return FAIL, "the app cannot reach Supabase — check the env vars on the host"
-        if "Could not load opportunities" in response.text:
+        if 'data-empty-state="load-error"' in body:
             return FAIL, "the app reached Supabase but the query failed"
-        if "No open opportunities yet" in response.text:
+        if 'data-empty-state="empty-database"' in body:
             return WARN, "reachable but empty — run the ingestion workflow"
-        return PASS, "browse page renders listings"
+        return PASS, f"renders, lang={locale} dir={expected_dir}"
 
     def filters() -> tuple[str, str]:
-        response = get("/?type=concours&sort=newest")
+        response = get("/fr/?type=concours&sort=newest")
         if response.status_code != 200:
             return FAIL, f"HTTP {response.status_code}"
         return PASS, "filtered view renders"
 
     def search() -> tuple[str, str]:
-        response = get("/?q=ing%C3%A9nieur")
+        response = get("/fr/?q=ing%C3%A9nieur")
         if response.status_code != 200:
             return FAIL, f"HTTP {response.status_code}"
         return PASS, "search renders"
 
-    def login() -> tuple[str, str]:
-        response = get("/login")
+    def arabic_search() -> tuple[str, str]:
+        """Arabic queries route to the second search vector."""
+        response = get("/ar/?q=%D8%AA%D8%B1%D8%B4%D9%8A%D8%AD")
         if response.status_code != 200:
             return FAIL, f"HTTP {response.status_code}"
-        if "Sign in" not in response.text:
-            return FAIL, "login page did not render its form"
-        return PASS, "sign-in page renders"
+        return PASS, "Arabic search renders"
+
+    def login() -> tuple[str, str]:
+        response = get("/fr/login")
+        if response.status_code != 200:
+            return FAIL, f"HTTP {response.status_code}"
+        # The form, not its label — the label is translated three ways.
+        if 'type="email"' not in response.text:
+            return FAIL, "login page did not render its email field"
+        return PASS, "sign-in page renders its form"
 
     def admin_is_hidden() -> tuple[str, str]:
-        response = requests.get(base + "/admin", timeout=TIMEOUT, allow_redirects=False)
+        """Follow redirects: a bare /admin now redirects into a locale,
+        and it is the page at the end that must refuse."""
+        response = get("/fr/admin", allow_redirects=True)
         if response.status_code == 200:
-            return FAIL, "/admin served 200 to an anonymous visitor"
-        return PASS, f"/admin refuses anonymous visitors (HTTP {response.status_code})"
+            return FAIL, "/fr/admin served 200 to an anonymous visitor"
+        return PASS, f"/fr/admin refuses anonymous visitors (HTTP {response.status_code})"
 
-    report.check("browse page", browse)
+    report.check("locale redirect", locale_redirect)
+    for locale in LOCALES:
+        report.check(f"browse page ({locale})", lambda l=locale: browse(l))
     report.check("filtering", filters)
     report.check("search", search)
+    report.check("arabic search", arabic_search)
     report.check("sign-in page", login)
     report.check("admin is not public", admin_is_hidden)
 
@@ -316,7 +353,7 @@ def check_database(report: Report, dsn: str) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Check a live Morocco Opportunities Tracker deployment."
+        description="Check a live Tremplin deployment."
     )
     parser.add_argument("--url", required=True, help="deployed site, e.g. https://x.vercel.app")
     parser.add_argument("--database-url", help="Supabase Postgres connection string")

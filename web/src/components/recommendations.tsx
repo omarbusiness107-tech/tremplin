@@ -3,8 +3,11 @@ import { Sparkles } from "lucide-react";
 
 import { OpportunityCard } from "@/components/opportunity-card";
 import { Button } from "@/components/ui/button";
+import type { Locale } from "@/i18n/config";
+import type { Dictionary } from "@/i18n/dictionary";
 import type { Domain } from "@/lib/database.types";
 import { bookmarkedIds } from "@/lib/bookmarks";
+import { domainLabelMap, reasonLabels } from "@/lib/labels";
 import { recommendedForUser } from "@/lib/opportunities";
 
 /**
@@ -16,9 +19,13 @@ import { recommendedForUser } from "@/lib/opportunities";
 export async function Recommendations({
   signedIn,
   domains,
+  locale,
+  dict,
 }: {
   signedIn: boolean;
   domains: Domain[];
+  locale: Locale;
+  dict: Dictionary;
 }) {
   if (!signedIn) return null;
 
@@ -26,46 +33,45 @@ export async function Recommendations({
 
   if (recommendations.length === 0) {
     return (
-      <section className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-border px-5 py-6 sm:flex-row sm:items-center sm:justify-between">
+      <section className="flex flex-col items-start gap-4 rounded-xl border border-dashed border-border-strong bg-surface px-5 py-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
-          <h2 className="flex items-center gap-2 text-base font-semibold">
+          <h2 className="flex items-center gap-2 font-display text-base font-semibold">
             <Sparkles className="size-4 text-primary" aria-hidden />
-            Get recommendations
+            {dict.recommendations.emptyTitle}
           </h2>
-          <p className="text-sm text-muted-foreground">
-            Tell us your level, fields and the kinds of opportunity you want, and this
-            list fills with what fits.
-          </p>
+          <p className="text-sm text-muted-foreground">{dict.recommendations.emptyBody}</p>
         </div>
         <Button size="sm" asChild>
-          <Link href="/profile">Complete your profile</Link>
+          <Link href={`/${locale}/profile`}>{dict.recommendations.emptyAction}</Link>
         </Button>
       </section>
     );
   }
 
-  const domainLabels = new Map(domains.map((d) => [d.slug, d.label_en]));
+  const domainLabels = domainLabelMap(domains, locale);
   const saved = await bookmarkedIds(recommendations.map((r) => r.opportunity.id));
 
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="flex items-center gap-2 text-lg font-semibold tracking-tight">
+        <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
           <Sparkles className="size-4 text-primary" aria-hidden />
-          Recommended for you
+          {dict.recommendations.title}
         </h2>
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/profile">Tune</Link>
+          <Link href={`/${locale}/profile`}>{dict.recommendations.tune}</Link>
         </Button>
       </div>
 
-      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {recommendations.map(({ opportunity, reasons }) => (
-          <li key={opportunity.id} className="relative flex">
+          <li key={opportunity.id} className="flex">
             <OpportunityCard
               opportunity={opportunity}
               domainLabels={domainLabels}
-              matchReasons={reasons}
+              locale={locale}
+              dict={dict}
+              matchReasons={reasonLabels(reasons, dict)}
               bookmarked={saved.has(opportunity.id)}
               signedIn
             />

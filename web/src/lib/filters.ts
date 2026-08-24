@@ -122,6 +122,14 @@ export function filtersToHref(filters: BrowseFilters, pathname = "/"): string {
   return query ? `${pathname}?${query}` : pathname;
 }
 
+/**
+ * The browse path for a locale. Filters live in the query string, so
+ * switching language keeps them — see LanguageSwitcher.
+ */
+export function browsePath(locale: string): string {
+  return `/${locale}`;
+}
+
 /** True when nothing is narrowing the list. */
 export function isUnfiltered(filters: BrowseFilters): boolean {
   return (

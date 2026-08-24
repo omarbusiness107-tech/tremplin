@@ -31,7 +31,7 @@ class Settings:
             database_url=os.getenv("DATABASE_URL") or os.getenv("SUPABASE_DB_URL"),
             resend_api_key=os.getenv("RESEND_API_KEY"),
             from_address=os.getenv(
-                "NOTIFIER_FROM", "Morocco Opportunities <alerts@example.com>"
+                "NOTIFIER_FROM", "Tremplin <alerts@example.com>"
             ),
             site_url=os.getenv("SITE_URL", "http://localhost:3000").rstrip("/"),
             max_emails_per_run=int(os.getenv("NOTIFIER_MAX_EMAILS", "200")),

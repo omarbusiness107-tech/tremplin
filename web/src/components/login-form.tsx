@@ -4,10 +4,28 @@ import { useState } from "react";
 import { CheckCircle2, Loader2, Mail } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { interpolate } from "@/i18n/format";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
-export function LoginForm({ error, next }: { error?: string; next?: string }) {
+interface Labels {
+  google: string;
+  or: string;
+  emailPlaceholder: string;
+  send: string;
+  checkInbox: string;
+  linkSent: string;
+}
+
+export function LoginForm({
+  error,
+  next,
+  labels,
+}: {
+  error?: string;
+  next?: string;
+  labels: Labels;
+}) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
   const [message, setMessage] = useState<string | null>(error ?? null);
@@ -48,10 +66,9 @@ export function LoginForm({ error, next }: { error?: string; next?: string }) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-6 text-center">
         <CheckCircle2 className="size-6 text-calm" aria-hidden />
-        <p className="text-sm font-medium">Check your inbox</p>
+        <p className="text-sm font-medium">{labels.checkInbox}</p>
         <p className="text-sm text-balance text-muted-foreground">
-          We sent a sign-in link to <span className="font-medium">{email}</span>. It is
-          valid for one hour.
+          {interpolate(labels.linkSent, { email })}
         </p>
       </div>
     );
@@ -60,18 +77,18 @@ export function LoginForm({ error, next }: { error?: string; next?: string }) {
   return (
     <div className="flex flex-col gap-4">
       <Button variant="outline" onClick={signInWithGoogle} className="w-full">
-        Continue with Google
+        {labels.google}
       </Button>
 
       <div className="flex items-center gap-3">
         <span className="h-px flex-1 bg-border" />
-        <span className="text-xs text-muted-foreground">or</span>
+        <span className="text-xs text-muted-foreground">{labels.or}</span>
         <span className="h-px flex-1 bg-border" />
       </div>
 
       <form onSubmit={sendMagicLink} className="flex flex-col gap-3">
         <label htmlFor="email" className="sr-only">
-          Email address
+          {labels.emailPlaceholder}
         </label>
         <input
           id="email"
@@ -80,7 +97,7 @@ export function LoginForm({ error, next }: { error?: string; next?: string }) {
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
+          placeholder={labels.emailPlaceholder}
           className={cn(
             "h-9 w-full rounded-md border border-input bg-card px-3 text-sm",
             "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -88,7 +105,7 @@ export function LoginForm({ error, next }: { error?: string; next?: string }) {
         />
         <Button type="submit" disabled={status === "sending"} className="w-full">
           {status === "sending" ? <Loader2 className="animate-spin" /> : <Mail />}
-          Email me a sign-in link
+          {labels.send}
         </Button>
       </form>
 

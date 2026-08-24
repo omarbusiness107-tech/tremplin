@@ -72,6 +72,7 @@ export type Domain = {
   slug: string;
   label_fr: string;
   label_en: string;
+  label_ar: string;
   sort_order: number;
 };
 

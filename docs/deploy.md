@@ -102,9 +102,9 @@ Repository → Settings → Secrets and variables → Actions.
 
 | Name | Value |
 | --- | --- |
-| `SCRAPER_USER_AGENT` | `MoroccoOpportunitiesBot/1.0 (+https://your-app.vercel.app)` |
+| `SCRAPER_USER_AGENT` | `TremplinBot/1.0 (+https://your-app.vercel.app)` |
 | `SITE_URL` | `https://your-app.vercel.app` |
-| `NOTIFIER_FROM` | `Morocco Opportunities <alerts@your-domain.ma>` |
+| `NOTIFIER_FROM` | `Tremplin <alerts@your-domain.ma>` |
 
 Put a real, reachable URL in the user agent. It is how a site owner reaches
 you if the crawler ever misbehaves, and it is the difference between being
@@ -173,8 +173,8 @@ python scripts/smoke_test.py --url https://your-app.vercel.app \
   --anon-key "$NEXT_PUBLIC_SUPABASE_ANON_KEY"
 ```
 
-Twenty checks across the public pages, the RLS rules and the database. Exit
-code is 0 only if all of them pass, so it works in CI or a cron. Warnings are
+Twenty-three checks across the public pages (all three locales), the RLS
+rules and the database. Exit code is 0 only if all of them pass, so it works in CI or a cron. Warnings are
 things worth a look, not breakages — "last run partial" usually means one
 listing was missing a field, which the admin page will show you.
 
