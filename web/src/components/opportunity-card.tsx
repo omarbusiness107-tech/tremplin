@@ -57,7 +57,7 @@ export function OpportunityCard({
           </div>
         </div>
 
-        <CardTitle className="mt-1 line-clamp-3">
+        <CardTitle className="mt-1 line-clamp-3" dir="auto">
           {/* Stretched link: the whole card is the target, but only the
               title is in the tab order and read out as the link. */}
           <Link
@@ -71,7 +71,7 @@ export function OpportunityCard({
         {opportunity.institution && (
           <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
             <Building2 className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-            <span className="line-clamp-2">{opportunity.institution}</span>
+            <span className="line-clamp-2" dir="auto">{opportunity.institution}</span>
           </p>
         )}
       </CardHeader>

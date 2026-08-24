@@ -21,6 +21,7 @@ see [`scrapers/README.md`](scrapers/README.md).
 
 ```
 .github/workflows/     daily ingestion, notifications, CI
+scripts/               smoke_test.py — check a live deployment
 supabase/
   migrations/          schema, RLS policies, seed reference data
   local-dev/           run the same migrations against plain Postgres
@@ -32,6 +33,7 @@ notifier/
   morocco_notifier/    email alerts and deadline reminders
 web/                   Next.js 16 + Tailwind v4 + shadcn-style components
 docs/schema.md         table-by-table schema reference
+docs/deploy.md         going from a clone to something people can use
 ```
 
 The three parts share a database and nothing else. Scrapers never import from
@@ -88,6 +90,23 @@ cp .env.example .env.local
 # set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
 npm run dev
 ```
+
+### Deploying
+
+[`docs/deploy.md`](docs/deploy.md) walks through Supabase, Vercel, the GitHub
+secrets, sign-in redirect URLs and Resend — about 30 minutes. Then:
+
+```bash
+python scripts/smoke_test.py --url https://your-app.vercel.app \
+  --database-url "$SUPABASE_DB_URL" \
+  --supabase-url https://YOUR-REF.supabase.co \
+  --anon-key "$NEXT_PUBLIC_SUPABASE_ANON_KEY"
+```
+
+Twenty checks across the public pages, the RLS rules and the database —
+including that bookmarks, profiles and scraper runs are *not* readable
+anonymously. Exit code is 0 only if all of them pass, so it works in CI or a
+cron.
 
 ---
 
@@ -280,11 +299,35 @@ survives a reload:
 Different filters combine with AND; multiple values inside one filter are OR —
 "master **or** doctorat, in Rabat" is what a multi-select means to a reader.
 
-Search runs against the stored `search_vector` with the `french` configuration.
-Because French stemming collapses *administrateur* and *administration* to one
-token, scrapers must keep field **labels** out of indexed text — see
-`COLUMN_BACKED_LABELS` in the emploi-public scraper for what that looks like in
-practice.
+### Search, in two languages
+
+Listings appear in French and Arabic, and one Postgres text search
+configuration cannot serve both: snowball dictionaries stem every token they
+are handed and never fall through to the next dictionary, so `french` and
+`arabic` cannot be chained. There are therefore two stored vectors, and the
+query picks one by the script the person typed.
+
+What the Arabic configuration buys is **clitic stripping**, the dominant
+problem in Arabic search — an announcement writes `الترشيح`, a person types
+`ترشيح`, and under the French configuration those are simply different tokens:
+
+| query | `search_vector` (french) | `search_vector_ar` (arabic) |
+| --- | --- | --- |
+| `ترشيح` | no match | matches `الترشيح` |
+| `مدارس` | no match | matches `المدارس` |
+
+It does **not** unify broken plurals — `مباراة` and `مباريات` still stem apart.
+That would need trigram or lemma-based matching.
+
+Two things follow for scrapers. Keep field **labels** out of indexed text:
+French stemming collapses *administrateur* and *administration* to one token,
+so a boilerplate label leaking into every description made a search for that
+grade match the whole table (see `COLUMN_BACKED_LABELS` in the emploi-public
+scraper). And render user content with `dir="auto"`, so an Arabic title lays
+out right-to-left without the page needing to know which language it is.
+
+No source ingests Arabic yet — 9rayti's post-bac concours section is the
+obvious first one.
 
 ---
 
@@ -371,6 +414,6 @@ Two things worth knowing before adding them:
   client-side — 338 KB of JavaScript and no text in the HTML. The framework can
   take a Playwright-backed session, but nothing needs one yet, so none is wired
   in.
-- **Search uses the `french` configuration.** Arabic-language listings will
-  index as unstemmed tokens and match only exactly. 9rayti publishes some of
-  its concours announcements in Arabic; the scholarships are French.
+- **Arabic search is ready but unexercised.** The second vector and the RTL
+  rendering are in place, and no source ingests Arabic yet — so the first one
+  that does will exercise a path only covered by tests.

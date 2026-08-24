@@ -96,12 +96,12 @@ export default async function OpportunityPage({
           {opportunity.status === "closed" && <Badge variant="outline">Closed</Badge>}
         </div>
 
-        <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
+        <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl" dir="auto">
           {opportunity.title}
         </h1>
 
         {opportunity.institution && (
-          <p className="flex items-center gap-2 text-muted-foreground">
+          <p className="flex items-center gap-2 text-muted-foreground" dir="auto">
             <Building2 className="size-4 shrink-0" aria-hidden />
             {opportunity.institution}
           </p>
@@ -132,7 +132,7 @@ export default async function OpportunityPage({
                     <dt className="text-xs tracking-wide text-muted-foreground uppercase">
                       {label}
                     </dt>
-                    <dd className="text-sm break-words">{renderValue(value)}</dd>
+                    <dd className="text-sm break-words" dir="auto">{renderValue(value)}</dd>
                   </div>
                 ))}
               </dl>
@@ -325,7 +325,7 @@ function DefinitionList({ text }: { text: string }) {
 
   if (pairs.some((p) => p === null)) {
     return (
-      <div className="flex flex-col gap-2 text-sm leading-relaxed">
+      <div className="flex flex-col gap-2 text-sm leading-relaxed" dir="auto">
         {lines.map((line, i) => (
           <p key={i}>{line}</p>
         ))}
@@ -338,7 +338,7 @@ function DefinitionList({ text }: { text: string }) {
       {(pairs as [string, string][]).map(([label, value]) => (
         <div key={label} className="flex flex-col gap-0.5">
           <dt className="text-xs tracking-wide text-muted-foreground uppercase">{label}</dt>
-          <dd className="text-sm break-words">{renderValue(value)}</dd>
+          <dd className="text-sm break-words" dir="auto">{renderValue(value)}</dd>
         </div>
       ))}
     </dl>

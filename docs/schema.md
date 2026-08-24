@@ -10,6 +10,8 @@ Defined in `supabase/migrations/`, applied in filename order:
 | `20260824000400_browse_views.sql` | `available_cities` facet view for the filter UI |
 | `20260824000500_notifications.sql` | `notifications` table + RLS |
 | `20260824000600_recommendations.sql` | `education_rank()` and `recommended_opportunities()` |
+| `20260824000700_customer_service_domain.sql` | call-centre / BPO domain tag |
+| `20260824000800_arabic_search.sql` | `search_vector_ar` + one weighting function for both languages |
 
 ```
 sources ──< opportunities >── domains (by slug, soft reference)
@@ -107,12 +109,21 @@ filtering on them should always be opt-in.
 
 ### Full-text search
 
-`search_vector` is a stored generated column built by
-`opportunity_search_vector()`, using the `french` configuration — listings are
-predominantly French, so stemming and stop words matter.
+Two stored generated columns, both built by the same
+`opportunity_search_vector(regconfig, …)` — one function so the field
+weighting cannot drift between languages:
 
-Weights: `title` **A** > `institution` and `domains` **B** >
-`conditions_to_apply` **C** > `description` **D**.
+| Column | Configuration | Queried when |
+| --- | --- | --- |
+| `search_vector` | `french` | the search text is Latin script |
+| `search_vector_ar` | `arabic` | the search text contains Arabic script |
+
+A single configuration cannot serve both. Snowball dictionaries stem every
+token they are given and never fall through to the next dictionary in the
+chain, so `french` and `arabic` cannot be combined into one config.
+
+Weights are identical in both: `title` **A** > `institution` and `domains`
+**B** > `conditions_to_apply` **C** > `description` **D**.
 
 ```sql
 select *, ts_rank(search_vector, q) as rank
@@ -122,7 +133,9 @@ select *, ts_rank(search_vector, q) as rank
 ```
 
 A helper function must build the vector because a generated column may only
-call immutable functions, and `array_to_string()` is merely stable.
+call immutable functions, and `array_to_string()` is merely stable. Note that
+replacing that function's body does **not** recompute stored values — the
+Arabic migration rebuilds the column rather than redefining it in place.
 
 There is also a `pg_trgm` index on `title` for fuzzy and prefix matching.
 

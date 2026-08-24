@@ -235,3 +235,70 @@ class TestRunBookkeeping:
 
         assert status == "partial"
         assert warnings == ["bad date on X"]
+
+class TestSearchVectors:
+    """Both stored vectors, exercised as SQL.
+
+    Listings arrive in French and Arabic. One text search configuration
+    cannot serve both -- snowball dictionaries stem every token they are
+    given and never fall through -- so there are two vectors and the app
+    picks by the script of the query.
+    """
+
+    def _hits(self, store, column: str, config: str, term: str) -> int:
+        with store.conn.cursor() as cur:
+            cur.execute(
+                f"select count(*) from opportunities "
+                f"where source_key = %s and {column} @@ websearch_to_tsquery(%s, %s)",
+                (SOURCE_KEY, config, term),
+            )
+            return cur.fetchone()[0]
+
+    def test_french_search_stems(self, store):
+        store.upsert(make(title="Concours de recrutement d'ingénieurs d'État"))
+        assert self._hits(store, "search_vector", "french", "ingénieur") == 1
+
+    def test_french_search_matches_across_the_weighted_fields(self, store):
+        store.upsert(make(institution="Ministère de la Justice", title="Concours X"))
+        assert self._hits(store, "search_vector", "french", "justice") == 1
+
+    def test_arabic_text_is_reachable_from_the_bare_word_form(self, store):
+        """The point of the Arabic configuration.
+
+        Announcements almost always carry the definite article
+        (الترشيح), while a person searching types the bare word
+        (ترشيح). Under the French configuration those are simply
+        different tokens and the listing is unreachable.
+        """
+        store.upsert(make(title="فتح باب الترشيح لولوج المدارس العليا"))
+
+        assert self._hits(store, "search_vector_ar", "arabic", "ترشيح") == 1
+        assert self._hits(store, "search_vector", "french", "ترشيح") == 0
+
+    def test_the_arabic_vector_also_matches_the_written_form(self, store):
+        store.upsert(make(title="فتح باب الترشيح لولوج المدارس العليا"))
+        assert self._hits(store, "search_vector_ar", "arabic", "الترشيح") == 1
+
+    def test_a_prefixed_form_reaches_the_same_listing(self, store):
+        store.upsert(make(title="الإعلان عن مباراة التوظيف"))
+        assert self._hits(store, "search_vector_ar", "arabic", "توظيف") == 1
+
+    def test_french_listings_stay_searchable_in_french(self, store):
+        """Adding the second vector must not disturb the first."""
+        store.upsert(make("a1", title="Concours de recrutement d'un Administrateur"))
+        store.upsert(make("a2", title="فتح باب الترشيح لولوج المدارس العليا"))
+
+        assert self._hits(store, "search_vector", "french", "administrateur") == 1
+
+    def test_both_vectors_are_kept_in_step_by_one_function(self, store):
+        """A single weighting function backs both columns, so a title
+        always outranks a description in either language."""
+        with store.conn.cursor() as cur:
+            cur.execute(
+                "select pg_get_functiondef(oid) from pg_proc "
+                "where proname = 'opportunity_search_vector'"
+            )
+            definitions = cur.fetchall()
+
+        assert len(definitions) == 1, "there should be exactly one weighting function"
+        assert "regconfig" in definitions[0][0]

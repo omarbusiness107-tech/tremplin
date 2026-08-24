@@ -8,6 +8,7 @@ import {
   PAGE_SIZE,
   WINDOW_DAYS,
 } from "@/lib/filters";
+import { searchTargetFor } from "@/lib/search";
 import { createClient } from "@/lib/supabase/server";
 
 export interface BrowseResult {
@@ -71,12 +72,12 @@ export async function browseOpportunities(
   }
 
   if (filters.q) {
-    // Matches the `french` configuration the generated column was built
-    // with; websearch syntax gives users quoted phrases and -exclusions.
-    query = query.textSearch("search_vector", filters.q, {
-      type: "websearch",
-      config: "french",
-    });
+    // The column and the configuration must agree with each other and
+    // with how the vector was generated; searchTargetFor picks the pair
+    // by the script of the query. websearch syntax gives users quoted
+    // phrases and -exclusions in either language.
+    const { column, config } = searchTargetFor(filters.q);
+    query = query.textSearch(column, filters.q, { type: "websearch", config });
   }
 
   switch (filters.sort) {
