@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+web/.next/
+web/out/
+web/build/
+next-env.d.ts
+.vercel
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environment
+.env
+.env.local
+.env*.local
+!.env.example
+
+# Scraper output / logs
+scrapers/out/
+*.log
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/

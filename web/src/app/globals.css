@@ -1,0 +1,237 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ---------------------------------------------------------------------
+   Tremplin — design tokens
+
+   The accent is Majorelle blue, the pigment Jacques Majorelle mixed for
+   his garden in Marrakech. It is the one blue that reads as specifically
+   Moroccan rather than as generic SaaS teal, and it holds up against the
+   saffron used for deadline urgency — the two are near-complementary, so
+   an urgent card separates from the field without either colour shouting.
+
+   Neutrals carry a slight blue bias so greys sit in the same family as
+   the accent instead of looking like an unrelated default grey.
+   --------------------------------------------------------------------- */
+:root {
+  --radius: 0.875rem;
+
+  --background: oklch(0.985 0.004 275);
+  --surface: oklch(1 0 0);
+  --surface-sunken: oklch(0.965 0.006 275);
+  --foreground: oklch(0.22 0.03 275);
+  --muted-foreground: oklch(0.52 0.025 275);
+  --subtle-foreground: oklch(0.65 0.02 275);
+
+  --border: oklch(0.91 0.008 275);
+  --border-strong: oklch(0.84 0.012 275);
+  --input: oklch(0.91 0.008 275);
+  --ring: oklch(0.50 0.21 277);
+
+  --primary: oklch(0.50 0.21 277);
+  --primary-hover: oklch(0.44 0.21 277);
+  --primary-foreground: oklch(0.99 0.004 275);
+  --primary-soft: oklch(0.94 0.04 277);
+  --primary-soft-foreground: oklch(0.38 0.18 277);
+
+  --secondary: oklch(0.955 0.008 275);
+  --secondary-foreground: oklch(0.32 0.03 275);
+
+  /* Deadline urgency. Three bands, so the colour means something
+     specific: this week, this month, later. */
+  --urgent: oklch(0.55 0.19 22);
+  --urgent-soft: oklch(0.955 0.035 22);
+  --soon: oklch(0.58 0.14 62);
+  --soon-soft: oklch(0.96 0.05 75);
+  --calm: oklch(0.52 0.10 165);
+  --calm-soft: oklch(0.955 0.03 165);
+
+  --destructive: oklch(0.55 0.19 22);
+
+  --shadow-card: 0 1px 2px oklch(0.22 0.03 275 / 0.04),
+                 0 8px 24px -12px oklch(0.22 0.03 275 / 0.12);
+  --shadow-lift: 0 2px 4px oklch(0.22 0.03 275 / 0.05),
+                 0 16px 40px -16px oklch(0.22 0.03 275 / 0.22);
+}
+
+.dark,
+:root[data-theme="dark"] {
+  --background: oklch(0.17 0.02 275);
+  --surface: oklch(0.215 0.024 275);
+  --surface-sunken: oklch(0.19 0.022 275);
+  --foreground: oklch(0.96 0.006 275);
+  --muted-foreground: oklch(0.72 0.018 275);
+  --subtle-foreground: oklch(0.58 0.02 275);
+
+  --border: oklch(1 0 0 / 11%);
+  --border-strong: oklch(1 0 0 / 20%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.72 0.16 277);
+
+  --primary: oklch(0.70 0.17 277);
+  --primary-hover: oklch(0.77 0.16 277);
+  --primary-foreground: oklch(0.16 0.03 277);
+  --primary-soft: oklch(0.30 0.09 277);
+  --primary-soft-foreground: oklch(0.87 0.10 277);
+
+  --secondary: oklch(0.27 0.022 275);
+  --secondary-foreground: oklch(0.94 0.008 275);
+
+  --urgent: oklch(0.74 0.15 24);
+  --urgent-soft: oklch(0.32 0.08 24);
+  --soon: oklch(0.79 0.13 70);
+  --soon-soft: oklch(0.32 0.06 70);
+  --calm: oklch(0.74 0.11 165);
+  --calm-soft: oklch(0.29 0.05 165);
+
+  --destructive: oklch(0.70 0.17 24);
+
+  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.4), 0 8px 24px -12px oklch(0 0 0 / 0.6);
+  --shadow-lift: 0 2px 4px oklch(0 0 0 / 0.45), 0 16px 40px -16px oklch(0 0 0 / 0.75);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not(.light) {
+    --background: oklch(0.17 0.02 275);
+    --surface: oklch(0.215 0.024 275);
+    --surface-sunken: oklch(0.19 0.022 275);
+    --foreground: oklch(0.96 0.006 275);
+    --muted-foreground: oklch(0.72 0.018 275);
+    --subtle-foreground: oklch(0.58 0.02 275);
+
+    --border: oklch(1 0 0 / 11%);
+    --border-strong: oklch(1 0 0 / 20%);
+    --input: oklch(1 0 0 / 14%);
+    --ring: oklch(0.72 0.16 277);
+
+    --primary: oklch(0.70 0.17 277);
+    --primary-hover: oklch(0.77 0.16 277);
+    --primary-foreground: oklch(0.16 0.03 277);
+    --primary-soft: oklch(0.30 0.09 277);
+    --primary-soft-foreground: oklch(0.87 0.10 277);
+
+    --secondary: oklch(0.27 0.022 275);
+    --secondary-foreground: oklch(0.94 0.008 275);
+
+    --urgent: oklch(0.74 0.15 24);
+    --urgent-soft: oklch(0.32 0.08 24);
+    --soon: oklch(0.79 0.13 70);
+    --soon-soft: oklch(0.32 0.06 70);
+    --calm: oklch(0.74 0.11 165);
+    --calm-soft: oklch(0.29 0.05 165);
+
+    --destructive: oklch(0.70 0.17 24);
+
+    --shadow-card: 0 1px 2px oklch(0 0 0 / 0.4), 0 8px 24px -12px oklch(0 0 0 / 0.6);
+    --shadow-lift: 0 2px 4px oklch(0 0 0 / 0.45), 0 16px 40px -16px oklch(0 0 0 / 0.75);
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-soft-foreground: var(--primary-soft-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-urgent: var(--urgent);
+  --color-urgent-soft: var(--urgent-soft);
+  --color-soon: var(--soon);
+  --color-soon-soft: var(--soon-soft);
+  --color-calm: var(--calm);
+  --color-calm-soft: var(--calm-soft);
+  --color-destructive: var(--destructive);
+
+  /* Card/muted aliases kept so shadcn-shaped primitives still resolve. */
+  --color-card: var(--surface);
+  --color-card-foreground: var(--foreground);
+  --color-muted: var(--surface-sunken);
+  --color-accent: var(--primary-soft);
+  --color-accent-foreground: var(--primary-soft-foreground);
+
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 3px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
+
+  /* Readex Pro and IBM Plex Sans Arabic both carry full Latin *and*
+     Arabic coverage, so a mixed-script page — which is most of them, an
+     Arabic title next to a French institution name — renders in one
+     type family rather than silently falling back mid-sentence. */
+  --font-display: var(--font-readex), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-plex-arabic), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  /* Arabic sits lower and needs more line height than Latin at the same
+     size; without this, headings crowd their descenders. */
+  :root[lang="ar"] body {
+    line-height: 1.75;
+  }
+  :root[lang="ar"] h1,
+  :root[lang="ar"] h2,
+  :root[lang="ar"] h3 {
+    letter-spacing: 0;
+    line-height: 1.5;
+  }
+
+  ::selection {
+    background-color: var(--primary-soft);
+    color: var(--primary-soft-foreground);
+  }
+}
+
+@layer utilities {
+  /* Logical properties so the whole layout mirrors under dir="rtl"
+     without a single RTL-specific rule anywhere else in the app. */
+  .stretched-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,76 @@
+name: Notifications
+
+# Runs after ingestion, so a listing discovered this morning can be
+# emailed the same morning. The schedule is a safety net: deadline
+# reminders must still go out on a day ingestion failed or was skipped.
+#
+# Both triggers firing is harmless. The notifications table has a unique
+# constraint on (user_id, opportunity_id, kind) and the runner claims rows
+# before sending, so a second run in the same hour sends nothing.
+on:
+  workflow_run:
+    workflows: ["Daily ingestion"]
+    types: [completed]
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+    inputs:
+      kind:
+        description: "Which notifications to send"
+        type: choice
+        options: [all, new_match, deadline_reminder]
+        default: all
+      dry_run:
+        description: "Print the emails instead of sending them"
+        type: boolean
+        default: false
+
+concurrency:
+  group: notifications
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: notifier/requirements.txt
+
+      - run: pip install -r notifier/requirements.txt
+
+      - name: Send notifications
+        working-directory: notifier
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NOTIFIER_FROM: ${{ vars.NOTIFIER_FROM }}
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          set -o pipefail
+          kind="${{ inputs.kind || 'all' }}"
+
+          args=(send)
+          if [ "$kind" = "all" ]; then args+=(--all); else args+=(--kind "$kind"); fi
+          if [ "${{ inputs.dry_run }}" = "true" ]; then args+=(--dry-run); fi
+
+          python -m morocco_notifier "${args[@]}" 2>&1 | tee notify.log
+
+      - name: Summarise
+        if: always()
+        working-directory: notifier
+        run: |
+          if [ -f notify.log ]; then
+            {
+              echo "### Notifications"
+              echo '```'
+              tail -8 notify.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi

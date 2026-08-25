@@ -1,0 +1,1432 @@
+<!doctype html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<link rel="preconnect" href="https://emploi-public.pages.dev">
+<link rel="shortcut icon" type="image/x-icon" href="https://emploi-public.pages.dev/media/icons/favicon.ico">
+<title>EMPLOI-PUBLIC -  Liste des concours </title>
+<link rel="stylesheet" href="https://emploi-public.pages.dev/media/fonts/fontawesome/css/all.min.css">
+<link rel="stylesheet" href="https://emploi-public.pages.dev/css/slick.min.css">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.1-rc.1/css/select2.min.css">
+<link rel="preconnect" href="https://unpkg.com">
+<link rel="stylesheet" href="https://unpkg.com/aos/dist/aos.css">
+<link rel="stylesheet" href="https://emploi-public.pages.dev/css/vendor/monthly.css">
+<link rel="stylesheet" href="https://emploi-public.pages.dev/css/styles.css">
+<link rel="stylesheet" href="https://emploi-public.pages.dev/css/custom.css">
+<link rel="stylesheet" href="https://emploi-public.pages.dev/accessibilty.min.css">
+</head>
+<body>
+<div class="loader-d">
+<img src="https://emploi-public.pages.dev/media/images/drapeau.svg" alt="drapeau loader">
+<div class="loader-c">
+<div class="inner one"></div>
+<div class="inner two"></div>
+<div class="inner three"></div>
+</div>
+</div>
+<div id="accessPanel" class="accessibility-panel" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="accessPanelTitle">
+<div class="accessPanel-header">
+<div class="accessPanel-header__l">
+<h2 id="accessPanelTitle" class="accessPanel-header__title">front_office.accessibilite_options</h2>
+</div>
+<button class="accessPanel-header__close" type="button" aria-label="front_office.accessibilite_fermer">
+<span style="width: 24px; height: 16px; display: flex;">
+</span>
+<span class="focus-outline"></span>
+</button>
+</div>
+<div class="accessPanel-features__wrapper">
+<button class="accessPanel-features__reset">
+<span class="accessPanel-features__reset__i">
+</span>
+<span class="accessPanel-features__reset__text">front_office.accessibilite_reinitialiser</span>
+</button>
+<div class="accessPanel-features__title">
+<span id="content_title" class="accessPanel-features__title__s">front_office.accessibilite_ajustement_contenu</span>
+</div>
+<div class="accessPanel-features">
+<div class="accessPanel-features__item">
+<button type="button" id="spacingText" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-spacing-1"></span></span>
+<div class="accessPanel-features__item__name">front_office.accessibilite_espacement</div>
+<span class="accessPanel-features__item__steps">
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+</span>
+</button>
+</div>
+<div class="accessPanel-features__item">
+<button type="button" id="biggerText" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-bigger-text-1"></span></span>
+<div class="accessPanel-features__item__name">front_office.accessibilite_texte_grand</div>
+<span class="accessPanel-features__item__steps">
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+</span>
+</button>
+</div>
+<div class="accessPanel-features__item">
+<button type="button" id="lineHeightText" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-line-height-1"></span></span>
+<div class="accessPanel-features__item__name">...</div>
+<span class="accessPanel-features__item__steps">
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+</span>
+</button>
+</div>
+<div class="accessPanel-features__item">
+<button type="button" id="dyslexiaText" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-font-dx"></span></span>
+<div class="accessPanel-features__item__name">front_office.accessibilite_dyslexie</div>
+<span class="accessPanel-features__item__steps">
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+</span>
+</button>
+</div>
+</div>
+<div class="accessPanel-features__title">
+<span id="display_title" class="accessPanel-features__title__s">front_office.accessibilite_ajustement_affichage</span>
+</div>
+<div class="accessPanel-features">
+<div class="accessPanel-features__item">
+<button type="button" id="contrastBg" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-contrast-plus"></span></span>
+<div class="accessPanel-features__item__name">front_office.accessibilite_contraste</div>
+<span class="accessPanel-features__item__steps">
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+</span>
+</button>
+</div>
+<div class="accessPanel-features__item">
+<button type="button" id="screenReader" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-screen-reader"></span></span>
+<div class="accessPanel-features__item__name">front_office.accessibilite_lecteur_ecran</div>
+</button>
+</div>
+<div class="accessPanel-features__item">
+<button type="button" id="highlightLinks" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-highlight-links"></span></span>
+<div class="accessPanel-features__item__name">front_office.accessibilite_liens</div>
+</button>
+</div>
+<div class="accessPanel-features__item">
+<button type="button" id="cursorGuide" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-cursor-1"></span></span>
+<div class="accessPanel-features__item__name">front_office.accessibilite_curseur</div>
+<span class="accessPanel-features__item__steps">
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+</span>
+</button>
+</div>
+<div class="accessPanel-features__item">
+<button type="button" id="hideImages" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-hide-images"></span></span>
+<div class="accessPanel-features__item__name">front_office.accessibilite_masquer_images</div>
+</button>
+</div>
+<div class="accessPanel-features__item">
+<button type="button" id="saturationBg" class="accessPanel-features__item__i">
+<span class="accessPanel-features__item__icon"><span class="icon icon-saturation-1"></span></span>
+<div class="accessPanel-features__item__name">front_office.accessibilite_saturation</div>
+<span class="accessPanel-features__item__steps">
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+<span class="accessPanel-features__step"><span class="accessPanel-features__step__i"></span></span>
+</span>
+</button>
+</div>
+</div>
+</div>
+<div class="accessPanel-footer">
+<div class="accessPanel-footer__l">
+<p class="accessPanel-footer__title">Spark Vibe ForNet</p>
+</div>
+</div>
+</div>
+<header>
+<div class="top-header">
+<div class="container">
+<div class="header-links">
+<a class="header-links-admin underline" href="https://backoffice.emploi-public.ma/"><i class="icon-espace-admin"></i>Espace administration</a>
+<ul>
+<li><a class="hover-link openLoginPopup"><i class="icon-open-account-login"></i>Se connecter</a></li>
+<li><a href="/fr/candidat/register" class="hover-link"><i class="icon-user-plus"></i>Créer un compte</a></li>
+</ul>
+</div>
+<div class="social-media">
+</div>
+<div class="dropdown-lang">
+<button class="dropdown-toggle hover-link" data-label="FR" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+FR
+<i class="fa fa-chevron-down"></i>
+</button>
+<ul class="dropdown-menu">
+<li><a class="dropdown-item" href="/ar/%D9%82%D8%A7%D8%A6%D9%85%D8%A9-%D8%A7%D9%84%D9%85%D8%A8%D8%A7%D8%B1%D9%8A%D8%A7%D8%AA">العربية</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="main-menu" data-sticky-wrap="true" data-sticky-class="is-sticky">
+<div class="container">
+<button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+<span class="burger-menu">
+<span></span><span></span><span></span>
+</span>
+</button>
+<a href="/fr/" class="logo">
+<img src="https://emploi-public.pages.dev/media/images/logo.svg" width="227" alt="L&#039;EMPLOI PUBLIC">
+</a>
+<div class="nav">
+<ul>
+<li class="has-submenu">
+<span class="nav-link underline">Chercher une annonce</span>
+<ul class="nav-submenu">
+<li><a href="/fr/concours-liste">Concours de recrutement</a></li>
+<li><a href="/fr/emploi-sup-liste">Emplois supérieurs</a></li>
+<li><a href="/fr/postes-respo-liste">Postes de responsabilités</a></li>
+<li><a href="/fr/experts-liste">Recrutement des experts</a></li>
+<li><a href="/fr/concours/calendrier">Calendrier des concours</a></li>
+<li><a href="/fr/poste_budgetaire-liste">Postes budgétaires</a></li>
+</ul>
+</li>
+<li class="has-submenu">
+<span class="nav-link underline">Fonctionnaire</span>
+<ul class="nav-submenu">
+<li><a href="/fr/eap-liste">Examens d&#039;Aptitude Professionnelle et Concours Professionnels</a></li>
+<li><a href="/fr/mobilite">Mobilité des fonctionnaires</a></li>
+<li><a href="/fr/content/decouvrir-la-fonction-publique">Questions fréquentes</a></li>
+</ul>
+</li>
+<li class="has-submenu">
+<span class="nav-link underline">Administrations qui recrutent</span>
+<ul class="nav-submenu">
+<li><a href="/fr/administration-liste?stat=service_etat">Services de l&#039;Etat</a></li>
+<li><a href="/fr/administration-liste?stat=collec">Collectivités territoriales</a></li>
+<li><a href="/fr/administration-liste?stat=etab_publics">Etablissements et Entreprises publiques</a></li>
+</ul>
+</li>
+<li class="has-submenu">
+<span class="nav-link underline">Textes juridiques</span>
+<ul class="nav-submenu">
+<li><a href="/fr/content/textes-concours">Concours de recrutement</a></li>
+<li><a href="/fr/content/textes-emploi-superieur">Emplois supérieurs</a></li>
+<li><a href="/fr/content/textes-examen">Postes de responsabilités</a></li>
+<li><a href="/fr/content/textes-experts">Recrutement des experts</a></li>
+<li><a href="/fr/content/textes-eap">Examens d&#039;Aptitude Professionnelle et Concours Professionnels</a></li>
+<li><a href="/fr/content/textes-mobilite">Mobilité des fonctionnaires</a></li>
+</ul>
+</li>
+<li class="has-submenu">
+<span class="nav-link underline">Nos services</span>
+<ul class="nav-submenu ">
+<li><a href="/fr/content/remuneration">Simulateur des salaires</a></li>
+<li><a href="/fr/content/r-c-grh">Référentiel Commun de la GRH</a></li>
+<li><a href="/fr/content/b-d-juridiques">Banque de Données Juridiques de la Fonction Publique</a></li>
+<li><a href="/fr/content/portail-de-transparence-et-acc-s-l-information-chafafiya">Portail de transparence et accès à l&#039;information chafafiya</a></li>
+<li><a href="https://www.idarati.ma/" target="_blank">Portail National Idarati</a></li>
+<li><a href="/fr/content/centre-d-appel-et-d-orientation-administrative">Centre d&#039;appel et d&#039;orientation administrative</a></li>
+<li><a href="/fr/content/portail-de-la-geolocalisation">Portail de géolocalisation des Services Publics</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="mobile-menu-wrapper collapse navbar-collapse" id="navbarSupportedContent"></div>
+</header>
+<div class="sticky-dc" data-margin-top="120" data-sticky-for="1023" data-sticky-class="is-sticky">
+<div>
+<button id="toggleAccessPanel" type="button" class="btn-accessibilty shadow" aria-controls="accessPanel" aria-expanded="false">
+</button>
+<a href="/fr/poser-une-question" title="Poser une question" class="tooltip-dc"><i class="fa-regular fa-envelope"></i><i class="fa-solid fa-envelope"></i></a>
+<a href="/fr/faq-liste" title="FAQ" class="tooltip-dc"><i class="fa-regular fa-circle-question"></i><i class="fa-solid fa-circle-question"></i></a>
+</div>
+<a href="#" class="tooltip-dc see-all d-sm-none"><i class="fa-regular fa-plus"></i></a>
+</div>
+<section class="block-banner">
+<div class="banner-wrapper">
+<div class="banner-image">
+<img src="/starterkit/build/assets/media/images/bn.png" alt="node.field_banniere.alt" class="bg" data-aos="zoom-out" data-aos-duration="600">
+</div>
+</div>
+<div class="overlay">
+<div class="container" data-aos="zoom-in" data-aos-duration="600">
+<h1>Concours de recrutement</h1>
+</div>
+</div>
+</section>
+<div class="b-breadcrumb container">
+<ul class="b-breadcrumb-list" data-aos="fade-up" data-aos-duration="600">
+<li><a href="/fr/">Accueil</a></li>
+<li><a href="/fr/concours-liste">Liste des concours</a></li>
+<li>
+<span class="b-current">
+Services de l&#039;Etat                                                        </span>
+</li>
+</ul>
+</div>
+<section class="container">
+<form id="filterSearch" class="a-filter" method="GET" name="a-filter" data-aos="fade-up" data-aos-duration="600" data-type="concours">
+<div class="row">
+<div class="col-12 col-md-4 mb-3">
+<label for="f-key">Mots-clés :
+<i class="fa-solid fa-circle-info" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Mots-clés"></i>
+</label>
+<input id="f-key" class="form-control" type="text" name="key_word" value="">
+</div>
+<div class="col-12 col-md-7 mb-3 select2-inner a-option">
+<label for="f-stat" class="full">
+Administration organisatrice :
+<i class="fa-solid fa-circle-info" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Gestion de l&#039;organisation"></i>
+</label>
+<select id="f-stat" name="stat" class="cascadingSelect" data-msg="Veuillez choisir les établissements">
+<option value="0" selected>-Choisir l&#039;administration-</option>
+<option value="service_etat" data-value="/fr/partials/get-etab/service_etat" selected>
+Services de l&#039;Etat
+</option>
+<option value="collec"  data-value="/fr/partials/get-etab/collec" >
+Collectivités territoriales
+</option>
+<option value="etab_publics" data-value="/fr/partials/get-etab/etab_publics" >
+Etablissements et Entreprises publiques
+</option>
+</select>
+<select id="f-establishment" name="establishment[]" class="listSelect" data-counter="Administration" data-placeholder="-Choisir l&#039;administration-"  multiple>
+<option value="1" >
+Le chef du gouvernement                            </option>
+<option value="3" >
+Ministère de l’intérieur                            </option>
+<option value="4" >
+Ministère des Affaires étrangères, de la Coopération africaine et des Marocains résidant à l’Étranger                            </option>
+<option value="5" >
+Ministère de la justice                            </option>
+<option value="6" >
+Ministère des habous et des affaires islamiques                            </option>
+<option value="7" >
+Secrétariat général du gouvernement                            </option>
+<option value="8" >
+Ministère de l’Économie et des Finances                            </option>
+<option value="9" >
+Ministère de l’Aménagement du territoire national, de l’Urbanisme, de l’Habitat et de la Politique de la ville - Département de l’Habitat                            </option>
+<option value="10" >
+Ministère de l’Agriculture, de la Pêche maritime, du développement rural et des eaux et forêts - Département de la Pêche maritime                            </option>
+<option value="11" >
+Ministère de l’Agriculture, de la Pêche maritime, du développement rural et des eaux et forêts - Département de l’Agriculture                            </option>
+<option value="12" >
+Ministère de l’Enseignement supérieur, de la recherche scientifique et de l’innovation                            </option>
+<option value="13" >
+Ministère de l’Education nationale, du Préscolaire et des Sports - Département de l’Education nationale                            </option>
+<option value="14" >
+Ministère de la Jeunesse, de la Culture et de la Communication - Département de la Jeunesse                            </option>
+<option value="15" >
+Ministère de l’Equipement et de l’Eau                            </option>
+<option value="16" >
+Ministère de la Santé et de la Protection sociale                            </option>
+<option value="17" >
+Ministère de la Jeunesse, de la Culture et de la Communication - Département de la Communication                            </option>
+<option value="18" >
+Ministère de l’Equipement et de l’Eau - Département de l&#039;Eau                            </option>
+<option value="19" >
+Ministère de l’Inclusion économique, de la Petite entreprise, de l’Emploi et des Compétences                            </option>
+<option value="20" >
+Ministère de l’Inclusion économique, de la Petite entreprise, de l’Emploi et des Compétences - Département de la Formation professionnelle                            </option>
+<option value="21" >
+Ministère de l’Industrie et du Commerce                            </option>
+<option value="22" >
+Ministère du Tourisme, de l’Artisanat et de l’Economie sociale et solidaire - Département du Tourisme                            </option>
+<option value="23" >
+Ministère de la Solidarité, de l’Insertion sociale et de la Famille                            </option>
+<option value="24" >
+Ministère de la Jeunesse, de la Culture et de la Communication - Département de la Culture                            </option>
+<option value="25" >
+Ministère du Tourisme, de l’Artisanat et de l’Economie sociale et solidaire - Département de l’Artisanat et de l’Economie sociale et solidaire                            </option>
+<option value="26" >
+Ministère délégué auprès du chef du gouvernement chargé des relations avec le parlement                            </option>
+<option value="27" >
+Ministère de l’administration de la défense nationale                            </option>
+<option value="28" >
+Ministère chargée des Marocains résidant à l’Étranger                            </option>
+<option value="29" >
+Ministère chargé des affaires générales et de la gouvernance                            </option>
+<option value="30" >
+Ministère de la Transition numérique de la Réforme de l’Administration                            </option>
+<option value="31" >
+Haut commissariat au plan                            </option>
+<option value="32" >
+Haut commissariat aux anciens résistants et anciens membres de l’armée de libération                            </option>
+<option value="33" >
+Ministère de l’Agriculture, de la Pêche maritime, du développement rural et des eaux et forêts - Département des eaux et forêts                            </option>
+<option value="34" >
+Ministère d&#039;Etat chargé des Droits de l&#039;Homme et des Relations avec le Parlement - Département des Droits de l&#039;Homme                            </option>
+<option value="36" >
+Ministère de l’intérieur -Inspection des Forces Auxiliaires Zone Nord-                            </option>
+<option value="37" >
+Ministère de la Transition énergétique et du Développement durable - Département du Développement durable                            </option>
+<option value="38" >
+Ministère de l’Économie et des Finances - Administration des Douanes et Impôts Indirects                            </option>
+<option value="39" >
+Délégation générale à l&#039;administration pénitentiaire et à la réinsertion                            </option>
+<option value="40" >
+Ministère de l’Économie et des Finances - Direction Générale des Impôts                            </option>
+<option value="41" >
+Ministère de l&#039;enseignement supérieur, de la recherche scientifique et de la formation des cadres -Direction de la formation des cadres-                            </option>
+<option value="43" >
+Ministère de l&#039;intérieur -Centre régional d&#039;Investissement de la région de Tanger Tétouan-                            </option>
+<option value="44" >
+Ministère de l’intérieur -Direction Générale de la Protection Civile-                            </option>
+<option value="45" >
+Ministère de l’intérieur -Direction Générale de la Sûreté Nationale-                            </option>
+<option value="49" >
+Ministère délégué auprès du Ministère de l’Industrie, de l’investissement, du commerce et de l’économie numérique, chargée du commerce extérieur                            </option>
+<option value="50" >
+Cour des comptes                            </option>
+<option value="59" >
+Ministère de la Transition énergétique et du Développement durable - Département de la Transition énergétique                            </option>
+<option value="64" >
+Ministère de l&#039;Enseignement Supérieur de la Recherche Scientifique et de la Formation des Cadres - Présidence de l&#039;Université moulay ISMAIL -MEKNES-                            </option>
+<option value="65" >
+Ministère de l&#039;Enseignement Supérieur de la Recherche Scientifique et de la Formation des Cadres - Université Sultan Moulay Slimane -Béni Mellal                             </option>
+<option value="66" >
+Ministère de l&#039;Habitat, de l&#039;Urbanisme et de la Politique de la Ville -Institut National d&#039;Aménagement et d&#039;Urbansime -                            </option>
+<option value="81" >
+Ministère de l&#039;Enseignement Supérieur de la Recherche Scientifique et de la Formation des Cadres - Université Hassan II - Casablanca                             </option>
+<option value="89" >
+Ministère de l&#039;Enseignement Supérieur de la Recherche Scientifique et de la Formation des Cadres -Ecole Nationale Supérieure d&#039;Arts et Métiers- Meknès                            </option>
+<option value="120" >
+Ministère de l&#039;enseignement supérieur, de la recherche scientifique et de la formation des cadres - Université Al Karaouine                            </option>
+<option value="146" >
+Ministère de l&#039;Enseignement Supérieur de la Recherche Scientifique et de la Formation des Cadres - Université Mohammed V - Souissi                            </option>
+<option value="161" >
+Ministère de l&#039;Enseignement Supérieur de la Recherche Scientifique et de la Formation des Cadres -Ecole Nationale de Commerce et de Gestion- Fès                            </option>
+<option value="273" >
+Ministère de l’Économie et des Finances - Trésorerie Générale du Royaume                            </option>
+<option value="291" >
+Ministère de l’Aménagement du territoire national, de l’Urbanisme, de l’Habitat et de la Politique de la ville                            </option>
+<option value="292" >
+Conseil national des droits de l&#039;Homme                            </option>
+<option value="405" >
+Chambre des Représentants                            </option>
+<option value="431" >
+Administration de la défense nationale - Gendarmerie Royale                            </option>
+<option value="447" >
+Conseil Economique, Social et Environnemental                            </option>
+<option value="550" >
+Ministère de l’intérieur -Direction du développement des compétences et de la transformation digitale-                            </option>
+<option value="559" >
+Présidence du parquet général                            </option>
+<option value="561" >
+Conseil Supérieur du Pouvoir Judiciaire                            </option>
+<option value="571" >
+Délégation interministérielle aux droits de l&#039;Homme                            </option>
+<option value="579" >
+plusieurs départements ministériels (Concours réservé aux personnes en situation de handicap)                            </option>
+<option value="584" >
+Ministère du Tourisme, de l’Artisanat, du Transport Aérien et de l’Economie Sociale - Direction Générale de l’Aviation Civile                            </option>
+<option value="585" >
+Chambre des Conseillers                            </option>
+<option value="606" >
+Ministère de l’intérieur -Inspection Générale des Forces Auxiliaires Zone Sud-                            </option>
+<option value="620" >
+Ministère du Transport et de la Logistique                            </option>
+<option value="622" >
+Ministère de l’Investissement, de la Convergence et de l’évaluation des politiques publiques                            </option>
+<option value="624" >
+Ministère de l’intérieur -Province d&#039;Azilal-                            </option>
+<option value="625" >
+Ministère de l’intérieur -Province de Figuig-                            </option>
+<option value="626" >
+Ministère de l’intérieur -Province de Boulemane-                            </option>
+<option value="627" >
+Ministère de l’intérieur -Province de Midelt-                            </option>
+<option value="628" >
+Ministère de l’intérieur -Province Ouarzazate-                            </option>
+<option value="629" >
+Ministère de l’intérieur -Province Zagora-                            </option>
+<option value="630" >
+Institution du Mediateur du Royaume                            </option>
+<option value="632" >
+Ministère de l’intérieur -Préfecture de Rabat-                            </option>
+<option value="633" >
+Ministère de l’intérieur -Province de Tata-                            </option>
+<option value="634" >
+Ministère de l’intérieur -Préfecture Tanger Asilah-                            </option>
+<option value="642" >
+Ministère de l’intérieur -Province de Guelmim-                            </option>
+<option value="645" >
+Instance Nationale de la Probité de la Prévention et de la Lutte contre la Corruption                            </option>
+<option value="647" >
+Ministère de l’intérieur -Province de Safi-                            </option>
+<option value="648" >
+Ministère de l’intérieur -Province d&#039;Errachidia-                            </option>
+<option value="649" >
+Ministère de l’intérieur -Province Berkane-                            </option>
+<option value="650" >
+Ministère de l’intérieur -Province Chtouka ait baha-                            </option>
+<option value="651" >
+Ministère de l’intérieur -Province d&#039;Al Haouz-                            </option>
+<option value="652" >
+Ministère de l’intérieur -Province Chefchaouen-                            </option>
+<option value="653" >
+Ministère de l’intérieur -Province Taounate-                            </option>
+<option value="654" >
+Ministère de l’intérieur -Province de Nador-                            </option>
+<option value="657" >
+Ministère de l’intérieur -Province Khouribga-                            </option>
+<option value="658" >
+Ministère de l’intérieur -Province d&#039;Essaouira-                            </option>
+<option value="668" >
+Ministère de l’intérieur -Province d&#039;&#039;El Hajeb-                            </option>
+<option value="669" >
+Ministère de l’intérieur -Province Médiouna-                            </option>
+<option value="671" >
+Ministère de l’intérieur -Préfecture d&#039;&#039;Oujda Angad-                            </option>
+<option value="672" >
+Ministère de l’intérieur -Préfecture d&#039;&#039;Agadir Idaoutanane-                            </option>
+<option value="678" >
+Ministère de l’intérieur -Préfecture  Fès-                            </option>
+<option value="679" >
+Ministère de l’intérieur -Préfecture de Salé-                            </option>
+<option value="680" >
+Ministère de l’intérieur -Province de Safi-                            </option>
+<option value="681" >
+Ministère de l’intérieur -Province de Larache-                            </option>
+<option value="682" >
+Ministère de l’intérieur -Province de Khemisset-                            </option>
+<option value="684" >
+Ministère de l’intérieur -Province de Chichaoua-                            </option>
+<option value="689" >
+Ministère de l’intérieur -Province de Tinghir-                            </option>
+<option value="691" >
+Ministère de l’intérieur -Préfecture d&#039;arrondissements ain chock-                            </option>
+<option value="694" >
+Ministère de l’intérieur -Province de Sidikacem-                            </option>
+<option value="696" >
+Ministère de l’intérieur -Préfecture d&#039;arrondissements Ain Sebâa - Hay Mohammadi-                            </option>
+<option value="697" >
+Ministère de l’intérieur -Province de Benslimane-                            </option>
+<option value="701" >
+Ministère de l&#039;Intérieur - Préfecture Province Es-Semara                            </option>
+<option value="702" >
+Ministère de l’intérieur -Préfecture de Sefrou-                            </option>
+<option value="706" >
+Ministère de l’intérieur -Préfecture-arrondissement Ben M&#039;Sick-                            </option>
+<option value="707" >
+Ministère de l’intérieur -Préfecture de Casablanca-                            </option>
+<option value="710" >
+Ministère de l’intérieur -Province Khénifra-                            </option>
+<option value="712" >
+Ministère de l’intérieur -Province Jerada-                            </option>
+<option value="714" >
+Ministère de l’intérieur -Province d&#039;El Jadida                            </option>
+<option value="717" >
+Ministère de l’intérieur -Province de Moulay Yacoub-                            </option>
+<option value="719" >
+Ministère de l’intérieur -Province Taza-                            </option>
+<option value="720" >
+Ministère de l’intérieur -Province Marrakech-                            </option>
+<option value="721" >
+Ministère de l’intérieur -Préfecture m&#039;diq fnideq-                            </option>
+<option value="722" >
+Ministère de l’intérieur -Préfecture d&#039;arrondissements Sidi BERNOUSSI -                            </option>
+<option value="723" >
+Ministère de l’intérieur -Province de Youssoufia-                            </option>
+<option value="725" >
+Ministère de l’intérieur-Province Nouaceur-                            </option>
+<option value="727" >
+Ministère de l’intérieur -Préfecture d&#039;arrondissements Al Fida Mers Sultan-                            </option>
+<option value="729" >
+Ministère de l’intérieur -Préfecture de Beni Mellal-                            </option>
+<option value="730" >
+Ministère de l’intérieur -Province d&#039;Aousserd-                            </option>
+<option value="731" >
+Ministère de l’intérieur -Préfecture de TanTan-                            </option>
+<option value="732" >
+Ministère de l’intérieur -Province Guercif-                            </option>
+<option value="733" >
+Ministère de l’intérieur -Province de Fquih Ben Salah-                            </option>
+<option value="734" >
+Ministère de l’intérieur -Province de Driouch-                            </option>
+<option value="736" >
+Ministère de l’intérieur -Préfecture d&#039;arrondissements de Casablanca-Anfa-                            </option>
+<option value="738" >
+Ministère de l’intérieur -Préfecture de Mohammedia-                            </option>
+<option value="739" >
+Ministère de l’intérieur -Province de Fahs Anjara-                            </option>
+<option value="740" >
+Ministère de l’intérieur -Province de Settat-                            </option>
+<option value="743" >
+Ministère de l’intérieur -Province de Ouezzane-                            </option>
+<option value="746" >
+Ministère de l’intérieur -Province de Tarfaya-                            </option>
+<option value="747" >
+Ministère de l’intérieur -Province d&#039;El Kalaa des Sraghna-                            </option>
+<option value="751" >
+Ministère de l’intérieur -Province de Sidi Ifni                            </option>
+<option value="753" >
+Ministère de l’intérieur -Préfecture de Sidi Bennour-                            </option>
+<option value="754" >
+Ministère de l&#039;intérieur - Préfecture de Skhirat-Temara                            </option>
+<option value="755" >
+Ministère de l’intérieur -Préfecture de Kénitra-                            </option>
+<option value="756" >
+Ministère de l&#039;intérieur - Préfecture de Tiznit-                            </option>
+<option value="757" >
+Ministère de l&#039;Intérieur -Province de Laayoune-                            </option>
+</select>
+</div>
+<div class="col-12 col-md-1 mb-3 d-flex a-button">
+<button type="submit" class="btn btn-dark btn-sm p-3 mt-auto d-inline-flex"><i class="fa-solid fa-magnifying-glass"></i></button>
+</div>
+<div id="collapseOptions" class="collapse">
+<div class="row">
+<div class="col-12 col-md-8 mb-3 select2-inner">
+<label for="f-corps">
+Corps :
+<i class="fa-solid fa-circle-info" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Corps"></i>
+</label>
+<label for="f-grade">
+Grade :
+<i class="fa-solid fa-circle-info" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Grade"></i>
+</label>
+<select id="f-corps" name="corps" class="cascadingSelect" data-msg="Veuillez choisir un corps">
+<option value="0" selected>-Choisir le corps-</option>
+<option value="0500" data-value="/fr/partials/get-grade/0500" >
+Cadres de la cour des comptes                                    </option>
+<option value="0602" data-value="/fr/partials/get-grade/0602" >
+Magistrats                                    </option>
+<option value="0604" data-value="/fr/partials/get-grade/0604" >
+Personnel du Greffe                                    </option>
+<option value="0605" data-value="/fr/partials/get-grade/0605" >
+Secrétaires juridiques                                    </option>
+<option value="0700" data-value="/fr/partials/get-grade/0700" >
+Cadres diplomatiques et consulaires                                    </option>
+<option value="0806" data-value="/fr/partials/get-grade/0806" >
+Personnel d&#039;encadrement des forces auxiliaires                                    </option>
+<option value="0807" data-value="/fr/partials/get-grade/0807" >
+Personnel de rang des forces auxiliaires                                    </option>
+<option value="0808" data-value="/fr/partials/get-grade/0808" >
+Sureté nationale                                    </option>
+<option value="0810" data-value="/fr/partials/get-grade/0810" >
+Inspection générale de l&#039;administration territoriale                                    </option>
+<option value="0811" data-value="/fr/partials/get-grade/0811" >
+Protection Civile                                    </option>
+<option value="0814" data-value="/fr/partials/get-grade/0814" >
+Agents d&#039;autorité                                    </option>
+<option value="08xx" data-value="/fr/partials/get-grade/08xx" >
+Personnel communal                                    </option>
+<option value="1002" data-value="/fr/partials/get-grade/1002" >
+Enseignants-Chercheurs de l&#039;Enseignement Supérieur                                    </option>
+<option value="1003" data-value="/fr/partials/get-grade/1003" >
+Enseignants chercheurs de médecine, de pharmacie et de medécine dentaire                                    </option>
+<option value="1108" data-value="/fr/partials/get-grade/1108" >
+Inspecteur pédagogique de l&#039;éducation nationale                                    </option>
+<option value="1109" data-value="/fr/partials/get-grade/1109" >
+Enseignant de l&#039;éducation nationale                                    </option>
+<option value="1110" data-value="/fr/partials/get-grade/1110" >
+Intendants et Inspecteurs des services matériels et financiers de l&#039;éducation nationale                                    </option>
+<option value="1111" data-value="/fr/partials/get-grade/1111" >
+Planification et orientation pédagogique de l&#039;éducation nationale                                    </option>
+<option value="1112" data-value="/fr/partials/get-grade/1112" >
+Spécialistes pédagogiques et sociaux, économies et administrations de l&#039;&#039;éducation nationale                                    </option>
+<option value="1113" data-value="/fr/partials/get-grade/1113" >
+Administrateurs de L’education Nationale                                    </option>
+<option value="1114" data-value="/fr/partials/get-grade/1114" >
+Professeurs Assistants du Ministère de L’éducation Nationale                                    </option>
+<option value="1203" data-value="/fr/partials/get-grade/1203" >
+Etudiants des hôpitaux                                    </option>
+<option value="1206" data-value="/fr/partials/get-grade/1206" >
+Infirmiers et assistants médicaux                                    </option>
+<option value="1303" data-value="/fr/partials/get-grade/1303" >
+Inspection générale des Finances                                    </option>
+<option value="1304" data-value="/fr/partials/get-grade/1304" >
+personnel de l&#039;&#039;ADII                                    </option>
+<option value="1600" data-value="/fr/partials/get-grade/1600" >
+Personnel d&#039;atelier de l&#039;imprimerie officielle                                    </option>
+<option value="1601" data-value="/fr/partials/get-grade/1601" >
+Conseillers Juridiques                                    </option>
+<option value="2903" data-value="/fr/partials/get-grade/2903" >
+Personnel d&#039;inspection et d&#039;enseignement artistique                                    </option>
+<option value="3100" data-value="/fr/partials/get-grade/3100" >
+Cadres du Ministère de l&#039;emploi                                    </option>
+<option value="3400" data-value="/fr/partials/get-grade/3400" >
+Gendarmerie Royale                                    </option>
+<option value="5101" data-value="/fr/partials/get-grade/5101" >
+Surveillance et sécurité administration pénitentiaire                                    </option>
+<option value="5102" data-value="/fr/partials/get-grade/5102" >
+Fonctionnaires de l&#039;Administration Pénitentiaire et de la Réinsertion                                    </option>
+<option value="5501" data-value="/fr/partials/get-grade/5501" >
+Fonctionnaires administratifs du parlement                                    </option>
+<option value="9904" data-value="/fr/partials/get-grade/9904" >
+Techniciens                                    </option>
+<option value="9909" data-value="/fr/partials/get-grade/9909" >
+Cadres de formation, d&#039;encadrement, d&#039;orientation, de planification et d&#039;inspection des établissements de formation professionnelle                                    </option>
+<option value="9910" data-value="/fr/partials/get-grade/9910" >
+Enseignants Chercheurs des Etablissements de Formation des Cadres Superieurs                                    </option>
+<option value="9911" data-value="/fr/partials/get-grade/9911" >
+Médecins, pharmaciens et chirurgiens dentistes                                    </option>
+<option value="9912" data-value="/fr/partials/get-grade/9912" >
+Médecins véterinaires                                    </option>
+<option value="9913" data-value="/fr/partials/get-grade/9913" >
+Administrateurs                                    </option>
+<option value="9914" data-value="/fr/partials/get-grade/9914" >
+Rédacteurs                                    </option>
+<option value="9915" data-value="/fr/partials/get-grade/9915" >
+Adjoints techniques                                    </option>
+<option value="9916" data-value="/fr/partials/get-grade/9916" >
+Adjoints administratifs                                    </option>
+<option value="9917" data-value="/fr/partials/get-grade/9917" >
+Ingénieurs et architectes                                    </option>
+<option value="9999" data-value="/fr/partials/get-grade/9999" >
+Personnel de la formation professionnelle                                    </option>
+<option value="99xx" data-value="/fr/partials/get-grade/99xx" >
+Infirmiers et techniciens de santé                                    </option>
+<option value="CCCC" data-value="/fr/partials/get-grade/CCCC" >
+conservateurs judiciaires                                    </option>
+<option value="xxyy" data-value="/fr/partials/get-grade/xxyy" >
+Personnel du CESE                                    </option>
+<option value="xxzz" data-value="/fr/partials/get-grade/xxzz" >
+Adjoint Pédagogiques                                    </option>
+<option value="xyzz" data-value="/fr/partials/get-grade/xyzz" >
+Personnel de l&#039;&#039;Institut Pasteur du Maroc                                    </option>
+<option value="yyyy" data-value="/fr/partials/get-grade/yyyy" >
+Administration éducative et gestion                                    </option>
+<option value="yyzz" data-value="/fr/partials/get-grade/yyzz" >
+Personnel du Conseil de la Concurrence                                    </option>
+</select>
+<select id="f-grade" name="grade[]" class="listSelect" data-counter="Grade" data-placeholder="-Choisir le grade-" disabled="" multiple>
+</select>
+</div>
+<div class="col-12 col-md-4 mb-3">
+<label for="f-region">
+Région :
+<i class="fa-solid fa-circle-info" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Région"></i>
+</label>
+<select id="f-region" name="region" class="text-group">
+<option value="0" selected>-Choisir la région-</option>
+<option value="1"  >
+BENI MELLAL-KHENIFRA                                    </option>
+<option value="2"  >
+DRAA-TAFILALET                                    </option>
+<option value="3"  >
+EDDAKHLA-OUED ED DAHAB                                    </option>
+<option value="4"  >
+FES MEKNES                                    </option>
+<option value="5"  >
+GRAND CASABLANCA-SETTAT                                    </option>
+<option value="6"  >
+GUELMIM-OUED NOUN                                    </option>
+<option value="7"  >
+LAAYOUNE-SAKIA EL HAMRA                                    </option>
+<option value="8"  >
+MARRAKECH-SAFI                                    </option>
+<option value="9"  >
+ORIENTAL                                    </option>
+<option value="10"  >
+RABAT-SALE-KENITRA                                    </option>
+<option value="11"  >
+SOUSS-MASSA                                    </option>
+<option value="12"  >
+TANGER TETOUAN AL HOCEIMA                                    </option>
+<option value="13"  >
+---------------                                    </option>
+</select>
+</div>
+<div class="col-12 col-md-4 mb-3 position-relative">
+<label for="date_limit">
+Limite de dépôt :
+<i class="fa-solid fa-circle-info" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Limite de dépôt"></i>
+</label>
+<input placeholder="JJ-MM-AAAA" type="text" name="datePicker" id="date_limit"  class="form-control calendar" readonly>
+<button type="button" class="btn btn-sm btn-dark reset-date reset-date--limit" style="display:none">
+<i class="fa-solid fa-x"></i>
+</button>
+</div>
+<div class="col-12 col-md-4 mb-3 position-relative">
+<label for="date_from">
+De :
+<i class="fa-solid fa-circle-info" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="De"></i>
+</label>
+<input placeholder="JJ-MM-AAAA" type="text" name="date_from" id="date_from"  class="form-control calendar" readonly>
+<button type="button" class="btn btn-sm btn-dark reset-date reset-date--from" style="display:none">
+<i class="fa-solid fa-x"></i>
+</button>
+</div>
+<div class="col-12 col-md-4 mb-3 position-relative">
+<label for="date_to">
+À :
+<i class="fa-solid fa-circle-info" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="À"></i>
+</label>
+<input placeholder="JJ-MM-AAAA" type="text" name="date_to" id="date_to"  class="form-control calendar" readonly>
+<button type="button" class="btn btn-sm btn-dark reset-date reset-date--to" style="display:none">
+<i class="fa-solid fa-x"></i>
+</button>
+</div>
+<div class="col-12 col-md-4 mb-3">
+<label for="f-procedure">
+Etape de la procédure :
+<i class="fa-solid fa-circle-info" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Etape de la procédure"></i>
+</label>
+<select id="f-procedure" name="procedure" class="text-group">
+<option value="0" selected>-Choisir le statut-</option>
+<option value="avis" >Annonce</option>
+<option value="convocation" >Convocation pour l&#039;examen écrit</option>
+<option value="oral" >Convocation pour l&#039;entretien oral</option>
+<option value="resultat" >Résultats</option>
+</select>
+</div>
+<div class="col-12 actions">
+<div class="col-12 col-md-8">
+<button type="button" id="open_popup" class="btn btn-secondary b-b" data-bs-toggle="modal" data-bs-target="#popup-login">
+<i class="fa-solid fa-floppy-disk"></i>Sauvegarder ma recherche
+</button>
+<div class="check-box">
+<input type="checkbox" id="switch" name="alert-checkbox">
+<label for="switch">Toggle</label>
+<span>Me notifier par e-mail</span>
+</div>
+</div>
+<div class="col-12 col-md-4">
+<button type="submit" class="btn btn-dark"><i class="fa-solid fa-magnifying-glass"></i>Rechercher</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="d-flex justify-content-center mt-2">
+<button class="btn btn-sm btn-show shadow position-absolute border-0 collapsed" type="button"
+data-bs-text=""
+data-bs-hv=""
+data-bs-toggle="collapse"
+data-bs-target="#collapseOptions" aria-expanded="true" aria-controls="collapseOptions">
+<i class="fa fa-chevron-down mx-2" style="color: var(--primary-color);"></i><span>Recherche avancée</span>
+</button>
+</div>
+</form>
+<div class="a-filter-selection" data-aos="fade-up" data-aos-duration="500">
+<span href="#" class="a-filter-attr mt-2" data-id="service_etat">
+<span>
+Services de l&#039;Etat                                                                    </span>
+</span>
+<span class="w-100 mt-2 px-4 text-secondary">
+1.101 Résultats
+</span>
+</div>
+<div id="listing-switcher" class="list-s" data-length="1101">
+<div class="switcher-inner mb-4" data-aos="fade-up" data-aos-duration="600">
+<div class="btn-group concours">
+<a href="#" id="btn-list" class="btn btn-light">
+<i class="fa-solid fa-list"></i>
+</a>
+<a href="#" id="btn-grid" class="btn btn-light">
+<i class="fa-solid fa-grip-vertical"></i>
+</a>
+</div>
+</div>
+<div class="row">
+<div class="s-item col-12 col-md-4 mb-5" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/7babf89f-94cb-4f16-8e62-84adf1859961" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-1">
+<img  src="/backoffice/files/images/administrations/logo-017.png" alt="Avis de concours de recrutement de Administrateur 2ème grade - Echelle 11" width="85" height="85">
+<h2 class="card-title">Avis de concours de recrutement de Administrateur 2ème grade - Echelle 11</h2>
+<div class="card-text"><i class="icon-building-gra"></i>Ministère de la Jeunesse, de la Culture et de la Communication - Département de la Communication</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+<div class="btn btn-sm btn-danger">Dépôt en ligne</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>1 poste</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 28 Août 2026
+- 16:30
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 13 Septembre 2026</div>
+</div>
+</a>
+</div>
+<div class="s-item col-12 col-md-4 mb-5" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/78b27d05-3b86-47fc-9356-b0f19b67b73e" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-1">
+<img  src="/backoffice/files/images/administrations/logo-005.png" alt="Avis de concours de recrutement de Commissaire Judiciaire 3ème grade - Echelle 10" width="85" height="85">
+<h2 class="card-title">Avis de concours de recrutement de Commissaire Judiciaire 3ème grade - Echelle 10</h2>
+<div class="card-text"><i class="icon-building-gra"></i>Ministère de la justice</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>12 postes</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 28 Août 2026
+- 16:30
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 27 Septembre 2026</div>
+</div>
+</a>
+</div>
+<div class="s-item col-12 col-md-4 mb-5" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/72da9541-e88d-4bde-929e-f342578c1539" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-1">
+<img  src="/starterkit/build/assets/media/images/Ministre-sm-default-image.jpg" alt="Avis de concours de recrutement de Administrateur 2ème grade - Echelle 11" width="85" height="85">
+<h2 class="card-title">Avis de concours de recrutement de Administrateur 2ème grade - Echelle 11</h2>
+<div class="card-text"><i class="icon-building-gra"></i>Ministère de l’intérieur -Préfecture d&#039;&#039;Oujda Angad-</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+<div class="btn btn-sm btn-danger">Dépôt en ligne</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>1 poste</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 11 Septembre 2026
+- 16:30
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 4 Octobre 2026</div>
+</div>
+</a>
+</div>
+<div class="s-item col-12 col-md-4 mb-5" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/0b660a5c-18e4-42a9-b35a-96cd32f86b53" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-2">
+<img  src="/starterkit/build/assets/media/images/Ministre-sm-default-image.jpg" alt="Avis de concours de recrutement de Technicien de 3ème grade - Echelle 9" width="85" height="85">
+<h2 class="card-title">Avis de concours de recrutement de Technicien de 3ème grade - Echelle 9</h2>
+<div class="card-text"><i class="icon-building-gra"></i>Ministère de l’Agriculture, de la Pêche maritime, du développement rural et des eaux et forêts - Département de la Pêche maritime</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+<div class="btn btn-sm btn-danger">Dépôt en ligne</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>1 poste</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 28 Août 2026
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 6 Septembre 2026</div>
+</div>
+</a>
+</div>
+<div class="s-item col-12 col-md-4 mb-5" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/567a5bc9-61a3-486f-be9d-21a3919bdcca" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-2">
+<img  src="/backoffice/files/images/administrations/logo-011.png" alt="Avis de concours de recrutement de Technicien de 3ème grade - Echelle 9" width="85" height="85">
+<h2 class="card-title">Avis de concours de recrutement de Technicien de 3ème grade - Echelle 9</h2>
+<div class="card-text"><i class="icon-building-gra"></i>Ministère de l’Agriculture, de la Pêche maritime, du développement rural et des eaux et forêts - Département de l’Agriculture</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>70 postes</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 19 Août 2026
+- 16:30
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 4 Octobre 2026</div>
+</div>
+</a>
+</div>
+<div class="s-item col-12 col-md-4 mb-5" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/8cce8ed8-8973-49f6-ae36-f75aef0d9d96" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-2">
+<img  src="/backoffice/files/images/administrations/logo-006.png" alt="Avis de concours de recrutement de Maître de conférences grade A - Echelle 11" width="85" height="85">
+<h2 class="card-title">Avis de concours de recrutement de Maître de conférences grade A - Echelle 11</h2>
+<div class="card-text"><i class="icon-building-gra"></i>Ministère des habous et des affaires islamiques</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>2 postes</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 19 Août 2026
+- 16:30
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 8 Septembre 2026</div>
+</div>
+</a>
+</div>
+<div class="s-item col-12 col-md-4 mb-5" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/72ed0218-c625-44ef-ad36-0ddf1450d8b7" class="card card-scale">
+<div class="card-body row-num-3">
+<img  src="/starterkit/build/assets/media/images/Ministre-sm-default-image.jpg" alt="Publication de la liste des convoqués pour l&#039;examen écrit du concours de recrutement d&#039;un Ingénieur d&#039;Etat 1er grade - Echelle 11" width="85" height="85">
+<h2 class="card-title">Publication de la liste des convoqués pour l&#039;examen écrit du concours de recrutement d&#039;un Ingénieur d&#039;Etat 1er grade - Echelle 11</h2>
+<div class="card-text"><i class="icon-building-gra"></i>Ministère de l’intérieur -Province Marrakech-</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Convocation</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>3 postes</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 18 Août 2026
+- 16:30
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 30 Août 2026</div>
+</div>
+</a>
+</div>
+<div class="s-item col-12 col-md-4 mb-5" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/1d56279d-bec7-4467-906d-4003286e1a05" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-3">
+<img  src="/backoffice/files/images/administrations/logo-008.png" alt="Avis de concours de recrutement de Architecte 1er grade - Echelle 11" width="85" height="85">
+<h2 class="card-title">Avis de concours de recrutement de Architecte 1er grade - Echelle 11</h2>
+<div class="card-text"><i class="icon-building-gra"></i>Ministère de l’Économie et des Finances</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>2 postes</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 13 Août 2026
+- 16:30
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 20 Septembre 2026</div>
+</div>
+</a>
+</div>
+<div class="s-item col-12 col-md-4 mb-5" data-aos="fade-up" data-aos-duration="600">
+<a href="/fr/concours/details/1874ae4c-94d6-4af0-9575-a39ede5189ff" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-3">
+<img  src="/starterkit/build/assets/media/images/Ministre-sm-default-image.jpg" alt="Avis de concours de recrutement de Administrateur 2ème grade - Echelle 11" width="85" height="85">
+<h2 class="card-title">Avis de concours de recrutement de Administrateur 2ème grade - Echelle 11</h2>
+<div class="card-text"><i class="icon-building-gra"></i>Ministère de l’intérieur -Province Zagora-</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+<div class="btn btn-sm btn-danger">Dépôt en ligne</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>3 postes</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 31 Août 2026
+- 16:30
+</div>
+<div><i class="icon-calendar-alt"></i>Date du concours : 11 Octobre 2026</div>
+</div>
+</a>
+</div>
+</div>
+<div class="loaded-content"></div>
+<nav aria-label="navigation">
+<ul class="pagination d-none d-md-flex" data-aos="fade-up" data-aos-duration="600">
+<li class="page-item"><a class="page-link active" href="/fr/concours-liste?page=1">1</a></li>
+<li class="page-item"><a class="page-link" href="/fr/concours-liste?page=2">2</a></li>
+<li class="page-item"><a class="page-link" href="/fr/concours-liste?page=3">3</a></li>
+<li class="page-item"><a class="page-link" href="/fr/concours-liste?page=4">4</a></li>
+<li class="page-item"><a class="page-link" href="/fr/concours-liste?page=5">5</a></li>
+<li class="page-item"><span class="page-link">...</span></li>
+<li class="page-item"><a class="page-link" href="/fr/concours-liste?page=123">123</a></li>
+<li class="page-item"><a class="page-link next" href="/fr/concours-liste?page=2">Suivant  ></a></li>
+</ul>
+</nav>
+<a href="/fr/loadCardsConcours?" class="btn btn-light d-md-none load_list"><i class="fa-regular fa-plus mx-3"></i>Afficher plus</a>
+</div>
+</section>
+<section class="c-wrapper bg-white pt-5">
+<div class="container">
+<h2 class="title-3 text-center" data-aos="fade-up" data-aos-duration="600">Dernière chance pour postuler</h2>
+<div class="row">
+<div class="col-12 col-md-4" data-aos="fade-up" data-aos-duration="500" >
+<a href="/fr/concours/details/6a6ffd3e-8cf1-4952-a399-ba8e0f8ee980" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-5">
+<img src="/backoffice/files/images/administrations/74fa64cccdde799bf773833fb271ed61.png" alt="Cadre en Commerce International" width="85" height="85">
+<h3 class="card-title">Cadre en Commerce International</h3>
+<div class="card-msg">
+1 jours restants
+</div>
+<div class="card-text"><i class="icon-building-gra"></i>
+Agence Nationale des Ports
+</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+<div class="btn btn-sm btn-danger">Dépôt en ligne</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>1 poste</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 24 Août 2026
+</div>
+</div>
+</a>
+</div>
+<div class="col-12 col-md-4" data-aos="fade-up" data-aos-duration="500" >
+<a href="/fr/concours/details/8d831b6d-e9e6-4c8d-915b-05854c488ed4" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-5">
+<img src="/backoffice/files/images/administrations/86b56d3d9570a74cdf88941c970c0079.png" alt="Chargé de Pilotage du Mandat de Gestion" width="85" height="85">
+<h3 class="card-title">Chargé de Pilotage du Mandat de Gestion</h3>
+<div class="card-msg">
+1 jours restants
+</div>
+<div class="card-text"><i class="icon-building-gra"></i>
+Caisse de Dépôt et de Gestion
+</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>1 poste</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 25 Août 2026
+</div>
+</div>
+</a>
+</div>
+<div class="col-12 col-md-4" data-aos="fade-up" data-aos-duration="500" >
+<a href="/fr/concours/details/622731fb-211c-43b2-8562-efb8ab38783d" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-5">
+<img src="/backoffice/files/images/administrations/3739b8ec8743c63821fba90e2637cec8.png" alt="Gestionnaire Recrutement" width="85" height="85">
+<h3 class="card-title">Gestionnaire Recrutement</h3>
+<div class="card-msg">
+2 jours restants
+</div>
+<div class="card-text"><i class="icon-building-gra"></i>
+Atlas Multiservices
+</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>2 poste</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 26 Août 2026
+</div>
+</div>
+</a>
+</div>
+<div class="col-12 col-md-4" data-aos="fade-up" data-aos-duration="500" >
+<a href="/fr/concours/details/089e1b81-21f8-4b8b-b929-f1cc76ede259" class="card card-scale">
+<button type="button" class="card-alert" data-bs-toggle="modal" data-bs-target="#popup-login" title="Suivez ce concours">
+<i class="icon-Icon-ionic-ios-notifications"></i>
+</button>
+<div class="card-body row-num-5">
+<img src="/backoffice/files/images/administrations/9acf727c78e5cfc3613be85b410affbc.png" alt="Technicien en gestion et maintenance" width="85" height="85">
+<h3 class="card-title">Technicien en gestion et maintenance</h3>
+<div class="card-msg">
+3 jours restants
+</div>
+<div class="card-text"><i class="icon-building-gra"></i>
+Société Rabat Région Emergence
+</div>
+<div class="card--btn">
+<div class="card-type bg-blue">Annonce</div>
+<div class="btn btn-sm btn-danger">Dépôt en ligne</div>
+</div>
+</div>
+<div class="card-footer">
+<div><i class="icon-suitcase"></i>4 poste</div>
+<div><i class="icon-time-out"></i>Limite de dépôt : 26 Août 2026
+- 16:00
+</div>
+</div>
+</a>
+</div>
+</div>
+</div>
+</section>
+<div class="modal fade fade-scale" id="popup-alert" data-easein="bounce" tabindex="-1" role="dialog" aria-labelledby="popup-svLabel" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered no-transform" role="document">
+<div class="modal-content">
+<button type="button" class="close" data-bs-dismiss="modal">
+<i class="fa fa-close"></i>
+</button>
+<div class="modal-body">
+<form action="/fr/candidat/save-seach-concours" id="form-save-search" class="modal-alert-form" method="POST">
+<div class="row">
+<div class="col-12 mb-3">
+<i class="icon-bell-exclamation"></i>
+<h2 class="h3">Créer une alerte</h2>
+<p>En créant cette alerte, vous commencerez à recevoir des notifications via votre compte immédiatement après chaque mise à jour</p>
+</div>
+<div class="col-12 text-start mb-3">
+<label for="name_alert">Nom de l&#039;alerte</label>
+<input type="text" name="name_alert" required class="form-control border-1" id="name_alert"
+data-msg="Ce champ est obligatoire"
+data-msg-minlength="Veuillez entrer au moins 3 caractères"
+data-msg-maxlength="Veuillez entrer 60 caractères maximum"
+data-msg-limit="vous ne pouvez avoir que 5 recherches enregistrées en même temps"
+>
+</div>
+<input type="hidden" name="token" value="0fcaff11d1660b4498b33bc613.WaucKHiFANWi_QoswrsvNcIenmBbZmQq6rEag_5ipqk.NP76XzraV62Pp2RauNMdWKFr5FQ3Vitw2tlZ75owx909hsZyM8JpovvMWw"/>
+<div class="col-12">
+<button type="submit" class="btn btn-yellow">Créer</button>
+</div>
+</div>
+</form>
+</div>
+</div>
+</div>
+</div>
+<div class="modal fade fade-scale" id="popup-success" data-easein="bounce" tabindex="-1" role="dialog" aria-labelledby="popup-svLabel" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered no-transform" role="document">
+<div class="modal-content">
+<button type="button" class="close" data-bs-dismiss="modal">
+<i class="fa fa-close"></i>
+</button>
+<div class="modal-body">
+<div class="row">
+<div class="col-12 mb-3">
+<i class="icon fa-solid fa-check-to-slot"></i>
+<h2 class="h3">Nouvelle recherche sauvegardée</h2>
+<p>Avec cette recherche sauvegardée, vous commencerez à recevoir des notifications via votre compte, après chaque nouvelle annonce correspondant aux critères de votre recherche sauvegardée</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="modal fade fade-scale" id="popup-login" data-easein="bounce" tabindex="-1" role="dialog" aria-labelledby="popup-svLabel" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered no-transform" role="document">
+<div class="modal-content">
+<button type="button" class="close" data-bs-dismiss="modal">
+<i class="fa fa-close"></i>
+</button>
+<div class="modal-body">
+<form class="login-form-1 card text-center" id="login-form">
+<input type="hidden" id="login_type">
+<h2 class="h3">
+<i class="icon-login"></i>
+Se connecter
+</h2>
+<div class="alert alert-danger d-none" id="loginError1"></div>
+<div class="form-group">
+<input id="login_email1" class="form-control border-1" name="login_email" type="email">
+<label for="login_email">Adresse mail</label>
+</div>
+<div class="form-group">
+<input id="login_pwd1" class="form-control border-1" name="login_pwd" type="password" autocomplete="off">
+<label for="login_pwd">Mot de passe</label>
+<span toggle="#login_pwd1" class="fa fa-fw fa-eye field-icon toggle-password"></span>
+</div>
+<div class="captcha-block d-none">
+<div class="d-flex px-2 mb-2">
+<img id="captcha-image" width="100" src="data:image/jpeg;base64,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" alt="Captcha">
+<span class="mx-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Le code de vérification peut inclure des lettres latines en (Majuscule) ainsi que des chiffres.">
+<i class="fas fa-info-circle text-info" ></i>
+</span>
+</div>
+<div class="form-group">
+<input type="text" id="captcha-input1" class="form-control border-1 px-3" name="captcha-input1" >
+<label for="captcha-input1">Code de sécurité</label>
+</div>
+</div>
+<div class="form-group" style="display: none;">
+<input type="text" id="phone1" name="phone">
+</div>
+<div class="form-group" style="display: none;">
+<input type="text" id="fax1" name="fax">
+</div>
+<div class="form-check form-check-inline">
+<input class="form-check-input" type="checkbox" id="option_save_1" name="_remember_me_1">
+<label class="form-check-label" for="option_save_1"><span>Enregistrer le mot de passe</span></label>
+</div>
+<div class="form-group text-center">
+<input type="hidden" name="_csrf_token" id="_csrf_token_1" data-token="3.wI3dHBOoICVJsz0YqKlD297Ulu6OQtjm0CmKkjgs4_o.sL-PWlLHd2I7wkRUwNMLlIqj_qz3Ca2lp2fg9WFCk8-3wJZ3ev4UaBHCSg"/>
+<button type="button" class="btn btn-yellow" id="btn-login1">Se connecter</button>
+<span class="pwd_note">Mot de passe oublié ?</span>
+<a href="#" class="underline" data-bs-toggle="modal" data-bs-target="#popup-password">Cliquez ici pour le récupérer</a>
+</div>
+<h2 class="h3 separate"><span>Accès à l&#039;espace filtre</span></h2>
+<div class="form-group text-center">
+<a  href="/fr/candidat/register" class="btn btn-primary b-b">Créer un compte</a>
+</div>
+</form>
+</div>
+</div>
+</div>
+</div>
+<div class="modal fade fade-scale" id="popup-password" data-easein="bounce" tabindex="-1" role="dialog" aria-labelledby="popup-svLabel" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered no-transform" role="document">
+<div class="modal-content">
+<button type="button" class="close" data-bs-dismiss="modal">
+<i class="fa fa-close"></i>
+</button>
+<div class="modal-body">
+<form  class="modal-password-form">
+<div class="row">
+<div class="col-12 mb-3">
+<img src="https://emploi-public.pages.dev/media/images/lock.png" alt="icon forgotten pass">
+<h2 class="h3">Récupération du mot de passe</h2>
+<p>Les instructions pour réinitialiser votre nouveau mot de passe seront envoyées à votre adresse e-mail</p>
+</div>
+<div class="col-12 text-start mb-3">
+<label for="recup_email">Adresse mail</label>
+<input type="email" name="email" class="form-control border-1" id="recup_email" data-msg="Ce champ est obligatoire">
+</div>
+<div class="captcha-block ">
+<div class="d-flex px-2 mb-2">
+<img id="captcha-image" width="100" src="data:image/jpeg;base64,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" alt="Captcha">
+<span class="mx-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Le code de vérification peut inclure des lettres latines en (Majuscule) ainsi que des chiffres.">
+<i class="fas fa-info-circle text-info" ></i>
+</span>
+</div>
+<div class="form-group">
+<input type="text" id="captcha-input2" class="form-control border-1 px-3" name="captcha-input2" required>
+<label for="captcha-input2">Code de sécurité</label>
+</div>
+</div>
+<div class="col-12">
+<button type="submit" class="btn btn-yellow">Envoyer</button>
+<input type="hidden" name="_csrf_token" id="csrf_token_recup_email" value="e3ae6212afb59ef69a0b62a1b216bdf.PpgXQ3j7aYUWOIw3N2dcKwWlk9Db7mg8bvHq2hj8iT8.evlZAhCTOL1_Xt0HRVQRHE3i8uSUijlGAqGgnXSX0VZ28nsPF48O6XBvuA">
+</div>
+</div>
+</form>
+</div>
+</div>
+</div>
+</div>
+<div class="modal fade fade-scale" id="popup-reset-password" data-easein="bounce" tabindex="-1" role="dialog" aria-labelledby="popup-svLabel" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered no-transform" role="document">
+<div class="modal-content">
+<button type="button" class="close" data-bs-dismiss="modal">
+<i class="fa fa-close"></i>
+</button>
+<div class="modal-body">
+<div class="row">
+<div class="col-12 mb-3">
+<img src="https://emploi-public.pages.dev/media/images/mail.png" class="mb-2" alt="mail confirmation icon">
+<h2 class="h3">Vérification de l&#039;E-mail</h2>
+<p>Un message a été envoyé pour confirmer l&#039;enregistrement de votre compte. Merci de consulter votre email</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<button class="action-gototop"><i class="fa-sharp fa-solid fa-chevron-up"></i></button>
+<footer>
+<div class="container" data-aos="fade-up">
+<div class="top-footer">
+<a href="/fr/" class="logo-footer">
+<img src="https://emploi-public.pages.dev/media/images/logo-footer.svg" alt="L&#039;EMPLOI PUBLIC">
+</a>
+<div class="social-media">
+</div>
+</div>
+<div class="footer-nav pb-2">
+<div class="footer-nav-wrapper">
+<div class="footer-nav-col">
+<div class="footer-nav-inner">
+<span class="footer-link">Chercher une annonce<i class="fa fa-chevron-down"></i></span>
+<div class="sous-link-container">
+<a href="/fr/concours-liste" class="footer-sous-link link-hover">Concours de recrutement</a>
+<a href="/fr/emploi-sup-liste" class="footer-sous-link link-hover">Emplois supérieurs</a>
+<a href="/fr/experts-liste" class="footer-sous-link link-hover">Recrutement des experts</a>
+<a href="/fr/postes-respo-liste" class="footer-sous-link link-hover">Postes de responsabilités
+<a href="/fr/concours/calendrier" class="footer-sous-link link-hover">Calendrier des concours</a>
+<a href="/fr/poste_budgetaire-liste" class="footer-sous-link link-hover">Postes budgétaires</a>
+</div>
+</div>
+</div>
+<div class="footer-nav-col">
+<div class="footer-nav-inner">
+<span class="footer-link">Fonctionnaire<i class="fa fa-chevron-down"></i></span>
+<div class="sous-link-container">
+<a href="/fr/eap-liste" class="footer-sous-link link-hover">Examens d&#039;Aptitude Professionnelle et Concours Professionnels</a>
+<a href="/fr/mobilite" class="footer-sous-link link-hover">Mobilité des fonctionnaires</a>
+<a href="/fr/content/decouvrir-la-fonction-publique" class="footer-sous-link link-hover">Questions fréquentes</a>
+</div>
+</div>
+</div>
+<div class="footer-nav-col">
+<div class="footer-nav-inner">
+<span class="footer-link">Administrations qui recrutent<i class="fa fa-chevron-down"></i></span>
+<div class="sous-link-container">
+<a href="/fr/administration-liste" class="footer-sous-link link-hover">Annuaire des administrations qui recrutent</a>
+<a href="/fr/administration-liste?stat=service_etat" class="footer-sous-link link-hover">Services de l&#039;Etat</a>
+<a href="/fr/administration-liste?stat=collec" class="footer-sous-link link-hover">Collectivités territoriales</a>
+<a href="/fr/administration-liste?stat=etab_publics" class="footer-sous-link link-hover">Etablissements et Entreprises publiques</a>
+</div>
+</div>
+</div>
+<div class="footer-nav-col">
+<div class="footer-nav-inner">
+<span class="footer-link">Textes juridiques<i class="fa fa-chevron-down"></i></span>
+<div class="sous-link-container">
+<a href="/fr/content/textes-concours" class="footer-sous-link link-hover">Concours de recrutement</a>
+<a href="/fr/content/textes-emploi-superieur" class="footer-sous-link link-hover">Emplois supérieurs</a>
+<a href="/fr/content/textes-examen" class="footer-sous-link link-hover">Postes de responsabilités</a>
+<a href="/fr/content/textes-experts" class="footer-sous-link link-hover">Recrutement des experts</a>
+<a href="/fr/content/textes-eap" class="footer-sous-link link-hover">Examens d&#039;Aptitude Professionnelle et Concours Professionnels</a>
+<a href="/fr/content/textes-mobilite" class="footer-sous-link link-hover">Mobilité des fonctionnaires</a>
+</div>
+</div>
+</div>
+<div class="footer-nav-col">
+<div class="footer-nav-inner">
+<span class="footer-link">Nos services<i class="fa fa-chevron-down"></i></span>
+<div class="sous-link-container">
+<a href="/fr/content/remuneration" class="footer-sous-link link-hover">Simulateur des salaires</a>
+<a href="/fr/content/r-c-grh" class="footer-sous-link link-hover">Référentiel Commun de la GRH</a>
+<a href="/fr/content/b-d-juridiques" class="footer-sous-link link-hover">Banque de Données Juridiques de la Fonction Publique</a>
+<a href="/fr/content/portail-de-transparence-et-acc-s-l-information-chafafiya" class="footer-sous-link link-hover">Portail de transparence et accès à l&#039;information chafafiya</a>
+<a href="https://www.idarati.ma/" target="_blank" class="footer-sous-link link-hover">Portail National Idarati</a>
+<a href="/fr/content/centre-d-appel-et-d-orientation-administrative" class="footer-sous-link link-hover">Centre d&#039;appel et d&#039;orientation administrative</a>
+<a href="/fr/content/portail-de-la-geolocalisation" class="footer-sous-link link-hover">Portail de géolocalisation des Services Publics</a>
+<a href="/fr/content/administration-en-chiffres" class="footer-sous-link link-hover">Administration en chiffres</a>
+<a href="/fr/sondage" class="footer-sous-link link-hover">Sondage et suggestions</a>
+<a href="/fr/poser-une-question" class="footer-sous-link link-hover">Poser une question</a>
+<a href="/fr/content/formulaire-type" class="footer-sous-link link-hover">Formulaire type</a>
+</div>
+<a href="/fr/content/Contactez-nous" class="footer-sous-link link-hover">
+<span class="footer-link mt-5">Contactez-nous<i class="fa fa-chevron-down"></i></span>
+</a>
+</div>
+</div>
+</div>
+</div>
+<div class="footer-nav p-0">
+<div class="footer-nav-inner mb-1">
+<a href="/fr/content/accessibilite" class="footer-sous-link link-hover">Accessibilité</a>
+</div>
+<div class="footer-nav-inner mb-2">
+<a href="/fr/content/mention-legale" class="footer-sous-link link-hover">Mentions légales</a>
+</div>
+</div>
+<div class="footer-copyright">
+<span>© Copyright 2026 - <a href="#" class="link-hover"> emploi-public.ma </a></span>
+</div>
+</div>
+</footer>
+<link rel="preconnect" href="https://ajax.googleapis.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://static.addtoany.com">
+</body>
+</html>

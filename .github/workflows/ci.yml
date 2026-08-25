@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: scrapers + notifier
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # These tests assert against real SQL — unique constraints, the status
+    # trigger, updated_at semantics, the notification dedup — so they need
+    # a real Postgres with the migrations applied, not a mock.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: tracker_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/tracker_test
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/tracker_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            scrapers/requirements-dev.txt
+            notifier/requirements-dev.txt
+
+      - run: |
+          pip install -r scrapers/requirements-dev.txt
+          pip install -r notifier/requirements-dev.txt
+
+      - name: Apply migrations
+        run: ./supabase/local-dev/apply.sh
+
+      - name: Scraper tests
+        working-directory: scrapers
+        run: pytest -q
+
+      - name: Notifier tests
+        working-directory: notifier
+        run: pytest -q
+
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+        working-directory: web
+
+      - run: npm run lint
+        working-directory: web
+
+      # Builds without Supabase credentials on purpose: the app must render
+      # its setup state rather than crash on a fresh clone.
+      - run: npm run build
+        working-directory: web

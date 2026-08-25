@@ -1,0 +1,86 @@
+name: Daily ingestion
+
+# 05:00 UTC is 06:00 in Casablanca. Sources publish during Moroccan office
+# hours, so an early-morning run picks up the previous day in full.
+on:
+  schedule:
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+    inputs:
+      sources:
+        description: "Space-separated source keys (blank = all)"
+        required: false
+        default: ""
+      pages:
+        description: "Listing pages per source"
+        required: false
+        default: "3"
+      dry_run:
+        description: "Parse without writing to the database"
+        type: boolean
+        default: false
+
+# Two ingestions writing at once would fight over the same rows.
+concurrency:
+  group: ingestion
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    # Generous: the scrapers deliberately sleep between requests.
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scrapers/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r scrapers/requirements.txt
+
+      - name: Run scrapers
+        working-directory: scrapers
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SCRAPER_USER_AGENT: ${{ vars.SCRAPER_USER_AGENT }}
+          # Be gentler than a developer would be locally.
+          SCRAPER_DELAY: "3.0"
+        run: |
+          set -o pipefail
+
+          args=(run --pages "${{ inputs.pages || '3' }}")
+          if [ -n "${{ inputs.sources }}" ]; then
+            for key in ${{ inputs.sources }}; do args+=(--source "$key"); done
+          else
+            args+=(--all)
+          fi
+          if [ "${{ inputs.dry_run }}" = "true" ]; then args+=(--dry-run); fi
+
+          python -m morocco_scraper "${args[@]}" 2>&1 | tee run.log
+
+      # The run itself only fails when every source failed. A single broken
+      # source should still be visible without reading the log.
+      - name: Flag partial failures
+        if: always()
+        working-directory: scrapers
+        run: |
+          if grep -qE '^\S+ +(failed|partial)' run.log; then
+            echo "### Sources needing attention" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            grep -E '^\S+ +(failed|partial)' run.log >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::At least one source did not finish cleanly - see the admin page."
+          fi
+
+      - name: Upload run log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ingestion-log
+          path: scrapers/run.log
+          retention-days: 14

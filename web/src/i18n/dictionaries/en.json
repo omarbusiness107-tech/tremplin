@@ -1,0 +1,174 @@
+{
+  "brand": { "name": "Tremplin", "tagline": "Opportunities in Morocco" },
+  "nav": {
+    "browse": "Browse",
+    "saved": "Saved",
+    "profile": "Profile",
+    "admin": "Admin",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "language": "Language"
+  },
+  "home": {
+    "title": "Your next opportunity in Morocco",
+    "subtitle": "Jobs, internships, degree programmes, scholarships and concours — collected daily from official sources, sorted by how soon they close.",
+    "stats": { "opportunities": "opportunities", "sources": "sources", "closingSoon": "closing soon" }
+  },
+  "filters": {
+    "searchPlaceholder": "Search title, institution, field…",
+    "searchLabel": "Search opportunities",
+    "filters": "Filters",
+    "sortBy": "Sort by",
+    "clearAll": "Clear all",
+    "active": { "one": "{count} filter active", "other": "{count} filters active" },
+    "groups": { "deadline": "Deadline", "field": "Field", "city": "City", "type": "Type" },
+    "windows": { "7d": "Closing this week", "30d": "Within 30 days", "90d": "Within 3 months", "closed": "Include closed" },
+    "sort": { "deadline": "Deadline — soonest first", "newest": "Recently added", "title": "Alphabetical" }
+  },
+  "types": {
+    "job": "Job",
+    "internship": "Internship",
+    "bachelor": "Bachelor",
+    "master": "Master",
+    "doctorat": "Doctorate",
+    "scholarship": "Scholarship",
+    "concours": "Concours"
+  },
+  "deadline": {
+    "rolling": "Rolling — no deadline",
+    "closed": "Closed",
+    "today": "Closes today",
+    "oneDay": "1 day left",
+    "days": "{count} days left",
+    "closesOn": "Closes {date}"
+  },
+  "card": {
+    "new": "New",
+    "nationwide": "Morocco — nationwide",
+    "remote": "Remote",
+    "positions": { "one": "1 position", "other": "{count} positions" },
+    "save": "Save this opportunity",
+    "unsave": "Remove from saved"
+  },
+  "list": {
+    "showing": "{first}–{last} of {total}",
+    "noResults": "No results",
+    "emptyFiltered": {
+      "title": "No opportunities match your filters",
+      "body": "Try widening your search — remove a field or a city, or extend the deadline window.",
+      "action": "Clear all filters"
+    },
+    "emptyDatabase": {
+      "title": "No open opportunities yet",
+      "body": "The database is reachable but empty. Run the ingestion job and reload."
+    },
+    "notConfigured": {
+      "title": "Supabase is not configured yet",
+      "body": "Copy web/.env.example to web/.env.local and fill in your project URL and anon key, then reload."
+    },
+    "loadError": { "title": "Could not load opportunities" }
+  },
+  "detail": {
+    "back": "All opportunities",
+    "conditions": "Conditions to apply",
+    "details": "Details",
+    "description": "Description",
+    "apply": "Apply",
+    "openAnnouncement": "Open the announcement",
+    "deadline": "Deadline",
+    "published": "Published",
+    "examDate": "Exam date",
+    "location": "Location",
+    "positionsLabel": "Positions",
+    "education": "Education",
+    "languages": "Languages",
+    "collectedFrom": "Collected from {source} on {date}. Always confirm the details on the issuing site before applying.",
+    "moreFrom": "More from this institution",
+    "notFound": "Opportunity not found"
+  },
+  "education": {
+    "bac": "Baccalauréat",
+    "bac_plus_2": "Bac +2",
+    "licence": "Licence (Bac +3)",
+    "master": "Master (Bac +5)",
+    "doctorat": "Doctorate",
+    "other": "Other"
+  },
+  "auth": {
+    "signInTitle": "Sign in",
+    "signInSubtitle": "To save opportunities, get recommendations that fit your profile, and be emailed when something new matches.",
+    "continueWithGoogle": "Continue with Google",
+    "or": "or",
+    "emailPlaceholder": "you@example.com",
+    "sendLink": "Email me a sign-in link",
+    "checkInbox": "Check your inbox",
+    "linkSent": "We sent a sign-in link to {email}. It is valid for one hour.",
+    "browsingNote": "Browsing works without an account — signing in only adds the personal parts."
+  },
+  "profile": {
+    "title": "Your profile",
+    "subtitle": "The more of this you fill in, the better the recommendations get.",
+    "about": "About you",
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "educationLevel": "Current education level",
+    "preferNotToSay": "Prefer not to say",
+    "lookingFor": "What you are looking for",
+    "lookingForHelp": "Used to rank the \"Recommended for you\" list and to decide which new listings are worth emailing you about.",
+    "opportunityTypes": "Opportunity types",
+    "fieldsOfInterest": "Fields of interest",
+    "preferredCities": "Preferred cities",
+    "languagesSpoken": "Languages you speak",
+    "commaSeparated": "Comma separated",
+    "openToRemote": "Open to remote opportunities",
+    "emailAlerts": "Email alerts",
+    "emailAlertsToggle": "Email me when a new opportunity matches my profile",
+    "reminderDays": "Remind me before a saved deadline",
+    "daysAhead": "Days ahead (0–30)",
+    "save": "Save profile",
+    "saved": "Saved"
+  },
+  "recommendations": {
+    "title": "Recommended for you",
+    "tune": "Tune",
+    "emptyTitle": "Get recommendations",
+    "emptyBody": "Tell us your level, fields and the kinds of opportunity you want, and this list fills with what fits.",
+    "emptyAction": "Complete your profile",
+    "reasons": {
+      "field": "In one of your fields",
+      "remote": "Remote",
+      "city": "In a city you chose",
+      "education": "You meet the education requirement",
+      "type": "Matches the type you are looking for"
+    }
+  },
+  "saved": {
+    "title": "Saved",
+    "none": "Nothing saved yet.",
+    "count": "{count} saved, soonest deadline first.",
+    "closingSoon": "{count} of your saved opportunities close within a week.",
+    "reminderNote": "You will also get an email reminder — adjust the timing in your {profileLink}.",
+    "profileLink": "profile",
+    "emptyTitle": "No saved opportunities",
+    "emptyBody": "Save anything you are considering and it will show up here, with a reminder before it closes.",
+    "emptyAction": "Browse opportunities"
+  },
+  "admin": {
+    "title": "Scraper health",
+    "subtitle": "A source that starts failing usually means the site changed its markup. The warnings column fills up before a scraper breaks outright.",
+    "sources": "Sources",
+    "recentRuns": "Recent runs",
+    "neverRun": "never run",
+    "noRunRecorded": "No run recorded",
+    "disabled": "disabled",
+    "noRuns": "No runs recorded yet.",
+    "columns": {
+      "started": "Started", "source": "Source", "status": "Status", "found": "Found",
+      "new": "New", "updated": "Updated", "failed": "Failed",
+      "warnings": "Warnings", "duration": "Duration", "listings": "Listings"
+    }
+  },
+  "footer": {
+    "disclaimer": "Listings are collected from public sources and link back to the original announcement. Always confirm details on the issuing site before applying."
+  }
+}
