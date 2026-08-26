@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "true",
+  "outputDirectory": "web",
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/ember-depths-pixel.html"
+    }
+  ]
+}
