@@ -438,7 +438,7 @@ there is no request, no layout shift, and no broken state: a card whose image
 | Key | Site | Type | Shape it exercises |
 | --- | --- | --- | --- |
 | `emploi_public` | [emploi-public.ma](https://www.emploi-public.ma) | `concours` | Structured label/value detail pages, hard deadlines, no city |
-| `moncallcenter` | [moncallcenter.ma](https://www.moncallcenter.ma) | `job` | **No deadline** (rolling), required languages, city, remote flag |
+| `moncallcenter` | [moncallcenter.ma](https://www.moncallcenter.ma) | `job`, `internship` | **No deadline** (rolling), required languages, city, remote flag; stage/PFE/stagiaire titles use the internship filter |
 | `bourses_9rayti` | [9rayti.com](https://www.9rayti.com) | `scholarship` | Prose announcements, deadline only in a data attribute |
 | `concoursa_9rayti` | [9rayti.com](https://www.9rayti.com) | `concours`, `bachelor`, `master`, `doctorat` | Same trap as above, mostly **Arabic** content, institution acronyms instead of a field description; explicit study cycles go to their own filter |
 | `formations_9rayti` | [9rayti.com](https://www.9rayti.com) | `bachelor`, `master`, `doctorat` | Server-rendered programme catalogue, no deadline, full programme page as the link |

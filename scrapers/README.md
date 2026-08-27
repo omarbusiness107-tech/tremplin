@@ -88,7 +88,7 @@ python -m morocco_scraper run --source example --pages 1 --max-items 5 --dry-run
 | Key | Site | Types | Notes |
 | --- | --- | --- | --- |
 | `emploi_public` | [emploi-public.ma](https://www.emploi-public.ma) | `concours` | Official MMSP portal. Server-rendered, UUID per listing, structured detail pages. robots.txt disallows only `/*/concours/download/`. |
-| `moncallcenter` | [moncallcenter.ma](https://www.moncallcenter.ma) | `job` | Call-centre and BPO board. Rolling adverts with **no deadline**, plus languages, city and a remote flag. Sponsored offers repeat on the same page under the same id. |
+| `moncallcenter` | [moncallcenter.ma](https://www.moncallcenter.ma) | `job`, `internship` | Call-centre and BPO board. Rolling adverts with **no deadline**, plus languages, city and a remote flag. Titles explicitly advertising a stage/PFE/stagiaire are put in the internship filter. Sponsored offers repeat on the same page under the same id. |
 | `bourses_9rayti` | [9rayti.com](https://www.9rayti.com) | `scholarship` | Student portal. Prose announcements; the deadline lives in a `data-target-date` attribute — **the visible date is a placeholder**, see below. |
 | `concoursa_9rayti` | [9rayti.com](https://www.9rayti.com) | `concours`, `bachelor`, `master`, `doctorat` | Post-bac entrance exams (ENSA, EST, FST, ENCG, medicine faculties), mostly **Arabic**. Explicit study cycles are put in their own filter; the rest stays `concours`. Same template and deadline trap as `bourses_9rayti`. |
 | `formations_9rayti` | [9rayti.com](https://www.9rayti.com) | `bachelor`, `master`, `doctorat` | Server-rendered programme directories. Catalogue entries have no deadline and point students to the full 9rayti programme page. |

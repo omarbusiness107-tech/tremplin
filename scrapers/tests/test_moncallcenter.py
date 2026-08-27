@@ -58,6 +58,18 @@ class TestListing:
 
         assert all(o.deadline is None for o in (scraper._parse_card(c) for c in cards) if o)
 
+    @pytest.mark.parametrize("title", ["Stage PFE — Marketing digital", "Stagiaire RH", "Internship Data"])
+    def test_internship_titles_use_the_internship_filter(self, title):
+        scraper = MonCallCenterScraper(FakeSession({}), {})
+        card = BeautifulSoup(
+            f'<div class="offres"><h2><a href="/offre-emploi/acme-{123456}">{title}</a></h2></div>',
+            "lxml",
+        ).div
+
+        opportunity = scraper._parse_card(card)
+
+        assert opportunity.type is OpportunityType.INTERNSHIP
+
     def test_the_country_is_not_stored_as_a_city(self, session, listing_html):
         """The board writes "Maroc" for a nationwide posting."""
         scraper = MonCallCenterScraper(session, {"pages": 1, "fetch_details": False})
