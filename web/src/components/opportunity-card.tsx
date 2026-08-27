@@ -45,9 +45,9 @@ export function OpportunityCard({
   return (
     <article
       className={cn(
-        "group relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface",
-        "shadow-[var(--shadow-card)] transition-all duration-200",
-        "hover:-translate-y-0.5 hover:border-border-strong hover:shadow-[var(--shadow-lift)]",
+        "group relative flex h-full w-full min-w-0 flex-col overflow-hidden rounded-[1.35rem] border border-border bg-surface",
+        "shadow-[var(--shadow-card)] transition-all duration-300",
+        "hover:-translate-y-1 hover:border-border-strong hover:shadow-[var(--shadow-lift)]",
         closed && "opacity-70",
       )}
     >
@@ -76,19 +76,19 @@ export function OpportunityCard({
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-3 p-4">
-        <h3 className="font-display text-[15px] leading-snug font-semibold">
+      <div className="flex flex-1 flex-col gap-3 p-5">
+        <h3 className="min-h-[2.75rem] font-display text-[15px] leading-snug font-semibold">
           <Link
             href={`/${locale}/opportunities/${opportunity.id}`}
             dir="auto"
-            className="stretched-link line-clamp-3 focus-visible:underline"
+            className="stretched-link line-clamp-2 focus-visible:underline"
           >
             {opportunity.title}
           </Link>
         </h3>
 
         {opportunity.institution && (
-          <p className="flex items-start gap-1.5 text-[13px] text-muted-foreground">
+          <p className="flex min-h-9 items-start gap-1.5 text-[13px] text-muted-foreground">
             <Building2 className="mt-0.5 size-3.5 shrink-0" aria-hidden />
             <span className="line-clamp-2" dir="auto">
               {opportunity.institution}
@@ -118,7 +118,7 @@ export function OpportunityCard({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 border-t border-border px-4 py-3">
+      <div className="flex min-h-14 flex-wrap items-center gap-2 border-t border-border bg-surface-sunken/45 px-5 py-3">
         <Badge variant={URGENCY_TONE[urgency]}>
           <CalendarClock className="size-3.5" aria-hidden />
           {deadlineLabel(opportunity.deadline, dict, locale)}

@@ -84,7 +84,7 @@ export default async function OpportunityPage({
   );
 
   return (
-    <article className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
+    <article className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
       <Link
         href={`/${typed}`}
         className="mb-6 inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
@@ -93,7 +93,7 @@ export default async function OpportunityPage({
         {dict.detail.back}
       </Link>
 
-      <header className="overflow-hidden rounded-2xl border border-border bg-surface shadow-[var(--shadow-card)]">
+      <header className="grid overflow-hidden rounded-[2rem] border border-border bg-surface shadow-[var(--shadow-lift)] lg:grid-cols-[0.86fr_1.14fr]">
         <OpportunityCover
           id={opportunity.id}
           type={opportunity.type}
@@ -101,7 +101,8 @@ export default async function OpportunityPage({
           size="hero"
         />
 
-        <div className="flex flex-col gap-4 p-5 sm:p-7">
+        <div className="relative flex flex-col justify-center gap-5 overflow-hidden p-6 sm:p-9 lg:p-12">
+          <div className="pointer-events-none absolute -end-24 -top-24 size-64 rounded-full bg-primary-soft/70 blur-3xl" />
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="default">{typeLabel(opportunity.type, dict)}</Badge>
             <Badge variant={URGENCY_TONE[urgency]}>
@@ -111,7 +112,7 @@ export default async function OpportunityPage({
           </div>
 
           <h1
-            className="text-2xl leading-tight font-bold text-balance sm:text-3xl"
+            className="relative text-2xl leading-tight font-bold text-balance sm:text-4xl"
             dir="auto"
           >
             {opportunity.title}
@@ -137,8 +138,14 @@ export default async function OpportunityPage({
         </div>
       </header>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_21rem]">
+      <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_22rem]">
         <div className="flex flex-col gap-6">
+          {opportunity.description && (
+            <Section title={dict.detail.description}>
+              <RichText text={opportunity.description} />
+            </Section>
+          )}
+
           {opportunity.conditions_to_apply && (
             <Section title={dict.detail.conditions}>
               <DefinitionList text={opportunity.conditions_to_apply} />
@@ -147,16 +154,21 @@ export default async function OpportunityPage({
 
           {attributes.length > 0 && (
             <Section title={dict.detail.details}>
-              <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+              <dl className="grid gap-3 sm:grid-cols-2">
                 {attributes.map(([label, value]) => (
-                  <div key={label} className="flex flex-col gap-1">
+                  <div
+                    key={label}
+                    className={`flex flex-col gap-2 rounded-2xl border border-border bg-surface-sunken/50 p-4 ${
+                      value.length > 180 || value.includes("\n") ? "sm:col-span-2" : ""
+                    }`}
+                  >
                     <dt
                       className="text-[11px] font-medium tracking-wide text-subtle-foreground uppercase"
                       dir="auto"
                     >
                       {label}
                     </dt>
-                    <dd className="text-sm break-words" dir="auto">
+                    <dd className="text-sm leading-relaxed break-words" dir="auto">
                       {renderValue(value)}
                     </dd>
                   </div>
@@ -165,17 +177,12 @@ export default async function OpportunityPage({
             </Section>
           )}
 
-          {opportunity.description && attributes.length === 0 && (
-            <Section title={dict.detail.description}>
-              <DefinitionList text={opportunity.description} />
-            </Section>
-          )}
         </div>
 
         <aside className="flex flex-col gap-4">
           {/* Sticky so the apply action stays reachable while reading a
               long announcement on desktop. */}
-          <div className="rounded-xl border border-border bg-surface p-5 shadow-[var(--shadow-card)] lg:sticky lg:top-24">
+          <div className="rounded-[1.4rem] border border-border bg-surface/95 p-5 shadow-[var(--shadow-card)] backdrop-blur-xl lg:sticky lg:top-24">
             <h2 className="font-display text-base font-semibold">{dict.detail.apply}</h2>
 
             <dl className="mt-4 flex flex-col gap-3.5 text-sm">
@@ -261,7 +268,7 @@ export default async function OpportunityPage({
           </h2>
           <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {related.map((item: Opportunity) => (
-              <li key={item.id} className="flex">
+              <li key={item.id} className="flex min-w-0">
                 <OpportunityCard
                   opportunity={item}
                   domainLabels={domainLabels}
@@ -280,8 +287,12 @@ export default async function OpportunityPage({
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
-      <h2 className="mb-4 font-display text-base font-semibold">{title}</h2>
+    <section className="relative overflow-hidden rounded-[1.4rem] border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
+      <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+      <h2 className="mb-5 flex items-center gap-2 font-display text-lg font-semibold">
+        <span className="size-2 rounded-full bg-primary shadow-[0_0_0_5px_var(--primary-soft)]" />
+        {title}
+      </h2>
       {children}
     </section>
   );
@@ -335,13 +346,7 @@ function DefinitionList({ text }: { text: string }) {
   });
 
   if (pairs.some((p) => p === null)) {
-    return (
-      <div className="flex flex-col gap-2.5 text-sm leading-relaxed" dir="auto">
-        {lines.map((line, i) => (
-          <p key={i}>{line}</p>
-        ))}
-      </div>
-    );
+    return <RichText text={text} />;
   }
 
   return (
@@ -365,7 +370,7 @@ function DefinitionList({ text }: { text: string }) {
 
 /** Sources sometimes put a URL in a value (a ministry's own deposit site). */
 function renderValue(value: string) {
-  if (!/^https?:\/\//i.test(value)) return value;
+  if (!/^https?:\/\//i.test(value)) return <RichText text={value} compact />;
   return (
     <a
       href={value}
@@ -375,5 +380,33 @@ function renderValue(value: string) {
     >
       {value}
     </a>
+  );
+}
+
+/** Render the safe plain-text structure emitted by scrapers. */
+function RichText({ text, compact = false }: { text: string; compact?: boolean }) {
+  const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
+
+  return (
+    <div className={compact ? "flex flex-col gap-1.5" : "flex flex-col gap-3 text-sm leading-7"} dir="auto">
+      {lines.map((line, index) => {
+        if (line.startsWith("## ")) {
+          return (
+            <h3 key={index} className="mt-3 font-display text-base font-semibold first:mt-0">
+              {line.slice(3)}
+            </h3>
+          );
+        }
+        if (line.startsWith("• ")) {
+          return (
+            <div key={index} className="flex items-start gap-2.5">
+              <span className="mt-[0.65em] size-1.5 shrink-0 rounded-full bg-primary" />
+              <p>{line.slice(2)}</p>
+            </div>
+          );
+        }
+        return <p key={index}>{line}</p>;
+      })}
+    </div>
   );
 }

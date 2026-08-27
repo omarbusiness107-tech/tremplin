@@ -16,7 +16,7 @@
    the accent instead of looking like an unrelated default grey.
    --------------------------------------------------------------------- */
 :root {
-  --radius: 0.875rem;
+  --radius: 1rem;
 
   --background: oklch(0.985 0.004 275);
   --surface: oklch(1 0 0);
@@ -51,7 +51,7 @@
   --destructive: oklch(0.55 0.19 22);
 
   --shadow-card: 0 1px 2px oklch(0.22 0.03 275 / 0.04),
-                 0 8px 24px -12px oklch(0.22 0.03 275 / 0.12);
+                 0 14px 36px -18px oklch(0.22 0.08 275 / 0.2);
   --shadow-lift: 0 2px 4px oklch(0.22 0.03 275 / 0.05),
                  0 16px 40px -16px oklch(0.22 0.03 275 / 0.22);
 }
@@ -186,6 +186,10 @@
 
   body {
     background-color: var(--background);
+    background-image:
+      radial-gradient(circle at 12% 20%, oklch(0.72 0.15 285 / 0.08), transparent 24rem),
+      radial-gradient(circle at 88% 48%, oklch(0.75 0.12 190 / 0.07), transparent 26rem);
+    background-attachment: fixed;
     color: var(--foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;

@@ -8,8 +8,8 @@ import type { Dictionary } from "@/i18n/dictionary";
 
 export function SiteHeader({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 sm:px-6">
+    <header className="sticky top-0 z-30 border-b border-border/70 bg-background/75 backdrop-blur-xl">
+      <div className="mx-auto flex h-[4.5rem] w-full max-w-7xl items-center gap-3 px-4 sm:px-6">
         <Link
           href={`/${locale}`}
           className="group flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -50,7 +50,7 @@ export function SiteHeader({ locale, dict }: { locale: Locale; dict: Dictionary 
  */
 function BrandMark() {
   return (
-    <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground shadow-sm transition-transform group-hover:scale-105">
+    <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-violet-500 via-primary to-cyan-500 text-white shadow-lg shadow-primary/20 transition-transform group-hover:rotate-3 group-hover:scale-105">
       <svg viewBox="0 0 24 24" className="size-5" aria-hidden="true" fill="none">
         <g stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round">
           <rect x="6.5" y="6.5" width="11" height="11" />
