@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup
 
-from morocco_scraper.models import OpportunityType
+from morocco_scraper.models import EducationLevel, OpportunityType
 from morocco_scraper.sources._nine_rayti import PLACEHOLDER_DEADLINE
 from morocco_scraper.sources.concoursa_9rayti import ConcoursA9raytiScraper, LayoutChanged
 from tests.fake_session import FakeSession
@@ -67,7 +67,12 @@ class TestListing:
 
         assert arabic_titled, "fixture should contain at least one Arabic title"
         for o in arabic_titled:
-            assert o.type is OpportunityType.CONCOURS
+            assert o.type in {
+                OpportunityType.CONCOURS,
+                OpportunityType.BACHELOR,
+                OpportunityType.MASTER,
+                OpportunityType.DOCTORAT,
+            }
             assert o.external_id  # slug, in Latin script, even for an Arabic title
 
 
@@ -139,6 +144,22 @@ class TestClassification:
         scraper = ConcoursA9raytiScraper(session, {"pages": 1, "max_items": 1})
         opportunity = next(iter(scraper.scrape()))
         assert opportunity.domains != ["other"]
+
+    @pytest.mark.parametrize(
+        ("title", "expected_type", "expected_level"),
+        [
+            ("Cycle Master en Intelligence Artificielle", OpportunityType.MASTER, EducationLevel.LICENCE),
+            ("Appel à candidatures Doctorat 2026", OpportunityType.DOCTORAT, EducationLevel.MASTER),
+            ("فتح باب الترشيح لولوج سلك الإجازة", OpportunityType.BACHELOR, EducationLevel.BAC),
+            ("Concours ENSA 2026", OpportunityType.CONCOURS, None),
+        ],
+    )
+    def test_explicit_study_cycles_leave_the_generic_concours_filter(self, title, expected_type, expected_level):
+        scraper = ConcoursA9raytiScraper(FakeSession({}), {})
+        card = BeautifulSoup(f'<a href="/concoursa/test-cycle"><h2>{title}</h2></a>', "lxml").a
+        opportunity = scraper._parse_card(card)
+        assert opportunity.type is expected_type
+        assert opportunity.required_education_level is expected_level
 
 
 class TestFailureHandling:

@@ -20,13 +20,44 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup, Tag
 
-from ..models import Opportunity, OpportunityType
+from ..models import EducationLevel, Opportunity, OpportunityType
 from ..normalize import MOROCCO_TZ, clean_text, fold
 from .base import BaseScraper
 
 # The static placeholder baked into every countdown template. If this ever
 # turns up as a parsed deadline, the parsing is reading the wrong element.
 PLACEHOLDER_DEADLINE = "14/10/2025"
+
+_DOCTORAT_MARKERS = ("doctorat", "cycle doctoral", "phd", "الدكتوراه", "دكتوراه")
+_MASTER_MARKERS = ("master", "mastere", "ماستر", "الماستر", "الماجستير")
+_BACHELOR_MARKERS = (
+    "bachelor", "licence", "license", "الاجازة", "الإجازة", "اجازة", "إجازة",
+)
+
+
+def programme_type_from_title(title: str | None, default: OpportunityType) -> OpportunityType:
+    """Return an explicit study-cycle type when a title names one.
+
+    A programme can mention several cycles.  Tremplin has one type per row,
+    so the most advanced named cycle is retained for filtering.
+    """
+    text = fold(title)
+    if any(marker in text for marker in _DOCTORAT_MARKERS):
+        return OpportunityType.DOCTORAT
+    if any(marker in text for marker in _MASTER_MARKERS):
+        return OpportunityType.MASTER
+    if any(marker in text for marker in _BACHELOR_MARKERS):
+        return OpportunityType.BACHELOR
+    return default
+
+
+def entry_level_for_type(opportunity_type: OpportunityType) -> EducationLevel | None:
+    """Known entry level for the three study cycles tracked by Tremplin."""
+    return {
+        OpportunityType.BACHELOR: EducationLevel.BAC,
+        OpportunityType.MASTER: EducationLevel.LICENCE,
+        OpportunityType.DOCTORAT: EducationLevel.MASTER,
+    }.get(opportunity_type)
 
 
 class LayoutChanged(RuntimeError):

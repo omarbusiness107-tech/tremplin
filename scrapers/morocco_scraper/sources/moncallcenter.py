@@ -45,6 +45,11 @@ KNOWN_LANGUAGES = {
     "portugais": "Portugais",
 }
 
+# Use the advert's title only. A normal job description often says that a
+# previous internship counts as experience; classifying from that prose would
+# incorrectly turn a permanent job into an internship.
+INTERNSHIP_TITLE_MARKERS = ("stage", "stagiaire", "internship", "pfe", "pre-embauche")
+
 
 class LayoutChanged(RuntimeError):
     """The listing page no longer looks like we expect."""
@@ -148,7 +153,11 @@ class MonCallCenterScraper(BaseScraper):
             external_id=match["id"],
             application_link=urljoin(self.homepage_url, link["href"]),
             title=title,
-            type=OpportunityType.JOB,
+            type=(
+                OpportunityType.INTERNSHIP
+                if any(marker in fold(title) for marker in INTERNSHIP_TITLE_MARKERS)
+                else OpportunityType.JOB
+            ),
             # The card's <img alt> names a different company from the one the
             # link points at, so the employer is read from the detail page.
             institution=None,

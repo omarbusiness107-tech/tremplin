@@ -26,7 +26,12 @@ import re
 
 from ..models import OpportunityType
 from ..registry import register
-from ._nine_rayti import LayoutChanged, NineRaytiScraper
+from ._nine_rayti import (
+    LayoutChanged,
+    NineRaytiScraper,
+    entry_level_for_type,
+    programme_type_from_title,
+)
 
 __all__ = ["ConcoursA9raytiScraper", "LayoutChanged"]
 
@@ -39,3 +44,12 @@ class ConcoursA9raytiScraper(NineRaytiScraper):
     LISTING_PATH = "/concoursa"
     PATH_RE = re.compile(r"^/concoursa/(?P<slug>[a-z0-9\-]+)/?$")
     OPPORTUNITY_TYPE = OpportunityType.CONCOURS
+
+    def _parse_card(self, card):
+        """Expose degree-specific admissions in their own app filters."""
+        opportunity = super()._parse_card(card)
+        if opportunity is None:
+            return None
+        opportunity.type = programme_type_from_title(opportunity.title, self.OPPORTUNITY_TYPE)
+        opportunity.required_education_level = entry_level_for_type(opportunity.type)
+        return opportunity

@@ -88,14 +88,17 @@ python -m morocco_scraper run --source example --pages 1 --max-items 5 --dry-run
 | Key | Site | Types | Notes |
 | --- | --- | --- | --- |
 | `emploi_public` | [emploi-public.ma](https://www.emploi-public.ma) | `concours` | Official MMSP portal. Server-rendered, UUID per listing, structured detail pages. robots.txt disallows only `/*/concours/download/`. |
-| `moncallcenter` | [moncallcenter.ma](https://www.moncallcenter.ma) | `job` | Call-centre and BPO board. Rolling adverts with **no deadline**, plus languages, city and a remote flag. Sponsored offers repeat on the same page under the same id. |
+| `moncallcenter` | [moncallcenter.ma](https://www.moncallcenter.ma) | `job`, `internship` | Call-centre and BPO board. Rolling adverts with **no deadline**, plus languages, city and a remote flag. Titles explicitly advertising a stage/PFE/stagiaire are put in the internship filter. Sponsored offers repeat on the same page under the same id. |
 | `bourses_9rayti` | [9rayti.com](https://www.9rayti.com) | `scholarship` | Student portal. Prose announcements; the deadline lives in a `data-target-date` attribute — **the visible date is a placeholder**, see below. |
-| `concoursa_9rayti` | [9rayti.com](https://www.9rayti.com) | `concours` | Post-bac entrance exams (ENSA, EST, FST, ENCG, medicine faculties), mostly **Arabic**. Same site, same template and same deadline trap as `bourses_9rayti` — both subclass `sources/_nine_rayti.py`. |
+| `concoursa_9rayti` | [9rayti.com](https://www.9rayti.com) | `concours`, `bachelor`, `master`, `doctorat` | Post-bac entrance exams (ENSA, EST, FST, ENCG, medicine faculties), mostly **Arabic**. Explicit study cycles are put in their own filter; the rest stays `concours`. Same template and deadline trap as `bourses_9rayti`. |
+| `formations_9rayti` | [9rayti.com](https://www.9rayti.com) | `bachelor`, `master`, `doctorat` | Server-rendered programme directories. Catalogue entries have no deadline and point students to the full 9rayti programme page. |
 
-The two 9rayti sources share every quirk of that site's template through
+The two 9rayti announcement sources share every quirk of that site's template through
 `_nine_rayti.py`, which is not itself a registered scraper — it defines
 `NineRaytiScraper`, and each leaf sets `LISTING_PATH`, `PATH_RE` and
-`OPPORTUNITY_TYPE`. Adding a third 9rayti section (the portal also runs
+`OPPORTUNITY_TYPE`. The programme directory uses the same results-grid pattern
+but is intentionally its own source: it has no application deadline and does
+not fetch every detail page. Adding another 9rayti announcement section (the portal also runs
 `/actualites` and `/evenements` feeds) is close to that ten lines.
 
 Planned next, per the build plan: university admissions beyond what 9rayti
