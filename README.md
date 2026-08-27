@@ -18,9 +18,10 @@ searches and details opportunities; accounts, profiles, personalised
 recommendations, bookmarks, email alerts and a scraper monitoring page are all
 in place.
 
-Four sources are live, covering public-sector *concours*, post-bac entrance
-exams, call-centre jobs, and scholarships — in both French and Arabic. Adding
-a fifth is one file — see [`scrapers/README.md`](scrapers/README.md).
+Five sources are live, covering public-sector *concours*, post-bac entrance
+exams, call-centre jobs, scholarships, and Bachelor/Master/Doctorat programme
+catalogues — in both French and Arabic. Adding another source is one file —
+see [`scrapers/README.md`](scrapers/README.md).
 
 ---
 
@@ -439,14 +440,15 @@ there is no request, no layout shift, and no broken state: a card whose image
 | `emploi_public` | [emploi-public.ma](https://www.emploi-public.ma) | `concours` | Structured label/value detail pages, hard deadlines, no city |
 | `moncallcenter` | [moncallcenter.ma](https://www.moncallcenter.ma) | `job` | **No deadline** (rolling), required languages, city, remote flag |
 | `bourses_9rayti` | [9rayti.com](https://www.9rayti.com) | `scholarship` | Prose announcements, deadline only in a data attribute |
-| `concoursa_9rayti` | [9rayti.com](https://www.9rayti.com) | `concours` | Same trap as above, mostly **Arabic** content, institution acronyms instead of a field description |
+| `concoursa_9rayti` | [9rayti.com](https://www.9rayti.com) | `concours`, `bachelor`, `master`, `doctorat` | Same trap as above, mostly **Arabic** content, institution acronyms instead of a field description; explicit study cycles go to their own filter |
+| `formations_9rayti` | [9rayti.com](https://www.9rayti.com) | `bachelor`, `master`, `doctorat` | Server-rendered programme catalogue, no deadline, full programme page as the link |
 
 That spread is the point: between them they cover every branch of the pipeline
 — a source whose listings never close, one whose deadline is machine-readable
 only, one that publishes everything as label/value pairs, and one in a second
 script and writing system entirely.
 
-The last two share a template (`sources/_nine_rayti.py`) since they are the
+The two 9rayti announcement sources share a template (`sources/_nine_rayti.py`) since they are the
 same site's two sections — same listing grid, same deadline trap, same
 article structure. A new 9rayti section is a ten-line leaf on that base
 rather than a full scraper; see the file for what it provides.
