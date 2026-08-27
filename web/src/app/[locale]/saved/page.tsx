@@ -76,7 +76,7 @@ export default async function SavedPage({
       ) : (
         <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {saved.map(({ opportunity }) => (
-            <li key={opportunity.id} className="flex">
+            <li key={opportunity.id} className="flex min-w-0">
               <OpportunityCard
                 opportunity={opportunity}
                 domainLabels={domainLabels}

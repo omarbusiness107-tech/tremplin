@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SearchX, SlidersHorizontal } from "lucide-react";
+import { SearchX, SlidersHorizontal, Sparkles } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
 import { FilterPanel } from "@/components/filter-panel";
@@ -45,7 +45,7 @@ export default async function HomePage({
     <>
       <Hero dict={dict} locale={typed} stats={stats} />
 
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 pb-4 sm:px-6">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-10">
         {/* Recommendations load independently: a slow personalised query
             must not hold up the browse grid everyone shares. */}
         <Suspense fallback={null}>
@@ -87,48 +87,49 @@ function Hero({
   stats: { total: number; sources: number; closingSoon: number };
 }) {
   return (
-    <section className="relative overflow-hidden border-b border-border bg-surface-sunken">
-      {/* The same khatim that tiles the cards, blown up and faded — the
-          page and the artwork share one geometry rather than the header
-          being a different idea from the grid. */}
-      <svg
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 size-full text-primary opacity-[0.07]"
-      >
-        <defs>
-          <pattern id="hero-zellij" width="72" height="72" patternUnits="userSpaceOnUse">
-            <g
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.2"
-              transform="translate(36 36)"
-            >
-              <rect x="-19" y="-19" width="38" height="38" />
-              <rect x="-19" y="-19" width="38" height="38" transform="rotate(45)" />
-              <circle r="5" />
-            </g>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#hero-zellij)" />
-      </svg>
+    <section className="relative isolate overflow-hidden bg-[#151338] text-white">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_25%,rgba(129,92,246,0.58),transparent_32%),radial-gradient(circle_at_82%_15%,rgba(20,184,166,0.32),transparent_28%),radial-gradient(circle_at_72%_90%,rgba(236,72,153,0.25),transparent_30%)]" />
+      <div className="absolute -top-24 end-[12%] size-72 rounded-full border-[52px] border-white/5" />
+      <div className="absolute bottom-0 start-0 h-px w-full bg-gradient-to-r from-transparent via-white/25 to-transparent" />
 
-      <div className="relative mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
-        <h1 className="max-w-3xl text-3xl leading-[1.1] font-bold sm:text-5xl">
-          {dict.home.title}
-        </h1>
-        <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-muted-foreground sm:text-base">
-          {dict.home.subtitle}
-        </p>
+      <div className="relative mx-auto grid w-full max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1.2fr_0.8fr]">
+        <div>
+          <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/80 backdrop-blur-md">
+            <Sparkles className="size-3.5 text-amber-300" aria-hidden />
+            {dict.brand.tagline}
+          </p>
+          <h1 className="max-w-3xl text-4xl leading-[1.05] font-bold text-balance sm:text-6xl">
+            {dict.home.title}
+          </h1>
+          <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-white/70 sm:text-lg">
+            {dict.home.subtitle}
+          </p>
 
-        <dl className="mt-8 flex flex-wrap gap-x-8 gap-y-4">
-          <Stat value={formatNumber(stats.total, locale)} label={dict.home.stats.opportunities} />
-          <Stat value={formatNumber(stats.sources, locale)} label={dict.home.stats.sources} />
-          <Stat
-            value={formatNumber(stats.closingSoon, locale)}
-            label={dict.home.stats.closingSoon}
-            tone="urgent"
-          />
-        </dl>
+          <dl className="mt-9 grid max-w-2xl grid-cols-3 gap-2 sm:gap-3">
+            <Stat value={formatNumber(stats.total, locale)} label={dict.home.stats.opportunities} />
+            <Stat value={formatNumber(stats.sources, locale)} label={dict.home.stats.sources} />
+            <Stat
+              value={formatNumber(stats.closingSoon, locale)}
+              label={dict.home.stats.closingSoon}
+              tone="urgent"
+            />
+          </dl>
+        </div>
+
+        <div className="relative hidden min-h-72 lg:block" aria-hidden="true">
+          <div className="absolute start-10 top-4 w-64 -rotate-6 rounded-3xl border border-white/15 bg-gradient-to-br from-violet-500 to-indigo-950 p-5 shadow-2xl">
+            <span className="text-xs font-semibold tracking-widest text-white/60">BAC+5</span>
+            <p className="mt-12 font-display text-xl font-semibold">{dict.types.master}</p>
+          </div>
+          <div className="absolute end-3 top-20 w-60 rotate-6 rounded-3xl border border-white/15 bg-gradient-to-br from-teal-400 to-emerald-950 p-5 shadow-2xl">
+            <span className="text-xs font-semibold tracking-widest text-white/60">EXPLORE</span>
+            <p className="mt-12 font-display text-xl font-semibold">{dict.types.internship}</p>
+          </div>
+          <div className="absolute start-24 bottom-0 w-64 -rotate-1 rounded-3xl border border-white/15 bg-gradient-to-br from-pink-400 to-purple-950 p-5 shadow-2xl">
+            <span className="text-xs font-semibold tracking-widest text-white/60">FUND</span>
+            <p className="mt-12 font-display text-xl font-semibold">{dict.types.scholarship}</p>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -144,11 +145,11 @@ function Stat({
   tone?: "urgent";
 }) {
   return (
-    <div className="flex flex-col">
-      <dt className="order-2 text-xs text-subtle-foreground">{label}</dt>
+    <div className="flex min-w-0 flex-col rounded-2xl border border-white/10 bg-white/[0.07] px-3 py-3 backdrop-blur-sm sm:px-4">
+      <dt className="order-2 text-xs text-white/55">{label}</dt>
       <dd
         className={`order-1 font-display text-2xl font-semibold tabular-nums ${
-          tone === "urgent" ? "text-urgent" : "text-foreground"
+          tone === "urgent" ? "text-amber-300" : "text-white"
         }`}
       >
         {value}
@@ -231,7 +232,7 @@ async function OpportunityGrid({
 
       <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {opportunities.map((opportunity) => (
-          <li key={opportunity.id} className="flex">
+          <li key={opportunity.id} className="flex min-w-0">
             <OpportunityCard
               opportunity={opportunity}
               domainLabels={domainLabels}
@@ -253,7 +254,7 @@ function OpportunityGridSkeleton() {
   return (
     <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }, (_, i) => (
-        <li key={i}>
+        <li key={i} className="min-w-0">
           <OpportunityCardSkeleton />
         </li>
       ))}
