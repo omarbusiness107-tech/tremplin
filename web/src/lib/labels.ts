@@ -84,8 +84,18 @@ export function positionsLabel(count: number, dict: Dictionary): string {
   return plural(dict.card.positions, count);
 }
 
+const PROGRAMME_TYPES = new Set<OpportunityType>(["bachelor", "master", "doctorat"]);
+
 export function locationLabel(opportunity: Opportunity, dict: Dictionary): string {
   if (opportunity.is_remote) return dict.card.remote;
+
+  // A study programme belongs to its named school/campus. This is more
+  // useful than a broad city label and avoids presenting a programme such
+  // as "FS Agadir" as if it were available throughout Morocco.
+  if (PROGRAMME_TYPES.has(opportunity.type) && opportunity.institution) {
+    return opportunity.institution;
+  }
+
   return opportunity.location_city ?? dict.card.nationwide;
 }
 
