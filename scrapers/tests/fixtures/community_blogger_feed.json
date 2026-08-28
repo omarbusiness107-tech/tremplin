@@ -1,0 +1,36 @@
+{
+  "feed": {
+    "entry": [
+      {
+        "title": {"$t": "Master FEG Agadir 2026-2027"},
+        "published": {"$t": "2026-08-28T11:29:33.466+01:00"},
+        "category": [
+          {"term": "FEG"},
+          {"term": "FEG Agadir"},
+          {"term": "Agadir"}
+        ],
+        "link": [
+          {
+            "rel": "alternate",
+            "href": "https://www.almaster-maroc.com/2026/08/master-feg-agadir.html"
+          }
+        ],
+        "content": {
+          "$t": "<h2>Master FEG Agadir</h2><p>La Faculté ouvre les candidatures au Master Finance et Audit.</p><h3>Conditions d'admission</h3><p>Licence en économie ou gestion.</p><p>Préinscription du 20/08/2026 au 10/09/2026.</p><a href='https://candidature.uiz.ac.ma/master'>Inscription en ligne</a>"
+        }
+      },
+      {
+        "title": {"$t": "Résultats définitifs Master FEG Agadir 2026"},
+        "published": {"$t": "2026-09-20T10:00:00+01:00"},
+        "category": [{"term": "Master"}],
+        "link": [
+          {
+            "rel": "alternate",
+            "href": "https://www.almaster-maroc.com/2026/09/resultats-feg-agadir.html"
+          }
+        ],
+        "content": {"$t": "<p>Liste des admis.</p>"}
+      }
+    ]
+  }
+}
