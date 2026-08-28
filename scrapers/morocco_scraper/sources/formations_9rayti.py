@@ -47,6 +47,35 @@ class Formations9raytiScraper(BaseScraper):
     )
     PATH_RE = re.compile(r"^/formation/(?P<slug>[^/?#]+)/?$")
 
+    # 9rayti programme pages do not expose a separate address field.  They
+    # do, however, identify the school both by name and by a stable school
+    # URL (for example ``/ecole/fsa-agadir``).  Keep this list deliberately
+    # explicit: a city is better left unknown than guessed from a vague title.
+    CITY_ALIASES = {
+        "agadir": "Agadir",
+        "beni mellal": "Béni Mellal",
+        "berrechid": "Berrechid",
+        "casablanca": "Casablanca",
+        "dar bouazza": "Dar Bouazza",
+        "el jadida": "El Jadida",
+        "fes": "Fès",
+        "fez": "Fès",
+        "kenitra": "Kénitra",
+        "khouribga": "Khouribga",
+        "laayoune": "Laâyoune",
+        "marrakech": "Marrakech",
+        "meknes": "Meknès",
+        "mohammedia": "Mohammedia",
+        "oujda": "Oujda",
+        "rabat": "Rabat",
+        "sale": "Salé",
+        "settat": "Settat",
+        "tanger": "Tanger",
+        "tangier": "Tanger",
+        "temara": "Témara",
+        "tetouan": "Tétouan",
+    }
+
     def scrape(self) -> Iterator[Opportunity]:
         max_pages = int(self.options.get("pages") or self.DEFAULT_PAGES)
         max_items = self.options.get("max_items")
@@ -134,6 +163,10 @@ class Formations9raytiScraper(BaseScraper):
         institution = brief.get("ecole") or brief.get("etablissement")
         if institution:
             opportunity.institution = institution
+        opportunity.location_city = self._city_from_school(
+            institution,
+            brief.get("ecole url") or brief.get("etablissement url"),
+        )
 
         sector = brief.get("secteurs de formation") or brief.get("secteur de formation")
         introduction = sections.pop("Introduction", None)
@@ -173,8 +206,21 @@ class Formations9raytiScraper(BaseScraper):
             value_node = item.select_one("a.text-dark, p.text-dark")
             value = clean_text(value_node.get_text(" ", strip=True)) if value_node else None
             if label and value:
-                values[fold(label)] = value
+                key = fold(label)
+                values[key] = value
+                if value_node and value_node.name == "a" and value_node.get("href"):
+                    values[f"{key} url"] = value_node["href"]
         return values
+
+    @classmethod
+    def _city_from_school(cls, school_name: str | None, school_url: str | None) -> str | None:
+        """Return a verified Moroccan city mentioned by the school metadata."""
+        candidates = [school_name or "", (school_url or "").replace("-", " ")]
+        source = fold(" ".join(candidates))
+        for alias, city in cls.CITY_ALIASES.items():
+            if re.search(rf"(?<!\w){re.escape(alias)}(?!\w)", source):
+                return city
+        return None
 
     def _detail_sections(self, soup: BeautifulSoup) -> dict[str, str]:
         """Return every useful collapsible panel, preserving its structure."""

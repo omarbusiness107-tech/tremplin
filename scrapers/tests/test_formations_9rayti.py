@@ -46,12 +46,19 @@ def test_enriches_programmes_with_school_and_full_details(session):
     opportunity = opportunities[0]
 
     assert opportunity.institution == "Université Exemple de Rabat"
+    assert opportunity.location_city == "Rabat"
     assert opportunity.description and "apprentissage par projets" in opportunity.description
     assert opportunity.conditions_to_apply and "Étude du dossier" in opportunity.conditions_to_apply
     assert opportunity.attributes["Secteurs de formation"] == "Informatique - Management"
     assert "Objectifs de la formation" in opportunity.attributes
     assert "• Construire des produits numériques" in opportunity.attributes["Objectifs de la formation"]
     assert {"software-it", "management-business"}.issubset(opportunity.domains)
+
+
+def test_city_can_be_read_from_a_school_url_when_the_name_omits_it(session):
+    scraper = Formations9raytiScraper(session, {})
+
+    assert scraper._city_from_school("FS", "/ecole/fsa-agadir") == "Agadir"
 
 
 def test_title_wins_when_a_directory_contains_a_different_cycle(session):
