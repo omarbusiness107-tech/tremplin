@@ -53,6 +53,7 @@ class Formations9raytiScraper(BaseScraper):
     # explicit: a city is better left unknown than guessed from a vague title.
     CITY_ALIASES = {
         "agadir": "Agadir",
+        "ait melloul": "Aït Melloul",
         "beni mellal": "Béni Mellal",
         "berrechid": "Berrechid",
         "casablanca": "Casablanca",
@@ -74,6 +75,14 @@ class Formations9raytiScraper(BaseScraper):
         "tangier": "Tanger",
         "temara": "Témara",
         "tetouan": "Tétouan",
+        # Some school names omit their city entirely. These institutions
+        # have one Moroccan campus for the programmes published by 9rayti.
+        "essec": "Rabat",
+        "euromed": "Fès",
+        "hestim": "Casablanca",
+        "mundiapolis": "Casablanca",
+        "ostelea": "Casablanca",
+        "vinci": "Rabat",
     }
 
     def scrape(self) -> Iterator[Opportunity]:
@@ -166,6 +175,7 @@ class Formations9raytiScraper(BaseScraper):
         opportunity.location_city = self._city_from_school(
             institution,
             brief.get("ecole url") or brief.get("etablissement url"),
+            opportunity.title,
         )
 
         sector = brief.get("secteurs de formation") or brief.get("secteur de formation")
@@ -213,9 +223,18 @@ class Formations9raytiScraper(BaseScraper):
         return values
 
     @classmethod
-    def _city_from_school(cls, school_name: str | None, school_url: str | None) -> str | None:
+    def _city_from_school(
+        cls,
+        school_name: str | None,
+        school_url: str | None,
+        programme_title: str | None = None,
+    ) -> str | None:
         """Return a verified Moroccan city mentioned by the school metadata."""
-        candidates = [school_name or "", (school_url or "").replace("-", " ")]
+        candidates = [
+            school_name or "",
+            (school_url or "").replace("-", " "),
+            programme_title or "",
+        ]
         source = fold(" ".join(candidates))
         for alias, city in cls.CITY_ALIASES.items():
             if re.search(rf"(?<!\w){re.escape(alias)}(?!\w)", source):
