@@ -7,11 +7,15 @@
     "admin": "Admin",
     "signIn": "Sign in",
     "signOut": "Sign out",
-    "language": "Language"
+    "language": "Language",
+    "theme": "Theme",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark"
   },
   "home": {
     "title": "Your next opportunity in Morocco",
-    "subtitle": "Jobs, internships, degree programmes, scholarships and concours — collected daily from official sources, sorted by how soon they close.",
+    "subtitle": "Jobs, internships, degree programmes, scholarships and concours, collected daily from public sources and sorted by deadline.",
     "stats": { "opportunities": "opportunities", "sources": "sources", "closingSoon": "closing soon" }
   },
   "filters": {
@@ -23,7 +27,7 @@
     "active": { "one": "{count} filter active", "other": "{count} filters active" },
     "groups": { "deadline": "Deadline", "field": "Field", "city": "City", "type": "Type" },
     "windows": { "7d": "Closing this week", "30d": "Within 30 days", "90d": "Within 3 months", "closed": "Include closed" },
-    "sort": { "deadline": "Deadline — soonest first", "newest": "Recently added", "title": "Alphabetical" }
+    "sort": { "deadline": "Deadline, soonest first", "newest": "Recently added", "title": "Alphabetical" }
   },
   "types": {
     "job": "Job",
@@ -35,7 +39,7 @@
     "concours": "Concours"
   },
   "deadline": {
-    "rolling": "Rolling — no deadline",
+    "rolling": "Rolling, no deadline",
     "closed": "Closed",
     "today": "Closes today",
     "oneDay": "1 day left",
@@ -44,18 +48,18 @@
   },
   "card": {
     "new": "New",
-    "nationwide": "Morocco — nationwide",
+    "nationwide": "Morocco, nationwide",
     "remote": "Remote",
     "positions": { "one": "1 position", "other": "{count} positions" },
     "save": "Save this opportunity",
     "unsave": "Remove from saved"
   },
   "list": {
-    "showing": "{first}–{last} of {total}",
+    "showing": "{first} to {last} of {total}",
     "noResults": "No results",
     "emptyFiltered": {
       "title": "No opportunities match your filters",
-      "body": "Try widening your search — remove a field or a city, or extend the deadline window.",
+      "body": "Try widening your search. Remove a field or city, or extend the deadline window.",
       "action": "Clear all filters"
     },
     "emptyDatabase": {
@@ -103,7 +107,7 @@
     "sendLink": "Email me a sign-in link",
     "checkInbox": "Check your inbox",
     "linkSent": "We sent a sign-in link to {email}. It is valid for one hour.",
-    "browsingNote": "Browsing works without an account — signing in only adds the personal parts."
+    "browsingNote": "Browsing works without an account. Signing in only adds the personal features."
   },
   "profile": {
     "title": "Your profile",
@@ -124,7 +128,7 @@
     "emailAlerts": "Email alerts",
     "emailAlertsToggle": "Email me when a new opportunity matches my profile",
     "reminderDays": "Remind me before a saved deadline",
-    "daysAhead": "Days ahead (0–30)",
+    "daysAhead": "Days ahead (0 to 30)",
     "save": "Save profile",
     "saved": "Saved"
   },
@@ -147,7 +151,7 @@
     "none": "Nothing saved yet.",
     "count": "{count} saved, soonest deadline first.",
     "closingSoon": "{count} of your saved opportunities close within a week.",
-    "reminderNote": "You will also get an email reminder — adjust the timing in your {profileLink}.",
+    "reminderNote": "You will also get an email reminder. Adjust the timing in your {profileLink}.",
     "profileLink": "profile",
     "emptyTitle": "No saved opportunities",
     "emptyBody": "Save anything you are considering and it will show up here, with a reminder before it closes.",

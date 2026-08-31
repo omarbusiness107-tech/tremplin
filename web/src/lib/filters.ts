@@ -22,7 +22,7 @@ export const SORT_KEYS = ["deadline", "newest", "title"] as const;
 export type SortKey = (typeof SORT_KEYS)[number];
 
 export const SORT_LABELS: Record<SortKey, string> = {
-  deadline: "Deadline — soonest first",
+  deadline: "Deadline, soonest first",
   newest: "Recently added",
   title: "Alphabetical",
 };

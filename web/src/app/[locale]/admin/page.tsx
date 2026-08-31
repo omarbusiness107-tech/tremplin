@@ -37,9 +37,10 @@ export default async function AdminPage({
   const t = dict.admin;
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6">
-      <header className="flex flex-col gap-1.5">
-        <h1 className="text-2xl font-bold sm:text-3xl">{t.title}</h1>
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 py-10 sm:px-6 sm:py-14">
+      <header className="border-b border-border pb-6">
+        <p className="mb-3 text-xs font-bold tracking-[0.16em] text-primary uppercase">06 / {dict.nav.admin}</p>
+        <h1 className="text-4xl font-bold sm:text-5xl">{t.title}</h1>
         <p className="max-w-3xl text-sm text-muted-foreground">{t.subtitle}</p>
       </header>
 
@@ -49,7 +50,7 @@ export default async function AdminPage({
           {health.map((source) => (
             <div
               key={source.source_key}
-              className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-5 shadow-[var(--shadow-card)]"
+              className="flex flex-col gap-3 border border-border border-t-4 border-t-primary bg-surface p-5 shadow-[var(--shadow-card)]"
             >
               <div className="flex items-start justify-between gap-2">
                 <h3 className="font-display text-base font-semibold">{source.name}</h3>
@@ -66,9 +67,9 @@ export default async function AdminPage({
 
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                 <Stat label={t.columns.listings} value={source.total_opportunities} />
-                <Stat label={t.columns.found} value={source.last_items_found ?? "—"} />
-                <Stat label={t.columns.new} value={source.last_items_created ?? "—"} />
-                <Stat label={t.columns.failed} value={source.last_items_failed ?? "—"} />
+                <Stat label={t.columns.found} value={source.last_items_found ?? "N/A"} />
+                <Stat label={t.columns.new} value={source.last_items_created ?? "N/A"} />
+                <Stat label={t.columns.failed} value={source.last_items_failed ?? "N/A"} />
               </dl>
 
               <p className="flex items-center gap-1.5 text-[11px] text-subtle-foreground">
@@ -99,7 +100,7 @@ export default async function AdminPage({
 
       <section className="flex flex-col gap-4">
         <h2 className="font-display text-lg font-semibold">{t.recentRuns}</h2>
-        <div className="overflow-x-auto rounded-xl border border-border bg-surface">
+        <div className="overflow-x-auto border border-border bg-surface">
           <table className="w-full text-sm">
             <thead className="bg-surface-sunken text-start text-[11px] tracking-wide text-subtle-foreground uppercase">
               <tr>
@@ -137,7 +138,7 @@ export default async function AdminPage({
                     {run.warnings.length}
                   </Td>
                   <Td align="end" className="whitespace-nowrap">
-                    {run.duration_ms ? `${(run.duration_ms / 1000).toFixed(1)}s` : "—"}
+                    {run.duration_ms ? `${(run.duration_ms / 1000).toFixed(1)}s` : "N/A"}
                   </Td>
                 </tr>
               ))}

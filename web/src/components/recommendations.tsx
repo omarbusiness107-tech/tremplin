@@ -33,7 +33,7 @@ export async function Recommendations({
 
   if (recommendations.length === 0) {
     return (
-      <section className="flex flex-col items-start gap-4 rounded-xl border border-dashed border-border-strong bg-surface px-5 py-6 sm:flex-row sm:items-center sm:justify-between">
+      <section className="flex flex-col items-start gap-4 border border-dashed border-border-strong bg-surface px-5 py-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
           <h2 className="flex items-center gap-2 font-display text-base font-semibold">
             <Sparkles className="size-4 text-primary" aria-hidden />
@@ -52,8 +52,8 @@ export async function Recommendations({
   const saved = await bookmarkedIds(recommendations.map((r) => r.opportunity.id));
 
   return (
-    <section className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
+    <section className="flex flex-col gap-5 border-t border-border pt-7">
+      <div className="flex items-end justify-between gap-3">
         <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
           <Sparkles className="size-4 text-primary" aria-hidden />
           {dict.recommendations.title}
@@ -63,7 +63,7 @@ export async function Recommendations({
         </Button>
       </div>
 
-      <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid grid-cols-1 gap-5 xl:grid-cols-2">
         {recommendations.map(({ opportunity, reasons }) => (
           <li key={opportunity.id} className="flex min-w-0">
             <OpportunityCard

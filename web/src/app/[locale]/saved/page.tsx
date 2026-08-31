@@ -37,9 +37,10 @@ export default async function SavedPage({
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6">
-      <header className="flex flex-col gap-1.5">
-        <h1 className="text-2xl font-bold sm:text-3xl">{dict.saved.title}</h1>
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-10 sm:px-6 sm:py-14">
+      <header className="border-b border-border pb-6">
+        <p className="mb-3 text-xs font-bold tracking-[0.16em] text-primary uppercase">02 / {dict.nav.saved}</p>
+        <h1 className="text-4xl font-bold sm:text-5xl">{dict.saved.title}</h1>
         <p className="text-sm text-muted-foreground">
           {saved.length === 0
             ? dict.saved.none
@@ -74,7 +75,7 @@ export default async function SavedPage({
           }
         />
       ) : (
-        <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-5 xl:grid-cols-2">
           {saved.map(({ opportunity }) => (
             <li key={opportunity.id} className="flex min-w-0">
               <OpportunityCard

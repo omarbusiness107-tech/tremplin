@@ -64,7 +64,7 @@ export function LoginForm({
 
   if (status === "sent") {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-6 text-center">
+      <div className="flex flex-col items-center gap-3 border border-border bg-card p-6 text-center">
         <CheckCircle2 className="size-6 text-calm" aria-hidden />
         <p className="text-sm font-medium">{labels.checkInbox}</p>
         <p className="text-sm text-balance text-muted-foreground">
@@ -99,7 +99,7 @@ export function LoginForm({
           onChange={(e) => setEmail(e.target.value)}
           placeholder={labels.emailPlaceholder}
           className={cn(
-            "h-9 w-full rounded-md border border-input bg-card px-3 text-sm",
+            "h-12 w-full rounded-md border border-input bg-background px-4 text-sm",
             "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
           )}
         />

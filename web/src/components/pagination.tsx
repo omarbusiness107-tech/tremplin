@@ -27,7 +27,7 @@ export function Pagination({ filters, pageCount, pathname = "/" }: Props) {
         disabled={page <= 1}
         label="Previous page"
       >
-        <ChevronLeft className="size-4" aria-hidden />
+        <ChevronLeft className="size-4 rtl:rotate-180" aria-hidden />
       </PageLink>
 
       {pages.map((entry, index) =>
@@ -41,7 +41,7 @@ export function Pagination({ filters, pageCount, pathname = "/" }: Props) {
             href={filtersToHref({ ...filters, page: entry }, pathname)}
             aria-current={entry === page ? "page" : undefined}
             className={cn(
-              "inline-flex h-9 min-w-9 items-center justify-center rounded-md px-2 text-sm tabular-nums transition-colors",
+              "inline-flex h-10 min-w-10 items-center justify-center rounded-md px-2 text-sm font-semibold tabular-nums transition-[background-color,color,transform] duration-200 ease-out active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-ring",
               entry === page
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-secondary hover:text-foreground",
@@ -57,7 +57,7 @@ export function Pagination({ filters, pageCount, pathname = "/" }: Props) {
         disabled={page >= pageCount}
         label="Next page"
       >
-        <ChevronRight className="size-4" aria-hidden />
+        <ChevronRight className="size-4 rtl:rotate-180" aria-hidden />
       </PageLink>
     </nav>
   );
@@ -75,7 +75,7 @@ function PageLink({
   children: React.ReactNode;
 }) {
   const className =
-    "inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors";
+    "inline-flex size-10 items-center justify-center rounded-md text-muted-foreground transition-[background-color,color,transform] duration-200 ease-out active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-ring";
 
   if (disabled) {
     return (

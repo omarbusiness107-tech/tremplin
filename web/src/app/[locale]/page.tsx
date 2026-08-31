@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SearchX, SlidersHorizontal, Sparkles } from "lucide-react";
+import { Compass, Database, SearchX, SlidersHorizontal, TimerReset } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
 import { FilterPanel } from "@/components/filter-panel";
@@ -43,7 +43,15 @@ export default async function HomePage({
 
   return (
     <>
-      <Hero dict={dict} locale={typed} stats={stats} />
+      <Hero
+        dict={dict}
+        locale={typed}
+        stats={stats}
+        filters={filters}
+        domains={domains}
+        cities={cities}
+        domainLabels={Object.fromEntries(domainLabelMap(domains, typed))}
+      />
 
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-10">
         {/* Recommendations load independently: a slow personalised query
@@ -51,14 +59,6 @@ export default async function HomePage({
         <Suspense fallback={null}>
           <Recommendations signedIn={signedIn} domains={domains} locale={typed} dict={dict} />
         </Suspense>
-
-        <FilterPanel
-          filters={filters}
-          domains={domains}
-          cities={cities}
-          dict={dict}
-          domainLabels={Object.fromEntries(domainLabelMap(domains, typed))}
-        />
 
         {/* Keyed on the filters so changing them re-suspends and the
             skeletons come back, instead of the old results sitting there
@@ -81,54 +81,50 @@ function Hero({
   dict,
   locale,
   stats,
+  filters,
+  domains,
+  cities,
+  domainLabels,
 }: {
   dict: Dictionary;
   locale: Locale;
   stats: { total: number; sources: number; closingSoon: number };
+  filters: ReturnType<typeof parseFilters>;
+  domains: Awaited<ReturnType<typeof listDomains>>;
+  cities: Awaited<ReturnType<typeof listCities>>;
+  domainLabels: Record<string, string>;
 }) {
   return (
-    <section className="relative isolate overflow-hidden bg-[#151338] text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_25%,rgba(129,92,246,0.58),transparent_32%),radial-gradient(circle_at_82%_15%,rgba(20,184,166,0.32),transparent_28%),radial-gradient(circle_at_72%_90%,rgba(236,72,153,0.25),transparent_30%)]" />
-      <div className="absolute -top-24 end-[12%] size-72 rounded-full border-[52px] border-white/5" />
-      <div className="absolute bottom-0 start-0 h-px w-full bg-gradient-to-r from-transparent via-white/25 to-transparent" />
-
-      <div className="relative mx-auto grid w-full max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1.2fr_0.8fr]">
-        <div>
-          <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/80 backdrop-blur-md">
-            <Sparkles className="size-3.5 text-amber-300" aria-hidden />
-            {dict.brand.tagline}
+    <section className="relative isolate overflow-hidden border-b border-border bg-surface">
+      <div className="absolute inset-y-0 end-0 hidden w-[42%] border-s border-border bg-primary-soft/30 lg:block" />
+      <div className="relative mx-auto grid w-full max-w-7xl gap-8 px-4 pb-8 pt-12 sm:px-6 sm:pb-10 sm:pt-16 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)] lg:gap-12 lg:pt-20">
+        <div className="motion-enter">
+          <p className="mb-5 flex items-center gap-3 text-xs font-bold tracking-[0.16em] text-primary uppercase">
+            <span className="h-px w-8 bg-primary" aria-hidden />
+            01 / {dict.brand.tagline}
           </p>
-          <h1 className="max-w-3xl text-4xl leading-[1.05] font-bold text-balance sm:text-6xl">
+          <h1 className="max-w-[14ch] text-[clamp(2.7rem,7vw,5.8rem)] leading-[0.98] font-bold tracking-[-0.055em]">
             {dict.home.title}
           </h1>
-          <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-white/70 sm:text-lg">
+          <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
             {dict.home.subtitle}
           </p>
-
-          <dl className="mt-9 grid max-w-2xl grid-cols-3 gap-2 sm:gap-3">
-            <Stat value={formatNumber(stats.total, locale)} label={dict.home.stats.opportunities} />
-            <Stat value={formatNumber(stats.sources, locale)} label={dict.home.stats.sources} />
-            <Stat
-              value={formatNumber(stats.closingSoon, locale)}
-              label={dict.home.stats.closingSoon}
-              tone="urgent"
-            />
-          </dl>
         </div>
 
-        <div className="relative hidden min-h-72 lg:block" aria-hidden="true">
-          <div className="absolute start-10 top-4 w-64 -rotate-6 rounded-3xl border border-white/15 bg-gradient-to-br from-violet-500 to-indigo-950 p-5 shadow-2xl">
-            <span className="text-xs font-semibold tracking-widest text-white/60">BAC+5</span>
-            <p className="mt-12 font-display text-xl font-semibold">{dict.types.master}</p>
-          </div>
-          <div className="absolute end-3 top-20 w-60 rotate-6 rounded-3xl border border-white/15 bg-gradient-to-br from-teal-400 to-emerald-950 p-5 shadow-2xl">
-            <span className="text-xs font-semibold tracking-widest text-white/60">EXPLORE</span>
-            <p className="mt-12 font-display text-xl font-semibold">{dict.types.internship}</p>
-          </div>
-          <div className="absolute start-24 bottom-0 w-64 -rotate-1 rounded-3xl border border-white/15 bg-gradient-to-br from-pink-400 to-purple-950 p-5 shadow-2xl">
-            <span className="text-xs font-semibold tracking-widest text-white/60">FUND</span>
-            <p className="mt-12 font-display text-xl font-semibold">{dict.types.scholarship}</p>
-          </div>
+        <dl className="motion-enter grid grid-cols-3 border-y border-border bg-background/80 lg:grid-cols-1 lg:border lg:bg-surface" style={{ animationDelay: "80ms" }}>
+          <Stat icon={Compass} value={formatNumber(stats.total, locale)} label={dict.home.stats.opportunities} />
+          <Stat icon={Database} value={formatNumber(stats.sources, locale)} label={dict.home.stats.sources} />
+          <Stat icon={TimerReset} value={formatNumber(stats.closingSoon, locale)} label={dict.home.stats.closingSoon} tone="urgent" />
+        </dl>
+
+        <div className="motion-enter lg:col-span-2" style={{ animationDelay: "140ms" }}>
+          <FilterPanel
+            filters={filters}
+            domains={domains}
+            cities={cities}
+            dict={dict}
+            domainLabels={domainLabels}
+          />
         </div>
       </div>
     </section>
@@ -139,21 +135,24 @@ function Stat({
   value,
   label,
   tone,
+  icon: Icon,
 }: {
   value: string;
   label: string;
   tone?: "urgent";
+  icon: typeof Compass;
 }) {
   return (
-    <div className="flex min-w-0 flex-col rounded-2xl border border-white/10 bg-white/[0.07] px-3 py-3 backdrop-blur-sm sm:px-4">
-      <dt className="order-2 text-xs text-white/55">{label}</dt>
+    <div className="flex min-w-0 flex-col gap-2 border-e border-border px-3 py-4 last:border-e-0 sm:px-5 lg:border-e-0 lg:border-b lg:py-6 lg:last:border-b-0">
+      <Icon className={`size-4 ${tone === "urgent" ? "text-urgent" : "text-primary"}`} aria-hidden />
       <dd
-        className={`order-1 font-display text-2xl font-semibold tabular-nums ${
-          tone === "urgent" ? "text-amber-300" : "text-white"
+        className={`font-display text-2xl font-bold tabular-nums sm:text-3xl ${
+          tone === "urgent" ? "text-urgent" : "text-foreground"
         }`}
       >
         {value}
       </dd>
+      <dt className="text-[11px] leading-tight font-semibold tracking-wide text-subtle-foreground uppercase">{label}</dt>
     </div>
   );
 }
@@ -225,12 +224,12 @@ async function OpportunityGrid({
   const last = Math.min(page * PAGE_SIZE, total);
 
   return (
-    <section className="flex flex-col gap-5">
-      <p className="text-sm text-muted-foreground tabular-nums">
+    <section id="opportunities" className="flex scroll-mt-24 flex-col gap-5">
+      <p className="border-b border-border pb-3 text-sm font-medium text-muted-foreground tabular-nums">
         {interpolate(dict.list.showing, { first, last, total })}
       </p>
 
-      <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid grid-cols-1 gap-5 xl:grid-cols-2">
         {opportunities.map((opportunity) => (
           <li key={opportunity.id} className="flex min-w-0">
             <OpportunityCard
@@ -252,7 +251,7 @@ async function OpportunityGrid({
 
 function OpportunityGridSkeleton() {
   return (
-    <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="grid grid-cols-1 gap-5 xl:grid-cols-2">
       {Array.from({ length: 6 }, (_, i) => (
         <li key={i} className="min-w-0">
           <OpportunityCardSkeleton />

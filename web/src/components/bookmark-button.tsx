@@ -57,7 +57,7 @@ export function BookmarkButton({
         aria-label={label}
         aria-pressed={optimistic}
         className={cn(
-          "grid size-8 place-items-center rounded-full bg-white/85 backdrop-blur-sm ring-1 ring-black/5 transition-colors",
+          "grid size-9 place-items-center rounded-md bg-white/90 shadow-sm ring-1 ring-black/10 transition-[color,transform] duration-200 ease-out active:scale-[0.96]",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
           optimistic ? "text-primary" : "text-slate-600 hover:text-slate-900",
           className,

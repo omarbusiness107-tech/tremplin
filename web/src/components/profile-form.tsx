@@ -190,7 +190,7 @@ function SubmitButton({ label }: { label: string }) {
 }
 
 const inputClass =
-  "h-9 w-full rounded-md border border-input bg-card px-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "h-11 w-full rounded-md border border-input bg-background px-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 function Field({
   label,
@@ -267,7 +267,7 @@ function CheckboxChips({
             />
             <span
               className={cn(
-                "inline-flex items-center rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground transition-colors",
+                "inline-flex min-h-9 items-center rounded-md border border-border bg-card px-3 py-1 text-xs font-semibold text-muted-foreground transition-[background-color,color,border-color,transform] duration-200 ease-out active:scale-[0.98]",
                 "hover:border-foreground/25 hover:text-foreground",
                 "peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-foreground",
               )}

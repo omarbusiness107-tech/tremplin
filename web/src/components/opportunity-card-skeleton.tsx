@@ -4,10 +4,11 @@ export function OpportunityCardSkeleton() {
   return (
     <div
       aria-hidden
-      className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-[var(--shadow-card)]"
+      className="grid h-full overflow-hidden rounded-lg border border-border bg-surface shadow-[var(--shadow-card)] sm:grid-cols-[11rem_minmax(0,1fr)]"
     >
-      <Skeleton className="aspect-[16/7] rounded-none" />
-      <div className="flex flex-1 flex-col gap-3 p-4">
+      <Skeleton className="h-40 rounded-none sm:h-full sm:min-h-64" />
+      <div className="flex min-w-0 flex-1 flex-col gap-3 p-5">
+        <Skeleton className="h-5 w-20 rounded-md" />
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-3/5" />
         <Skeleton className="h-3 w-2/3" />
@@ -15,9 +16,9 @@ export function OpportunityCardSkeleton() {
           <Skeleton className="h-5 w-20 rounded-full" />
           <Skeleton className="h-5 w-16 rounded-full" />
         </div>
-      </div>
-      <div className="border-t border-border px-4 py-3">
-        <Skeleton className="h-5 w-28 rounded-full" />
+        <div className="mt-auto border-t border-border pt-3">
+          <Skeleton className="h-5 w-28 rounded-md" />
+        </div>
       </div>
     </div>
   );

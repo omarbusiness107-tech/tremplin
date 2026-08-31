@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Building2, CalendarClock, MapPin, Users } from "lucide-react";
+import { ArrowUpRight, Building2, CalendarClock, MapPin, Users } from "lucide-react";
 
 import { BookmarkButton } from "@/components/bookmark-button";
 import { OpportunityCover } from "@/components/opportunity-cover";
@@ -45,9 +45,8 @@ export function OpportunityCard({
   return (
     <article
       className={cn(
-        "group relative flex h-full w-full min-w-0 flex-col overflow-hidden rounded-[1.35rem] border border-border bg-surface",
-        "shadow-[var(--shadow-card)] transition-all duration-300",
-        "hover:-translate-y-1 hover:border-border-strong hover:shadow-[var(--shadow-lift)]",
+        "pressable group relative grid h-full w-full min-w-0 overflow-hidden rounded-lg border border-border bg-surface shadow-[var(--shadow-card)]",
+        "sm:grid-cols-[11rem_minmax(0,1fr)] hover:border-border-strong hover:shadow-[var(--shadow-lift)]",
         closed && "opacity-70",
       )}
     >
@@ -57,13 +56,7 @@ export function OpportunityCard({
         logoUrl={opportunity.institution_logo_url}
       />
 
-      {/* Floated over the cover so the type badge reads against artwork
-          rather than eating a line of the card body. */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <Badge variant="glass">{typeLabel(opportunity.type, dict)}</Badge>
-          {isNew && <Badge variant="solid">{dict.card.new}</Badge>}
-        </div>
+      <div className="absolute end-3 top-3 z-10">
         <div className="pointer-events-auto">
           <BookmarkButton
             opportunityId={opportunity.id}
@@ -76,8 +69,13 @@ export function OpportunityCard({
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-3 p-5">
-        <h3 className="min-h-[2.75rem] font-display text-[15px] leading-snug font-semibold">
+      <div className="flex min-w-0 flex-col p-4 sm:p-5">
+        <div className="mb-3 flex flex-wrap items-center gap-1.5 pe-9">
+          <Badge variant="default">{typeLabel(opportunity.type, dict)}</Badge>
+          {isNew && <Badge variant="solid">{dict.card.new}</Badge>}
+        </div>
+
+        <h3 className="font-display text-base leading-snug font-semibold sm:text-[17px]">
           <Link
             href={`/${locale}/opportunities/${opportunity.id}`}
             dir="auto"
@@ -88,7 +86,7 @@ export function OpportunityCard({
         </h3>
 
         {opportunity.institution && (
-          <p className="flex min-h-9 items-start gap-1.5 text-[13px] text-muted-foreground">
+          <p className="mt-2 flex items-start gap-1.5 text-[13px] text-muted-foreground">
             <Building2 className="mt-0.5 size-3.5 shrink-0" aria-hidden />
             <span className="line-clamp-2" dir="auto">
               {opportunity.institution}
@@ -96,7 +94,7 @@ export function OpportunityCard({
           </p>
         )}
 
-        <div className="flex flex-wrap gap-1.5">
+        <div className="mt-3 flex flex-wrap gap-1.5">
           {opportunity.domains.slice(0, 2).map((slug) => (
             <Badge key={slug} variant="outline" dir="auto">
               {domainLabels.get(slug) ?? slug}
@@ -104,7 +102,7 @@ export function OpportunityCard({
           ))}
         </div>
 
-        <div className="mt-auto flex flex-wrap gap-x-3 gap-y-1 pt-1 text-[11px] text-subtle-foreground">
+        <div className="mt-auto flex flex-wrap gap-x-3 gap-y-1 pt-4 text-xs text-subtle-foreground">
           <span className="inline-flex items-center gap-1">
             <MapPin className="size-3.5" aria-hidden />
             <span dir="auto">{locationLabel(opportunity, dict)}</span>
@@ -116,18 +114,19 @@ export function OpportunityCard({
             </span>
           )}
         </div>
-      </div>
 
-      <div className="flex min-h-14 flex-wrap items-center gap-2 border-t border-border bg-surface-sunken/45 px-5 py-3">
-        <Badge variant={URGENCY_TONE[urgency]}>
-          <CalendarClock className="size-3.5" aria-hidden />
-          {deadlineLabel(opportunity.deadline, dict, locale)}
-        </Badge>
-        {matchReasons?.slice(0, 1).map((reason) => (
-          <Badge key={reason} variant="outline">
-            {reason}
+        <div className="mt-4 flex min-h-10 flex-wrap items-center gap-2 border-t border-border pt-3">
+          <Badge variant={URGENCY_TONE[urgency]}>
+            <CalendarClock className="size-3.5" aria-hidden />
+            {deadlineLabel(opportunity.deadline, dict, locale)}
           </Badge>
-        ))}
+          {matchReasons?.slice(0, 1).map((reason) => (
+            <Badge key={reason} variant="outline">
+              {reason}
+            </Badge>
+          ))}
+          <ArrowUpRight className="ms-auto size-4 text-subtle-foreground transition-transform duration-200 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" aria-hidden />
+        </div>
       </div>
     </article>
   );
