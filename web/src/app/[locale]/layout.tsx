@@ -28,6 +28,15 @@ const plexArabic = IBM_Plex_Sans_Arabic({
   display: "swap",
 });
 
+const DIRECTION_CONTRACT = `<!--
+THESIS: Tremplin is a campus wayfinder for real opportunities, refusing the centered marketing hero and interchangeable card wall.
+OWN-WORLD: Limestone paper, midnight ink, Majorelle blue signals, compact radii, numbered index cues, flat category posters, and firm rules.
+STORY: Visitors identify the catalogue, see its live scope, search or filter immediately, scan complete facts, and continue to the source with confidence.
+FIRST VIEWPORT: A sticky utility masthead leads into an asymmetric title field, vertical live index, and the full search surface across the lower edge. Search is the primary action. The filter reveal is the signature interaction, opening from its control with short ease-out motion.
+FORM: Campus Wayfinder, grounded candidate 4, seed b9ab74ff.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+-->`;
+
 /** Every locale is known ahead of time, so all three prerender. */
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
@@ -72,6 +81,10 @@ export default async function LocaleLayout({
       className={`${readex.variable} ${plexArabic.variable}`}
     >
       <body className="flex min-h-screen flex-col bg-background">
+        <template
+          data-design-contract="b9ab74ff"
+          dangerouslySetInnerHTML={{ __html: DIRECTION_CONTRACT }}
+        />
         <SiteHeader locale={typed} dict={dict} />
         <main className="flex-1">{children}</main>
         <SiteFooter dict={dict} />

@@ -23,7 +23,8 @@ interface Props {
 
 type ArtDirection = {
   icon: LucideIcon;
-  gradient: string;
+  surface: string;
+  ink: string;
   accent: string;
   mark: string;
 };
@@ -36,44 +37,51 @@ type ArtDirection = {
 const ART: Record<OpportunityType, ArtDirection> = {
   job: {
     icon: BriefcaseBusiness,
-    gradient: "from-sky-500 via-blue-700 to-indigo-950",
-    accent: "bg-cyan-300",
+    surface: "bg-[#d9e5ff] dark:bg-[#1d3158]",
+    ink: "text-[#17376f] dark:text-[#bdd0ff]",
+    accent: "bg-[#3569d4]",
     mark: "JOB",
   },
   internship: {
     icon: Rocket,
-    gradient: "from-teal-400 via-emerald-700 to-slate-950",
-    accent: "bg-lime-300",
+    surface: "bg-[#d7eee4] dark:bg-[#193b32]",
+    ink: "text-[#175b47] dark:text-[#a8ddca]",
+    accent: "bg-[#1d8a67]",
     mark: "STAGE",
   },
   bachelor: {
     icon: BookOpenCheck,
-    gradient: "from-amber-400 via-fuchsia-600 to-violet-950",
-    accent: "bg-orange-200",
+    surface: "bg-[#f5e6bd] dark:bg-[#4a371c]",
+    ink: "text-[#6d4a0e] dark:text-[#f2d58c]",
+    accent: "bg-[#d18a1f]",
     mark: "BAC+3",
   },
   master: {
     icon: GraduationCap,
-    gradient: "from-violet-500 via-indigo-700 to-slate-950",
-    accent: "bg-fuchsia-300",
+    surface: "bg-[#dfddff] dark:bg-[#2b285e]",
+    ink: "text-[#3d3895] dark:text-[#c5c1ff]",
+    accent: "bg-[#5147c9]",
     mark: "BAC+5",
   },
   doctorat: {
     icon: Microscope,
-    gradient: "from-cyan-400 via-blue-700 to-slate-950",
-    accent: "bg-sky-200",
+    surface: "bg-[#d7e9ec] dark:bg-[#173941]",
+    ink: "text-[#1b5966] dark:text-[#a8dbe2]",
+    accent: "bg-[#2b8192]",
     mark: "PHD",
   },
   scholarship: {
     icon: Sparkles,
-    gradient: "from-pink-400 via-purple-700 to-indigo-950",
-    accent: "bg-yellow-200",
+    surface: "bg-[#f1dce7] dark:bg-[#4a2439]",
+    ink: "text-[#84345e] dark:text-[#efb8d4]",
+    accent: "bg-[#b54f7f]",
     mark: "BOURSE",
   },
   concours: {
     icon: Trophy,
-    gradient: "from-amber-400 via-orange-600 to-red-950",
-    accent: "bg-yellow-200",
+    surface: "bg-[#f2ded0] dark:bg-[#4b2b1f]",
+    ink: "text-[#8a3e20] dark:text-[#edb79f]",
+    accent: "bg-[#c85b2d]",
     mark: "CONCOURS",
   },
 };
@@ -92,46 +100,40 @@ export function OpportunityCover({ id, type, logoUrl, className, size = "card" }
   const seed = hash(id);
   const art = ART[type];
   const Icon = art.icon;
-  const rotation = (seed % 17) - 8;
-  const x = 12 + (seed % 22);
-  const y = 18 + ((seed >> 4) % 28);
+  const index = String((seed % 89) + 11).padStart(2, "0");
 
   return (
     <div
       aria-hidden="true"
       className={cn(
-        "relative isolate overflow-hidden bg-gradient-to-br text-white",
-        art.gradient,
-        size === "card" ? "aspect-[16/8]" : "h-48 sm:h-56 lg:h-full lg:min-h-[22rem]",
+        "relative isolate overflow-hidden border-border",
+        art.surface,
+        art.ink,
+        size === "card"
+          ? "h-40 border-b sm:h-full sm:min-h-64 sm:border-e sm:border-b-0"
+          : "h-56 border-b sm:h-72 lg:h-full lg:min-h-[30rem] lg:border-e lg:border-b-0",
         className,
       )}
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_15%,rgba(255,255,255,0.34),transparent_32%),linear-gradient(120deg,transparent_25%,rgba(255,255,255,0.11)_25%,rgba(255,255,255,0.11)_26%,transparent_26%)]" />
-      <div
-        className={cn("absolute size-40 rounded-full opacity-30 blur-3xl", art.accent)}
-        style={{ left: `${x}%`, top: `${y}%` }}
-      />
-      <div className="absolute -end-8 -bottom-16 size-52 rounded-full border-[28px] border-white/10" />
-      <div className="absolute end-7 top-6 size-16 rotate-12 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-sm" />
-
-      <div
-        className={cn(
-          "absolute start-[13%] top-1/2 grid -translate-y-1/2 place-items-center rounded-[1.4rem] border border-white/25 bg-white/15 shadow-2xl backdrop-blur-md",
-          size === "card" ? "size-16" : "size-24 sm:size-28",
-        )}
-        style={{ transform: `translateY(-50%) rotate(${rotation}deg)` }}
-      >
-        <Icon className={size === "card" ? "size-8" : "size-12 sm:size-14"} strokeWidth={1.5} />
+      <div className="absolute inset-y-0 start-1/2 w-px bg-current opacity-20" />
+      <div className="absolute inset-x-0 top-1/2 h-px bg-current opacity-20" />
+      <div className={cn("absolute inset-y-0 start-0 w-1.5", art.accent)} />
+      <span className="absolute end-4 top-3 font-display text-[11px] font-bold tracking-[0.18em] opacity-65">
+        {index}
+      </span>
+      <div className="absolute start-5 top-5 flex items-center gap-2 text-[10px] font-bold tracking-[0.14em] uppercase opacity-75">
+        <span className={cn("size-2", art.accent)} />
+        {art.mark}
       </div>
 
-      <span
-        className={cn(
-          "absolute end-5 bottom-3 font-display font-bold tracking-[0.16em] text-white/20",
-          size === "card" ? "text-2xl" : "text-4xl sm:text-6xl",
-        )}
-      >
-        {art.mark}
-      </span>
+      <div className="absolute inset-0 grid place-items-center">
+        <div className={cn(
+          "grid place-items-center border-2 border-current bg-white/45 shadow-[5px_5px_0_currentColor] dark:bg-black/15",
+          size === "card" ? "size-16" : "size-24 sm:size-28",
+        )}>
+          <Icon className={size === "card" ? "size-8" : "size-12 sm:size-14"} strokeWidth={1.6} />
+        </div>
+      </div>
 
       {logoUrl && <InstitutionLogo src={logoUrl} size={size} />}
     </div>

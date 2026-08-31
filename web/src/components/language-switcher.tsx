@@ -40,7 +40,7 @@ export function LanguageSwitcher({ locale, label }: { locale: Locale; label: str
       role="group"
       aria-label={label}
     >
-      <Languages className="ms-1.5 size-3.5 shrink-0 text-subtle-foreground" aria-hidden />
+      <Languages className="ms-1.5 hidden size-3.5 shrink-0 text-subtle-foreground sm:block" aria-hidden />
       {LOCALES.map((option) => (
         <button
           key={option}
@@ -50,7 +50,7 @@ export function LanguageSwitcher({ locale, label }: { locale: Locale; label: str
           aria-current={option === locale ? "true" : undefined}
           title={LOCALE_NAMES[option]}
           className={cn(
-            "rounded-full px-2 py-1 text-xs font-medium transition-colors",
+            "rounded-full px-2 py-1 text-xs font-semibold transition-[background-color,color,transform] duration-200 ease-out active:scale-[0.97]",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             option === locale
               ? "bg-primary text-primary-foreground"

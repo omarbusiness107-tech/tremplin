@@ -7,11 +7,15 @@
     "admin": "Administration",
     "signIn": "Se connecter",
     "signOut": "Se déconnecter",
-    "language": "Langue"
+    "language": "Langue",
+    "theme": "Thème",
+    "themeSystem": "Système",
+    "themeLight": "Clair",
+    "themeDark": "Sombre"
   },
   "home": {
     "title": "Votre prochaine opportunité au Maroc",
-    "subtitle": "Emplois, stages, filières, bourses et concours — rassemblés chaque jour depuis les sources officielles, classés par échéance.",
+    "subtitle": "Emplois, stages, filières, bourses et concours, rassemblés chaque jour depuis des sources publiques et classés par échéance.",
     "stats": { "opportunities": "opportunités", "sources": "sources", "closingSoon": "clôturent bientôt" }
   },
   "filters": {
@@ -23,7 +27,7 @@
     "active": { "one": "{count} filtre actif", "other": "{count} filtres actifs" },
     "groups": { "deadline": "Échéance", "field": "Domaine", "city": "Ville", "type": "Type" },
     "windows": { "7d": "Clôture cette semaine", "30d": "Sous 30 jours", "90d": "Sous 3 mois", "closed": "Inclure les clôturées" },
-    "sort": { "deadline": "Échéance — au plus tôt", "newest": "Ajoutées récemment", "title": "Ordre alphabétique" }
+    "sort": { "deadline": "Échéance, au plus tôt", "newest": "Ajoutées récemment", "title": "Ordre alphabétique" }
   },
   "types": {
     "job": "Emploi",
@@ -44,18 +48,18 @@
   },
   "card": {
     "new": "Nouveau",
-    "nationwide": "Maroc — tout le pays",
+    "nationwide": "Maroc, tout le pays",
     "remote": "À distance",
     "positions": { "one": "1 poste", "other": "{count} postes" },
     "save": "Enregistrer cette opportunité",
     "unsave": "Retirer des enregistrées"
   },
   "list": {
-    "showing": "{first}–{last} sur {total}",
+    "showing": "{first} à {last} sur {total}",
     "noResults": "Aucun résultat",
     "emptyFiltered": {
       "title": "Aucune opportunité ne correspond à vos filtres",
-      "body": "Essayez d'élargir votre recherche — retirez un domaine ou une ville, ou allongez la période d'échéance.",
+      "body": "Essayez d'élargir votre recherche. Retirez un domaine ou une ville, ou allongez la période d'échéance.",
       "action": "Effacer les filtres"
     },
     "emptyDatabase": {
@@ -103,7 +107,7 @@
     "sendLink": "Recevoir un lien de connexion",
     "checkInbox": "Consultez votre boîte mail",
     "linkSent": "Nous avons envoyé un lien de connexion à {email}. Il est valable une heure.",
-    "browsingNote": "La consultation fonctionne sans compte — la connexion n'ajoute que les fonctions personnelles."
+    "browsingNote": "La consultation fonctionne sans compte. La connexion ajoute uniquement les fonctions personnelles."
   },
   "profile": {
     "title": "Votre profil",
@@ -124,7 +128,7 @@
     "emailAlerts": "Alertes e-mail",
     "emailAlertsToggle": "M'avertir quand une nouvelle opportunité correspond à mon profil",
     "reminderDays": "Me rappeler avant une échéance enregistrée",
-    "daysAhead": "Jours à l'avance (0–30)",
+    "daysAhead": "Jours à l'avance (0 à 30)",
     "save": "Enregistrer le profil",
     "saved": "Enregistré"
   },
@@ -147,7 +151,7 @@
     "none": "Rien d'enregistré pour le moment.",
     "count": "{count} enregistrées, échéance la plus proche en premier.",
     "closingSoon": "{count} de vos opportunités enregistrées clôturent sous une semaine.",
-    "reminderNote": "Vous recevrez aussi un rappel par e-mail — ajustez le délai dans votre {profileLink}.",
+    "reminderNote": "Vous recevrez aussi un rappel par e-mail. Ajustez le délai dans votre {profileLink}.",
     "profileLink": "profil",
     "emptyTitle": "Aucune opportunité enregistrée",
     "emptyBody": "Enregistrez ce que vous envisagez et vous le retrouverez ici, avec un rappel avant la clôture.",

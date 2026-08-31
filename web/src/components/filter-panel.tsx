@@ -50,8 +50,8 @@ export function FilterPanel({ filters, domains, cities, dict, domainLabels }: Pr
   }
 
   return (
-    <div className="relative flex flex-col gap-4 overflow-hidden rounded-[1.4rem] border border-border bg-surface/95 p-4 shadow-[var(--shadow-card)] backdrop-blur-xl sm:p-5">
-      <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-primary/55 to-transparent" />
+    <div className="relative flex flex-col gap-4 border border-border-strong bg-surface p-4 shadow-[var(--shadow-card)] sm:p-5">
+      <div className="pointer-events-none absolute inset-y-0 start-0 w-1 bg-primary" />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <SearchBox
           id={searchId}
@@ -72,7 +72,7 @@ export function FilterPanel({ filters, domains, cities, dict, domainLabels }: Pr
             onChange={(e) =>
               apply({ ...filters, sort: e.target.value as BrowseFilters["sort"], page: 1 })
             }
-            className="h-11 rounded-xl border border-input bg-surface-sunken/60 px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-12 rounded-md border border-input bg-background px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {SORT_KEYS.map((key) => (
               <option key={key} value={key}>
@@ -85,12 +85,12 @@ export function FilterPanel({ filters, domains, cities, dict, domainLabels }: Pr
             variant="outline"
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
-            className="h-11 rounded-xl"
+            className="h-12"
           >
             <SlidersHorizontal />
             {dict.filters.filters}
             {activeCount > 0 && (
-              <span className="ms-0.5 rounded-full bg-primary px-1.5 text-[10px] leading-4 text-primary-foreground tabular-nums">
+              <span className="ms-0.5 rounded-sm bg-primary px-1.5 text-[10px] leading-4 text-primary-foreground tabular-nums">
                 {activeCount}
               </span>
             )}
@@ -111,7 +111,7 @@ export function FilterPanel({ filters, domains, cities, dict, domainLabels }: Pr
       </div>
 
       {expanded && (
-        <div className="flex flex-col gap-5 rounded-2xl border border-border bg-surface-sunken/55 p-4">
+        <div className="motion-enter origin-top flex flex-col gap-5 border-t border-border bg-surface-sunken/55 p-4">
           <FilterGroup label={dict.filters.groups.deadline}>
             {DEADLINE_WINDOWS.map((window) => (
               <FilterChip
@@ -258,7 +258,7 @@ function SearchBox({
         placeholder={placeholder}
         dir="auto"
         className={cn(
-          "h-11 w-full rounded-xl border border-input bg-surface-sunken/60 pe-10 ps-9 text-sm",
+          "h-12 w-full rounded-md border border-input bg-background pe-10 ps-10 text-sm",
           "placeholder:text-subtle-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         )}
       />

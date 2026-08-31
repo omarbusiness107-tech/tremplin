@@ -21,7 +21,7 @@ export function InstitutionLogo({ src, size }: { src: string; size: "card" | "he
   if (failed) return null;
 
   return (
-    <div className="pointer-events-none absolute inset-0 grid place-items-center p-3">
+    <div className="pointer-events-none absolute inset-0 grid place-items-center p-4">
       {/* eslint-disable-next-line @next/next/no-img-element -- see OpportunityCover */}
       <img
         src={src}
@@ -31,8 +31,8 @@ export function InstitutionLogo({ src, size }: { src: string; size: "card" | "he
         decoding="async"
         onError={() => setFailed(true)}
         className={cn(
-          "max-h-[74%] rounded-lg bg-white/95 object-contain p-2 shadow-sm ring-1 ring-black/5",
-          size === "hero" ? "max-w-[34%]" : "max-w-[58%]",
+          "max-h-[72%] bg-white object-contain p-3 shadow-[5px_5px_0_rgba(17,24,39,0.18)] ring-1 ring-black/10",
+          size === "hero" ? "max-w-[42%]" : "max-w-[68%]",
         )}
       />
     </div>

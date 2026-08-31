@@ -84,16 +84,16 @@ export default async function OpportunityPage({
   );
 
   return (
-    <article className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+    <article className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
       <Link
         href={`/${typed}`}
-        className="mb-6 inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        className="mb-6 inline-flex w-fit items-center gap-1.5 rounded-sm text-sm font-semibold text-muted-foreground transition-colors duration-200 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
       >
         <BackIcon className="size-4" aria-hidden />
         {dict.detail.back}
       </Link>
 
-      <header className="grid overflow-hidden rounded-[2rem] border border-border bg-surface shadow-[var(--shadow-lift)] lg:grid-cols-[0.86fr_1.14fr]">
+      <header className="grid overflow-hidden border border-border-strong bg-surface shadow-[var(--shadow-lift)] lg:grid-cols-[0.78fr_1.22fr]">
         <OpportunityCover
           id={opportunity.id}
           type={opportunity.type}
@@ -101,8 +101,8 @@ export default async function OpportunityPage({
           size="hero"
         />
 
-        <div className="relative flex flex-col justify-center gap-5 overflow-hidden p-6 sm:p-9 lg:p-12">
-          <div className="pointer-events-none absolute -end-24 -top-24 size-64 rounded-full bg-primary-soft/70 blur-3xl" />
+        <div className="relative flex flex-col justify-center gap-5 p-6 sm:p-9 lg:p-12">
+          <p className="text-xs font-bold tracking-[0.16em] text-primary uppercase">05 / {dict.brand.name}</p>
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="default">{typeLabel(opportunity.type, dict)}</Badge>
             <Badge variant={URGENCY_TONE[urgency]}>
@@ -112,7 +112,7 @@ export default async function OpportunityPage({
           </div>
 
           <h1
-            className="relative text-2xl leading-tight font-bold text-balance sm:text-4xl"
+            className="relative max-w-4xl text-3xl leading-[1.08] font-bold text-balance sm:text-5xl"
             dir="auto"
           >
             {opportunity.title}
@@ -138,7 +138,7 @@ export default async function OpportunityPage({
         </div>
       </header>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_22rem]">
+      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_23rem]">
         <div className="flex flex-col gap-6">
           {opportunity.description && (
             <Section title={dict.detail.description}>
@@ -158,7 +158,7 @@ export default async function OpportunityPage({
                 {attributes.map(([label, value]) => (
                   <div
                     key={label}
-                    className={`flex flex-col gap-2 rounded-2xl border border-border bg-surface-sunken/50 p-4 ${
+                    className={`flex flex-col gap-2 border-s-2 border-primary bg-surface-sunken/65 p-4 ${
                       value.length > 180 || value.includes("\n") ? "sm:col-span-2" : ""
                     }`}
                   >
@@ -182,8 +182,8 @@ export default async function OpportunityPage({
         <aside className="flex flex-col gap-4">
           {/* Sticky so the apply action stays reachable while reading a
               long announcement on desktop. */}
-          <div className="rounded-[1.4rem] border border-border bg-surface/95 p-5 shadow-[var(--shadow-card)] backdrop-blur-xl lg:sticky lg:top-24">
-            <h2 className="font-display text-base font-semibold">{dict.detail.apply}</h2>
+          <div className="border border-border-strong border-t-4 border-t-primary bg-surface p-5 shadow-[var(--shadow-card)] lg:sticky lg:top-24">
+            <h2 className="font-display text-lg font-semibold">{dict.detail.apply}</h2>
 
             <dl className="mt-4 flex flex-col gap-3.5 text-sm">
               <Fact icon={<CalendarClock className="size-4" aria-hidden />} label={dict.detail.deadline}>
@@ -266,7 +266,7 @@ export default async function OpportunityPage({
           <h2 className="font-display text-lg font-semibold" dir="auto">
             {dict.detail.moreFrom}
           </h2>
-          <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-5 xl:grid-cols-2">
             {related.map((item: Opportunity) => (
               <li key={item.id} className="flex min-w-0">
                 <OpportunityCard
@@ -287,10 +287,9 @@ export default async function OpportunityPage({
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="relative overflow-hidden rounded-[1.4rem] border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
-      <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-      <h2 className="mb-5 flex items-center gap-2 font-display text-lg font-semibold">
-        <span className="size-2 rounded-full bg-primary shadow-[0_0_0_5px_var(--primary-soft)]" />
+    <section className="relative border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
+      <h2 className="mb-5 flex items-center gap-3 font-display text-lg font-semibold">
+        <span className="h-5 w-1 bg-primary" aria-hidden />
         {title}
       </h2>
       {children}
@@ -308,7 +307,7 @@ function Fact({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start gap-2.5">
+    <div className="flex items-start gap-2.5 border-b border-border pb-3.5 last:border-b-0 last:pb-0">
       <span className="mt-0.5 text-subtle-foreground">{icon}</span>
       <div className="flex flex-col">
         <dt className="text-[11px] text-subtle-foreground">{label}</dt>
